@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Gadiani & D'Antraccoli &#8212; Sistema de Gest&#227;o</title>
-<!-- Firebase removido &#8212; usando Google Sheets como banco de dados -->
+<title>Gadiani & D'Antraccoli — Sistema de Gestão</title>
+<!-- Firebase removido — usando Google Sheets como banco de dados -->
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Segoe UI',system-ui,sans-serif;color:#1a1a1a;background:#f0ede8;font-size:14px}
@@ -17,7 +17,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;color:#1a1a1a;background:#f0ede
 .urgent-btn{background:#fce4ec;color:#c62828;border:1px solid #f8bbd0;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:4px}
 .urgent-btn:hover{background:#f8bbd0}
 
-/* M&#243;dulos */
+/* Módulos */
 .mod-tabs{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
 .mod-btn{padding:14px 18px;border:1.5px solid #ddd;border-radius:12px;cursor:pointer;background:#fff;text-align:left;font-family:inherit;transition:all .15s}
 .mod-btn:hover{border-color:#888}
@@ -166,78 +166,78 @@ a.link:hover{text-decoration:underline}
 </head>
 <body>
 <div id="status-bar" style="display:none;background:#fff8e1;border-bottom:1px solid #ffcc80;padding:8px 16px;font-size:12px;color:#e65100;text-align:center">
-  &#9888; Carregando via proxy (modo arquivo local). Para melhor desempenho, use o Replit. &nbsp;
-  <a href="https://replit.com" target="_blank" style="color:#1565c0;font-weight:600">Saiba como &#8594;</a>
+  ⚠ Carregando via proxy (modo arquivo local). Para melhor desempenho, use o Replit. &nbsp;
+  <a href="https://replit.com" target="_blank" style="color:#1565c0;font-weight:600">Saiba como →</a>
 </div>
 <div class="app">
 
 <div class="header">
   <div>
     <div class="header-logo">GADIANI &amp; D'ANTRACCOLI</div>
-    <div class="header-sub">Sistema Interno &#8212; Advogados</div>
+    <div class="header-sub">Sistema Interno — Advogados</div>
   </div>
   <div class="header-right">
-    <span id="sync-status" style="font-size:10px;color:#25d366;display:none">&#9679; Sincronizado</span>
+    <span id="sync-status" style="font-size:10px;color:#25d366;display:none">● Sincronizado</span>
     <select id="usuario-sel" onchange="salvarUsuario()" style="width:140px;font-size:12px;padding:5px 8px">
       <option value="">Quem sou eu?</option>
       <option value="Dr. Augusto">Dr. Augusto</option>
       <option value="Dr. Ari">Dr. Ari</option>
       <option value="Closer">Closer</option>
-      <option value="Estagi&#225;rio 1">Estagi&#225;rio 1</option>
-      <option value="Estagi&#225;rio 2">Estagi&#225;rio 2</option>
-      <option value="Estagi&#225;rio 3">Estagi&#225;rio 3</option>
+      <option value="Estagiário 1">Estagiário 1</option>
+      <option value="Estagiário 2">Estagiário 2</option>
+      <option value="Estagiário 3">Estagiário 3</option>
     </select>
-    <button class="urgent-btn" onclick="abrirModalUrgente()">&#9889; Urgente</button>
-    <button class="btn btns" onclick="reconfigurarScript()" title="Reconfigurar URL do servidor" style="font-size:11px;padding:4px 8px">&#9881;</button>
+    <button class="urgent-btn" onclick="abrirModalUrgente()">⚡ Urgente</button>
+    <button class="btn btns" onclick="reconfigurarScript()" title="Reconfigurar URL do servidor" style="font-size:11px;padding:4px 8px">⚙</button>
   </div>
 </div>
 
 <div class="mod-tabs">
   <button class="mod-btn on" id="mbtn-di" onclick="setMod('di')">
-    <div class="mod-icon">&#127974;</div>
+    <div class="mod-icon">🏦</div>
     <div class="mod-title">Descontos Indevidos</div>
-    <div class="mod-sub">Extratos INSS &#183; Checklist &#183; Peti&#231;&#227;o</div>
+    <div class="mod-sub">Extratos INSS · Checklist · Petição</div>
   </button>
   <button class="mod-btn" id="mbtn-se" onclick="setMod('se')">
-    <div class="mod-icon">&#9878;&#65039;</div>
+    <div class="mod-icon">⚖️</div>
     <div class="mod-title">Superendividamento</div>
-    <div class="mod-sub">Plano 70/30 &#183; Peti&#231;&#227;o em etapas</div>
+    <div class="mod-sub">Plano 70/30 · Petição em etapas</div>
   </button>
 </div>
 
 <!-- =================== DESCONTOS INDEVIDOS =================== -->
 <div id="mod-di">
   <nav class="tabs">
-    <button class="on" id="di-n0" onclick="swDI(0)">&#128203; Fila</button>
-    <button id="di-n1" onclick="swDI(1)">&#128194; Documentos</button>
-    <button id="di-n2" onclick="swDI(2)">&#9203; Pend&#234;ncias</button>
-    <button id="di-n3" onclick="swDI(3)">&#128220; Peti&#231;&#227;o</button>
-    <button id="di-n4" onclick="swDI(4)">&#128241; Protocolo</button>
-    <button id="di-n5" onclick="swDI(5)">&#128172; CRM</button>
-    <button id="di-n6" onclick="swDI(6)">&#128276; Notifica&#231;&#227;o</button>
+    <button class="on" id="di-n0" onclick="swDI(0)">📋 Fila</button>
+    <button id="di-n1" onclick="swDI(1)">📂 Documentos</button>
+    <button id="di-n2" onclick="swDI(2)">⏳ Pendências</button>
+    <button id="di-n3" onclick="swDI(3)">📜 Petição</button>
+    <button id="di-n4" onclick="swDI(4)">📱 Protocolo</button>
+    <button id="di-n5" onclick="swDI(5)">💬 CRM</button>
+    <button id="di-n6" onclick="swDI(6)">🔔 Notificação</button>
   </nav>
 
   <!-- FILA -->
   <div id="di-pg0" class="pg on">
     <div class="g4">
-      <div class="stat"><div class="sn" id="di-st0">&#8212;</div><div class="sl">Total clientes</div></div>
-      <div class="stat"><div class="sn" id="di-st1" style="color:#c62828">&#8212;</div><div class="sl">Docs pendentes &gt;7d</div></div>
-      <div class="stat"><div class="sn" id="di-st2" style="color:#e65100">&#8212;</div><div class="sl">Aguard. protocolo &gt;3d</div></div>
-      <div class="stat"><div class="sn" id="di-st3" style="color:#1b5e20">&#8212;</div><div class="sl">Protocolados</div></div>
+      <div class="stat"><div class="sn" id="di-st0">—</div><div class="sl">Total clientes</div></div>
+      <div class="stat"><div class="sn" id="di-st1" style="color:#c62828">—</div><div class="sl">Docs pendentes &gt;7d</div></div>
+      <div class="stat"><div class="sn" id="di-st2" style="color:#e65100">—</div><div class="sl">Aguard. protocolo &gt;3d</div></div>
+      <div class="stat"><div class="sn" id="di-st3" style="color:#1b5e20">—</div><div class="sl">Protocolados</div></div>
     </div>
     <div class="card">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-        <div class="ct" style="margin-bottom:0">Fila de Clientes &#8212; Descontos Indevidos</div>
+        <div class="ct" style="margin-bottom:0">Fila de Clientes — Descontos Indevidos</div>
         <div style="display:flex;gap:6px">
           <input id="di-busca" placeholder="Buscar..." style="width:160px;font-size:12px;padding:6px 10px" oninput="diFiltrar()">
           <select id="di-filtro" style="width:130px;font-size:12px;padding:6px 8px" onchange="diFiltrar()">
             <option value="todos">Todos</option>
-            <option value="urgente">&#9889; Urgentes</option>
-            <option value="docs">&#128194; Docs pendentes</option>
-            <option value="protocolo">&#9203; Aguard. protocolo</option>
-            <option value="protocolado">&#9989; Protocolados</option>
+            <option value="urgente">⚡ Urgentes</option>
+            <option value="docs">📂 Docs pendentes</option>
+            <option value="protocolo">⏳ Aguard. protocolo</option>
+            <option value="protocolado">✅ Protocolados</option>
           </select>
-          <button class="btn" onclick="diCarregarPlanilha()" title="Recarregar">&#8634;</button>
+          <button class="btn" onclick="diCarregarPlanilha()" title="Recarregar">↺</button>
         </div>
       </div>
       <div id="di-loading" style="padding:20px;text-align:center;color:#aaa"><span class="spin"></span> Carregando...</div>
@@ -257,14 +257,14 @@ a.link:hover{text-decoration:underline}
       <div class="card">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
           <div><div class="ct" style="margin-bottom:3px">Enviados pelo cliente</div><span class="badge bi" id="di-dbadge">0/12</span></div>
-          <button class="btn btnw" onclick="diCobrarWA()">&#128241; Cobrar no WhatsApp</button>
+          <button class="btn btnw" onclick="diCobrarWA()">📱 Cobrar no WhatsApp</button>
         </div>
         <div class="pw"><div class="pb pb-green" id="di-dprog" style="width:0%"></div></div>
         <div id="di-docs-cli" style="margin-top:10px"></div>
       </div>
       <div class="card">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-          <div><div class="ct" style="margin-bottom:3px">Obtidos pelo escrit&#243;rio <span class="tag-gov">.gov</span></div><span class="badge bo" id="di-gbadge">0/8</span></div>
+          <div><div class="ct" style="margin-bottom:3px">Obtidos pelo escritório <span class="tag-gov">.gov</span></div><span class="badge bo" id="di-gbadge">0/8</span></div>
         </div>
         <div class="pw"><div class="pb pb-orange" id="di-gprog" style="width:0%"></div></div>
         <div id="di-docs-gov" style="margin-top:10px"></div>
@@ -272,8 +272,8 @@ a.link:hover{text-decoration:underline}
       <div class="card">
         <div class="ct">Dados do contrato questionado</div>
         <div class="g2">
-          <div><label>N&#250;mero do contrato</label><input id="di-contrato" placeholder="Ex: 202300001234" oninput="diCalcContrato()"></div>
-          <div><label>Data in&#237;cio dos descontos</label><input type="date" id="di-dataini" onchange="diCalcContrato()"></div>
+          <div><label>Número do contrato</label><input id="di-contrato" placeholder="Ex: 202300001234" oninput="diCalcContrato()"></div>
+          <div><label>Data início dos descontos</label><input type="date" id="di-dataini" onchange="diCalcContrato()"></div>
         </div>
         <div class="g2">
           <div><label>Valor da parcela (R$)</label><input type="number" id="di-parcela" placeholder="0,00" step="0.01" oninput="diCalcContrato()"></div>
@@ -284,52 +284,52 @@ a.link:hover{text-decoration:underline}
     </div>
   </div>
 
-  <!-- PEND&#202;NCIAS / ALERTAS -->
+  <!-- PENDÊNCIAS / ALERTAS -->
   <div id="di-pg2" class="pg">
     <div class="card">
-      <div class="ct">Central de Pend&#234;ncias e Alertas</div>
-      <div class="info">Clientes ordenados por tempo de espera. Vermelho = mais urgente. Clique em "Cobrar" para enviar WhatsApp autom&#225;tico.</div>
+      <div class="ct">Central de Pendências e Alertas</div>
+      <div class="info">Clientes ordenados por tempo de espera. Vermelho = mais urgente. Clique em "Cobrar" para enviar WhatsApp automático.</div>
       <div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap">
-        <button class="btn" onclick="diRenderPendencias('docs')" id="pf-docs" style="background:#fce4ec;border-color:#f8bbd0;color:#c62828">&#128194; Docs pendentes</button>
-        <button class="btn" onclick="diRenderPendencias('protocolo')" id="pf-prot" style="border-color:#90caf9;color:#1565c0">&#9203; Aguard. protocolo</button>
-        <button class="btn" onclick="diRenderPendencias('urgente')" id="pf-urg" style="border-color:#ffcc80;color:#e65100">&#9889; Urgentes</button>
+        <button class="btn" onclick="diRenderPendencias('docs')" id="pf-docs" style="background:#fce4ec;border-color:#f8bbd0;color:#c62828">📂 Docs pendentes</button>
+        <button class="btn" onclick="diRenderPendencias('protocolo')" id="pf-prot" style="border-color:#90caf9;color:#1565c0">⏳ Aguard. protocolo</button>
+        <button class="btn" onclick="diRenderPendencias('urgente')" id="pf-urg" style="border-color:#ffcc80;color:#e65100">⚡ Urgentes</button>
       </div>
       <div id="di-pendencias-lista"></div>
     </div>
   </div>
 
-  <!-- PETI&#199;&#195;O -->
+  <!-- PETIÇÃO -->
   <div id="di-pg3" class="pg">
     <div class="card">
-      <div class="ct">Gerar Peti&#231;&#227;o Inicial &#8212; Descontos Indevidos</div>
-      <div class="warn">&#9888; A peti&#231;&#227;o s&#243; &#233; gerada ap&#243;s todos os documentos obrigat&#243;rios estarem marcados como recebidos.</div>
+      <div class="ct">Gerar Petição Inicial — Descontos Indevidos</div>
+      <div class="warn">⚠ A petição só é gerada após todos os documentos obrigatórios estarem marcados como recebidos.</div>
       <div class="row" style="margin-bottom:12px">
         <select id="di-sel-pet" onchange="diVerificarBloqueio()"><option value="">Selecionar cliente...</option></select>
       </div>
       <div id="di-pet-bloqueio" class="err" style="display:none"></div>
       <div id="di-pet-form">
         <div class="g2">
-          <div><label>Vara / Comarca</label><input id="di-vara" placeholder="Ex: 1&#170; Vara C&#237;vel de..."></div>
+          <div><label>Vara / Comarca</label><input id="di-vara" placeholder="Ex: 1ª Vara Cível de..."></div>
           <div><label>Cidade</label><input id="di-pet-cidade" value="Vargem Grande do Sul"></div>
         </div>
         <div class="g2">
-          <div><label>N&#186; contrato</label><input id="di-pet-contrato"></div>
-          <div><label>Data in&#237;cio descontos</label><input type="date" id="di-pet-dataini"></div>
+          <div><label>Nº contrato</label><input id="di-pet-contrato"></div>
+          <div><label>Data início descontos</label><input type="date" id="di-pet-dataini"></div>
         </div>
         <div class="g2">
           <div><label>Valor da parcela (R$)</label><input type="number" id="di-pet-parcela" step="0.01"></div>
           <div><label>Qtd parcelas</label><input type="number" id="di-pet-nparcelas"></div>
         </div>
         <button class="btn btnp" style="width:100%;justify-content:center;margin-top:14px;padding:11px" onclick="diGerarPeticao()">
-          &#128196; Gerar peti&#231;&#227;o inicial completa
+          📄 Gerar petição inicial completa
         </button>
       </div>
       <div id="di-pet-out" style="display:none;margin-top:14px">
         <div style="font-size:12px;font-weight:600;color:#666;margin-bottom:6px" id="di-pet-label"></div>
         <div class="out ld" id="di-pet-texto"></div>
         <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
-          <button class="btn" onclick="copiar('di-pet-texto')">&#128203; Copiar</button>
-          <button class="btn btng" id="di-pet-dl" style="display:none" onclick="downloadTxt('di-pet-texto','peticao_descontos.txt')">&#11015; Baixar .txt</button>
+          <button class="btn" onclick="copiar('di-pet-texto')">📋 Copiar</button>
+          <button class="btn btng" id="di-pet-dl" style="display:none" onclick="downloadTxt('di-pet-texto','peticao_descontos.txt')">⬇ Baixar .txt</button>
         </div>
       </div>
     </div>
@@ -338,18 +338,18 @@ a.link:hover{text-decoration:underline}
   <!-- PROTOCOLO -->
   <div id="di-pg4" class="pg">
     <div class="card">
-      <div class="ct">Gest&#227;o de Protocolo</div>
+      <div class="ct">Gestão de Protocolo</div>
       <div class="g2" style="margin-bottom:14px">
         <div>
           <div class="ct" style="margin-bottom:8px">Marcar como enviado para protocolo</div>
           <select id="di-prot-sel" style="margin-bottom:8px"><option value="">Selecionar cliente...</option></select>
-          <button class="btn btno" style="width:100%" onclick="diMarcarParaProtocolo()">&#128228; Enviado para protocolo</button>
+          <button class="btn btno" style="width:100%" onclick="diMarcarParaProtocolo()">📤 Enviado para protocolo</button>
         </div>
         <div>
-          <div class="ct" style="margin-bottom:8px">Confirmar protocolo + n&#250;mero</div>
+          <div class="ct" style="margin-bottom:8px">Confirmar protocolo + número</div>
           <select id="di-prot-sel2" style="margin-bottom:6px"><option value="">Selecionar cliente...</option></select>
-          <input id="di-num-acao" placeholder="N&#250;mero da a&#231;&#227;o (ex: 1234567-89.2025.8.26.0000)" style="margin-bottom:8px">
-          <button class="btn btnp" style="width:100%" onclick="diConfirmarProtocolo()">&#9989; Confirmar + Enviar WA com n&#186;</button>
+          <input id="di-num-acao" placeholder="Número da ação (ex: 1234567-89.2025.8.26.0000)" style="margin-bottom:8px">
+          <button class="btn btnp" style="width:100%" onclick="diConfirmarProtocolo()">✅ Confirmar + Enviar WA com nº</button>
         </div>
       </div>
       <div class="divider"></div>
@@ -361,8 +361,8 @@ a.link:hover{text-decoration:underline}
   <!-- CRM -->
   <div id="di-pg5" class="pg">
     <div class="card">
-      <div class="ct">CRM &#8212; Cad&#234;ncia de Relacionamento</div>
-      <div class="info">Sequ&#234;ncia de mensagens para manter o v&#237;nculo com o cliente. As mensagens iniciais t&#234;m intervalo de 3 dias, depois passam para 10 dias.</div>
+      <div class="ct">CRM — Cadência de Relacionamento</div>
+      <div class="info">Sequência de mensagens para manter o vínculo com o cliente. As mensagens iniciais têm intervalo de 3 dias, depois passam para 10 dias.</div>
       <div class="row" style="margin-bottom:14px">
         <select id="di-crm-sel" onchange="diCarregarCRM()"><option value="">Selecionar cliente...</option></select>
       </div>
@@ -373,24 +373,24 @@ a.link:hover{text-decoration:underline}
     </div>
   </div>
 
-  <!-- NOTIFICA&#199;&#195;O -->
+  <!-- NOTIFICAÇÃO -->
   <div id="di-pg6" class="pg">
     <div class="card">
-      <div class="ct">Notifica&#231;&#227;o Extrajudicial</div>
+      <div class="ct">Notificação Extrajudicial</div>
       <div class="info">Gerada em nome do consumidor (sem mencionar advogados). Registrar em Consumidor.gov e Banco Central.</div>
       <div class="row" style="margin-bottom:12px">
         <select id="di-sel-not"><option value="">Selecionar cliente...</option></select>
-        <button class="btn btnp" onclick="diGerarNotif()">Gerar notifica&#231;&#227;o</button>
+        <button class="btn btnp" onclick="diGerarNotif()">Gerar notificação</button>
       </div>
       <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap">
-        <a href="https://www.consumidor.gov.br/" class="btn" target="_blank">&#8599; Consumidor.gov</a>
-        <a href="https://www.bcb.gov.br/meubc/registrar_reclamacao" class="btn" target="_blank">&#8599; Banco Central</a>
+        <a href="https://www.consumidor.gov.br/" class="btn" target="_blank">↗ Consumidor.gov</a>
+        <a href="https://www.bcb.gov.br/meubc/registrar_reclamacao" class="btn" target="_blank">↗ Banco Central</a>
       </div>
     </div>
     <div id="di-not-card" style="display:none" class="card">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-        <div class="ct" style="margin-bottom:0">Notifica&#231;&#227;o gerada</div>
-        <button class="btn" onclick="copiar('di-not-out')">&#128203; Copiar</button>
+        <div class="ct" style="margin-bottom:0">Notificação gerada</div>
+        <button class="btn" onclick="copiar('di-not-out')">📋 Copiar</button>
       </div>
       <div class="out" id="di-not-out"></div>
     </div>
@@ -400,29 +400,29 @@ a.link:hover{text-decoration:underline}
 <!-- =================== SUPERENDIVIDAMENTO =================== -->
 <div id="mod-se" style="display:none">
   <nav class="tabs">
-    <button class="on" id="se-n0" onclick="swSE(0)">&#128203; Fila</button>
-    <button id="se-n1" onclick="swSE(1)">&#128194; Documentos</button>
-    <button id="se-n2" onclick="swSE(2)">&#9203; Pend&#234;ncias</button>
-    <button id="se-n3" onclick="swSE(3)">&#128220; Peti&#231;&#227;o</button>
-    <button id="se-n4" onclick="swSE(4)">&#128202; Plano 70/30</button>
-    <button id="se-n5" onclick="swSE(5)">&#128241; Protocolo</button>
-    <button id="se-n6" onclick="swSE(6)">&#128172; CRM</button>
-    <button id="se-n7" onclick="swSE(7)">&#128276; Notifica&#231;&#245;es</button>
+    <button class="on" id="se-n0" onclick="swSE(0)">📋 Fila</button>
+    <button id="se-n1" onclick="swSE(1)">📂 Documentos</button>
+    <button id="se-n2" onclick="swSE(2)">⏳ Pendências</button>
+    <button id="se-n3" onclick="swSE(3)">📜 Petição</button>
+    <button id="se-n4" onclick="swSE(4)">📊 Plano 70/30</button>
+    <button id="se-n5" onclick="swSE(5)">📱 Protocolo</button>
+    <button id="se-n6" onclick="swSE(6)">💬 CRM</button>
+    <button id="se-n7" onclick="swSE(7)">🔔 Notificações</button>
   </nav>
 
   <div id="se-pg0" class="pg on">
     <div class="g4">
-      <div class="stat"><div class="sn" id="se-st0">&#8212;</div><div class="sl">Total clientes</div></div>
-      <div class="stat"><div class="sn" id="se-st1" style="color:#c62828">&#8212;</div><div class="sl">Docs pendentes &gt;7d</div></div>
-      <div class="stat"><div class="sn" id="se-st2" style="color:#e65100">&#8212;</div><div class="sl">Aguard. protocolo &gt;3d</div></div>
-      <div class="stat"><div class="sn" id="se-st3" style="color:#1b5e20">&#8212;</div><div class="sl">Protocolados</div></div>
+      <div class="stat"><div class="sn" id="se-st0">—</div><div class="sl">Total clientes</div></div>
+      <div class="stat"><div class="sn" id="se-st1" style="color:#c62828">—</div><div class="sl">Docs pendentes &gt;7d</div></div>
+      <div class="stat"><div class="sn" id="se-st2" style="color:#e65100">—</div><div class="sl">Aguard. protocolo &gt;3d</div></div>
+      <div class="stat"><div class="sn" id="se-st3" style="color:#1b5e20">—</div><div class="sl">Protocolados</div></div>
     </div>
     <div class="card">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-        <div class="ct" style="margin-bottom:0">Fila de Clientes &#8212; Superendividamento</div>
+        <div class="ct" style="margin-bottom:0">Fila de Clientes — Superendividamento</div>
         <div style="display:flex;gap:6px">
           <input id="se-busca" placeholder="Buscar..." style="width:160px;font-size:12px;padding:6px 10px" oninput="seFiltrar()">
-          <button class="btn" onclick="seCarregarPlanilha()" title="Recarregar">&#8634;</button>
+          <button class="btn" onclick="seCarregarPlanilha()" title="Recarregar">↺</button>
         </div>
       </div>
       <div id="se-loading" style="padding:20px;text-align:center;color:#aaa"><span class="spin"></span> Carregando...</div>
@@ -439,8 +439,8 @@ a.link:hover{text-decoration:underline}
       <div class="card" id="se-cli-info"></div>
       <div class="card">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-          <div><div class="ct" style="margin-bottom:3px">Documentos necess&#225;rios</div><span class="badge bi" id="se-dbadge">0/10</span></div>
-          <button class="btn btnw" onclick="seCobrarWA()">&#128241; Cobrar no WhatsApp</button>
+          <div><div class="ct" style="margin-bottom:3px">Documentos necessários</div><span class="badge bi" id="se-dbadge">0/10</span></div>
+          <button class="btn btnw" onclick="seCobrarWA()">📱 Cobrar no WhatsApp</button>
         </div>
         <div class="pw"><div class="pb pb-green" id="se-dprog" style="width:0%"></div></div>
         <div id="se-docs-lista" style="margin-top:10px"></div>
@@ -451,15 +451,15 @@ a.link:hover{text-decoration:underline}
 
   <div id="se-pg2" class="pg">
     <div class="card">
-      <div class="ct">Central de Pend&#234;ncias &#8212; Superendividamento</div>
+      <div class="ct">Central de Pendências — Superendividamento</div>
       <div id="se-pendencias-lista"></div>
     </div>
   </div>
 
   <div id="se-pg3" class="pg">
     <div class="card">
-      <div class="ct">Peti&#231;&#227;o &#8212; Superendividamento (5 etapas)</div>
-      <div class="info">Cada etapa &#233; revis&#225;vel antes de avan&#231;ar. Ap&#243;s a etapa 5, baixe o arquivo completo.</div>
+      <div class="ct">Petição — Superendividamento (5 etapas)</div>
+      <div class="info">Cada etapa é revisável antes de avançar. Após a etapa 5, baixe o arquivo completo.</div>
       <div class="row" style="margin-bottom:14px">
         <select id="se-sel-pet" onchange="seSelecionarCliente()"><option value="">Selecionar cliente...</option></select>
       </div>
@@ -468,8 +468,8 @@ a.link:hover{text-decoration:underline}
         <div class="ct" id="se-etapa-label"></div>
         <div class="out" id="se-pet-texto" style="min-height:120px"></div>
         <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
-          <button class="btn" onclick="copiar('se-pet-texto')">&#128203; Copiar etapa</button>
-          <button class="btn btng" id="se-pet-dl" style="display:none" onclick="seDownloadPeticao()">&#11015; Baixar peti&#231;&#227;o .txt</button>
+          <button class="btn" onclick="copiar('se-pet-texto')">📋 Copiar etapa</button>
+          <button class="btn btng" id="se-pet-dl" style="display:none" onclick="seDownloadPeticao()">⬇ Baixar petição .txt</button>
         </div>
       </div>
     </div>
@@ -477,8 +477,8 @@ a.link:hover{text-decoration:underline}
 
   <div id="se-pg4" class="pg">
     <div class="card">
-      <div class="ct">Plano de Pagamento Provis&#243;rio &#8212; Art. 104-A CDC</div>
-      <div class="info">70% m&#237;nimo existencial + 30% proporcional entre credores. 60 meses. Juros 1% a.m.</div>
+      <div class="ct">Plano de Pagamento Provisório — Art. 104-A CDC</div>
+      <div class="info">70% mínimo existencial + 30% proporcional entre credores. 60 meses. Juros 1% a.m.</div>
       <div class="row" style="margin-bottom:12px">
         <select id="se-sel-plano"><option value="">Selecionar cliente...</option></select>
         <button class="btn btnp" onclick="seGerarPlano()">Calcular plano</button>
@@ -488,8 +488,8 @@ a.link:hover{text-decoration:underline}
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
         <div class="ct" style="margin-bottom:0">Plano gerado</div>
         <div style="display:flex;gap:6px">
-          <button class="btn" onclick="copiar('se-plano-out')">&#128203; Copiar</button>
-          <button class="btn btng" onclick="downloadTxt('se-plano-out','plano_pagamento.txt')">&#11015; Baixar .txt</button>
+          <button class="btn" onclick="copiar('se-plano-out')">📋 Copiar</button>
+          <button class="btn btng" onclick="downloadTxt('se-plano-out','plano_pagamento.txt')">⬇ Baixar .txt</button>
         </div>
       </div>
       <div class="out" id="se-plano-out" style="min-height:80px"></div>
@@ -498,18 +498,18 @@ a.link:hover{text-decoration:underline}
 
   <div id="se-pg5" class="pg">
     <div class="card">
-      <div class="ct">Gest&#227;o de Protocolo &#8212; Superendividamento</div>
+      <div class="ct">Gestão de Protocolo — Superendividamento</div>
       <div class="g2" style="margin-bottom:14px">
         <div>
           <div class="ct" style="margin-bottom:8px">Marcar para protocolo</div>
           <select id="se-prot-sel" style="margin-bottom:8px"><option value="">Selecionar cliente...</option></select>
-          <button class="btn btno" style="width:100%" onclick="seMarcarParaProtocolo()">&#128228; Enviado para protocolo</button>
+          <button class="btn btno" style="width:100%" onclick="seMarcarParaProtocolo()">📤 Enviado para protocolo</button>
         </div>
         <div>
           <div class="ct" style="margin-bottom:8px">Confirmar protocolo</div>
           <select id="se-prot-sel2" style="margin-bottom:6px"><option value="">Selecionar cliente...</option></select>
-          <input id="se-num-acao" placeholder="N&#250;mero da a&#231;&#227;o" style="margin-bottom:8px">
-          <button class="btn btnp" style="width:100%" onclick="seConfirmarProtocolo()">&#9989; Confirmar + Enviar WA</button>
+          <input id="se-num-acao" placeholder="Número da ação" style="margin-bottom:8px">
+          <button class="btn btnp" style="width:100%" onclick="seConfirmarProtocolo()">✅ Confirmar + Enviar WA</button>
         </div>
       </div>
       <div class="ct">Aguardando protocolo</div>
@@ -519,7 +519,7 @@ a.link:hover{text-decoration:underline}
 
   <div id="se-pg6" class="pg">
     <div class="card">
-      <div class="ct">CRM &#8212; Superendividamento</div>
+      <div class="ct">CRM — Superendividamento</div>
       <div class="row" style="margin-bottom:14px">
         <select id="se-crm-sel" onchange="seCarregarCRM()"><option value="">Selecionar cliente...</option></select>
       </div>
@@ -532,15 +532,15 @@ a.link:hover{text-decoration:underline}
 
   <div id="se-pg7" class="pg">
     <div class="card">
-      <div class="ct">Notifica&#231;&#245;es Extrajudiciais &#8212; Todos os Credores</div>
-      <div class="info">Uma notifica&#231;&#227;o por credor, em nome do consumidor.</div>
+      <div class="ct">Notificações Extrajudiciais — Todos os Credores</div>
+      <div class="info">Uma notificação por credor, em nome do consumidor.</div>
       <div class="row" style="margin-bottom:12px">
         <select id="se-sel-not"><option value="">Selecionar cliente...</option></select>
-        <button class="btn btnp" onclick="seGerarNotif()">Gerar notifica&#231;&#245;es</button>
+        <button class="btn btnp" onclick="seGerarNotif()">Gerar notificações</button>
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <a href="https://www.consumidor.gov.br/" class="btn" target="_blank">&#8599; Consumidor.gov</a>
-        <a href="https://www.bcb.gov.br/meubc/registrar_reclamacao" class="btn" target="_blank">&#8599; Banco Central</a>
+        <a href="https://www.consumidor.gov.br/" class="btn" target="_blank">↗ Consumidor.gov</a>
+        <a href="https://www.bcb.gov.br/meubc/registrar_reclamacao" class="btn" target="_blank">↗ Banco Central</a>
       </div>
     </div>
     <div id="se-not-wrap"></div>
@@ -550,11 +550,11 @@ a.link:hover{text-decoration:underline}
 <!-- Modal urgente -->
 <div class="modal-bg" id="modal-urgente">
   <div class="modal">
-    <h3>&#9889; Marcar caso como urgente</h3>
+    <h3>⚡ Marcar caso como urgente</h3>
     <label>Cliente</label>
     <select id="modal-cli-sel" style="margin-bottom:10px"><option value="">Selecionar...</option></select>
-    <label>Motivo da urg&#234;ncia</label>
-    <textarea id="modal-urgente-motivo" placeholder="Ex: prazo prescricional se aproximando, cliente em situa&#231;&#227;o de vulnerabilidade extrema..." style="margin-bottom:10px"></textarea>
+    <label>Motivo da urgência</label>
+    <textarea id="modal-urgente-motivo" placeholder="Ex: prazo prescricional se aproximando, cliente em situação de vulnerabilidade extrema..." style="margin-bottom:10px"></textarea>
     <div style="display:flex;gap:8px;justify-content:flex-end">
       <button class="btn" onclick="fecharModal()">Cancelar</button>
       <button class="btn btnp" onclick="salvarUrgente()">Marcar como urgente</button>
@@ -563,12 +563,12 @@ a.link:hover{text-decoration:underline}
 </div>
 
 <script>
-// ============ CONFIGURA&#199;&#195;O &#8212; GOOGLE APPS SCRIPT ============
+// ============ CONFIGURAÇÃO — GOOGLE APPS SCRIPT ============
 const SCRIPT_URL_FIXED = 'https://script.google.com/macros/s/AKfycbzqfOxWuVPVRDliZN15PQswhl-v_Oru-ZLFdNgvdBuRe8TLrU06H27W0jgQuE03WyzbmQ/exec';
 
-// Detecta automaticamente: se aberto pelo Apps Script, usa a pr&#243;pria URL
+// Detecta automaticamente: se aberto pelo Apps Script, usa a própria URL
 function detectarScriptURL() {
-  // 1. Se aberto pelo Apps Script, window.location j&#225; &#201; a URL correta
+  // 1. Se aberto pelo Apps Script, window.location já É a URL correta
   if (window.location.href.includes('script.google.com')) {
     return window.location.href.split('?')[0];
   }
@@ -579,7 +579,7 @@ function detectarScriptURL() {
 let APPS_SCRIPT_URL = detectarScriptURL();
 
 function verificarConfiguracao() {
-  // URL j&#225; est&#225; embutida, nada a fazer
+  // URL já está embutida, nada a fazer
   console.info('Apps Script URL:', APPS_SCRIPT_URL);
 }
 
@@ -595,23 +595,23 @@ let appState = {}; // sincronizado via Firebase
 let diCurrent = null, seCurrent = null;
 let seCurrentCliente = null, sePetTextos = [];
 let diPetTextoFinal = '';
-const usuario = () => document.getElementById('usuario-sel').value || 'Usu&#225;rio';
+const usuario = () => document.getElementById('usuario-sel').value || 'Usuário';
 
 // ============ GOOGLE APPS SCRIPT SYNC ============
 // Salva estado no localStorage (imediato) + Google Sheets (sincronizado)
 let _saveTimer = null;
 
 async function carregarEstado() {
-  // Carrega do localStorage primeiro (instant&#226;neo)
+  // Carrega do localStorage primeiro (instantâneo)
   const local = localStorage.getItem('gadiani_state');
   if (local) { try { appState = JSON.parse(local); } catch(e) {} }
-  // Depois busca do servidor (pode ter atualiza&#231;&#245;es de outros usu&#225;rios)
+  // Depois busca do servidor (pode ter atualizações de outros usuários)
   if (APPS_SCRIPT_URL) {
     try {
       const r = await fetch(APPS_SCRIPT_URL + '?action=getState', {redirect:'follow'});
       const d = await r.json();
       if (d.ok && d.data && Object.keys(d.data).length > 0) {
-        // Merge: servidor tem prioridade para chaves que existem l&#225;
+        // Merge: servidor tem prioridade para chaves que existem lá
         appState = Object.assign({}, appState, d.data);
         localStorage.setItem('gadiani_state', JSON.stringify(appState));
       }
@@ -625,7 +625,7 @@ async function salvarEstado() {
   // Envia para o servidor com debounce (aguarda 1.5s de inatividade)
   clearTimeout(_saveTimer);
   const syncEl = document.getElementById('sync-status');
-  if (syncEl) { syncEl.style.display='inline'; syncEl.style.color='#ff9800'; syncEl.textContent='&#9679; Salvando...'; }
+  if (syncEl) { syncEl.style.display='inline'; syncEl.style.color='#ff9800'; syncEl.textContent='● Salvando...'; }
   _saveTimer = setTimeout(async () => {
     if (!APPS_SCRIPT_URL) return;
     try {
@@ -635,15 +635,15 @@ async function salvarEstado() {
         headers: { 'Content-Type': 'application/json' },
         redirect: 'follow'
       });
-      if (syncEl) { syncEl.style.color='#25d366'; syncEl.textContent='&#9679; Sincronizado'; }
+      if (syncEl) { syncEl.style.color='#25d366'; syncEl.textContent='● Sincronizado'; }
     } catch(e) {
-      if (syncEl) { syncEl.style.color='#f44336'; syncEl.textContent='&#9679; Offline (local)'; }
+      if (syncEl) { syncEl.style.color='#f44336'; syncEl.textContent='● Offline (local)'; }
       console.warn('Erro ao sincronizar:', e.message);
     }
   }, 1500);
 }
 
-// Sincronizar com outros usu&#225;rios a cada 30 segundos
+// Sincronizar com outros usuários a cada 30 segundos
 setInterval(async () => {
   if (!APPS_SCRIPT_URL) return;
   try {
@@ -657,7 +657,7 @@ setInterval(async () => {
         localStorage.setItem('gadiani_state', JSON.stringify(appState));
         diRenderFila(); seRenderFila();
         diAtualizarStats(); seAtualizarStats();
-        console.info('[Sync] Estado atualizado de outro usu&#225;rio');
+        console.info('[Sync] Estado atualizado de outro usuário');
       }
     }
   } catch(e) {}
@@ -669,7 +669,7 @@ function getRec(mod, cid) {
   return appState[mod][cid];
 }
 
-// ============ USU&#193;RIO ============
+// ============ USUÁRIO ============
 function salvarUsuario() {
   localStorage.setItem('gadiani_usuario', document.getElementById('usuario-sel').value);
 }
@@ -681,80 +681,80 @@ function carregarUsuario() {
 // ============ DOCS CONFIG ============
 const DOCS_DI_CLI = [
   {id:'d1', label:'CPF / documento com foto', ob:true},
-  {id:'d2', label:'Comprovante de endere&#231;o atualizado (&#250;ltimos 3 meses)', ob:true},
+  {id:'d2', label:'Comprovante de endereço atualizado (últimos 3 meses)', ob:true},
   {id:'d3', label:'Carteira de trabalho', ob:false, obs:'Se CLT'},
-  {id:'d4', label:'3&#8211;6 &#250;ltimos holerites / contracheques', ob:true},
-  {id:'d5', label:'3+ extratos banc&#225;rios de todos os bancos', ob:true},
-  {id:'d6', label:'Comprovante de &#225;gua', ob:false},
+  {id:'d4', label:'3–6 últimos holerites / contracheques', ob:true},
+  {id:'d5', label:'3+ extratos bancários de todos os bancos', ob:true},
+  {id:'d6', label:'Comprovante de água', ob:false},
   {id:'d7', label:'Comprovante de luz', ob:false},
   {id:'d8', label:'Comprovante de aluguel', ob:false},
-  {id:'d9', label:'Farm&#225;cia / rem&#233;dios', ob:false, obs:'Se tiver gastos'},
-  {id:'d10', label:'Laudos m&#233;dicos', ob:false, obs:'Se possuir'},
+  {id:'d9', label:'Farmácia / remédios', ob:false, obs:'Se tiver gastos'},
+  {id:'d10', label:'Laudos médicos', ob:false, obs:'Se possuir'},
   {id:'d11', label:'Imposto de Renda', ob:false, obs:'Se declarar'},
   {id:'d12', label:'Contratos com credores', ob:false, obs:'Se tiver'},
 ];
 const DOCS_DI_GOV = [
-  {id:'g1', label:'Extratos empr&#233;stimo consignado INSS', ob:true, link:''},
-  {id:'g2', label:'Hist&#243;rico de pagamentos INSS', ob:false, link:''},
-  {id:'g3', label:'Declara&#231;&#227;o de Hipossufici&#234;ncia', ob:true, link:''},
-  {id:'g4', label:'Declara&#231;&#227;o de Isen&#231;&#227;o de IR', ob:false, link:''},
-  {id:'g5', label:'Restitui&#231;&#227;o do IR', ob:false, link:''},
-  {id:'g6', label:'Certid&#227;o negativa de ve&#237;culo DETRAN', ob:true, link:'https://www.detran.sp.gov.br/detransp/pb/servico/veiculos/emitir_certidao_propriedade_veiculo?id=carta_de_servico_emitir_certidao_propriedade_veiculo'},
-  {id:'g7', label:'Certid&#227;o regularidade CPF &#8212; Receita', ob:true, link:'https://servicos.receita.fazenda.gov.br/servicos/cpf/consultasituacao/consultapublica.asp'},
+  {id:'g1', label:'Extratos empréstimo consignado INSS', ob:true, link:''},
+  {id:'g2', label:'Histórico de pagamentos INSS', ob:false, link:''},
+  {id:'g3', label:'Declaração de Hipossuficiência', ob:true, link:''},
+  {id:'g4', label:'Declaração de Isenção de IR', ob:false, link:''},
+  {id:'g5', label:'Restituição do IR', ob:false, link:''},
+  {id:'g6', label:'Certidão negativa de veículo DETRAN', ob:true, link:'https://www.detran.sp.gov.br/detransp/pb/servico/veiculos/emitir_certidao_propriedade_veiculo?id=carta_de_servico_emitir_certidao_propriedade_veiculo'},
+  {id:'g7', label:'Certidão regularidade CPF — Receita', ob:true, link:'https://servicos.receita.fazenda.gov.br/servicos/cpf/consultasituacao/consultapublica.asp'},
   {id:'g8', label:'Registrato BACEN', ob:true, link:'https://www.bcb.gov.br/cidadaniafinanceira/registrato'},
 ];
 const DOCS_SE = [
   {id:'s1', label:'CPF / documento com foto', ob:true},
-  {id:'s2', label:'Comprovante de endere&#231;o atualizado', ob:true},
-  {id:'s3', label:'Comprovante de renda (&#250;ltimos 3 meses)', ob:true},
-  {id:'s4', label:'Extratos banc&#225;rios &#8212; todos os bancos (3 meses)', ob:true},
+  {id:'s2', label:'Comprovante de endereço atualizado', ob:true},
+  {id:'s3', label:'Comprovante de renda (últimos 3 meses)', ob:true},
+  {id:'s4', label:'Extratos bancários — todos os bancos (3 meses)', ob:true},
   {id:'s5', label:'Contratos com todos os credores', ob:true},
-  {id:'s6', label:'Comprovantes de &#225;gua, luz, aluguel', ob:false},
-  {id:'s7', label:'Laudos m&#233;dicos', ob:false, obs:'Se possuir'},
+  {id:'s6', label:'Comprovantes de água, luz, aluguel', ob:false},
+  {id:'s7', label:'Laudos médicos', ob:false, obs:'Se possuir'},
   {id:'s8', label:'Imposto de Renda', ob:false, obs:'Se declarar'},
-  {id:'s9', label:'Certid&#227;o negativa ve&#237;culo DETRAN', ob:false, link:'https://www.detran.sp.gov.br/detransp/pb/servico/veiculos/emitir_certidao_propriedade_veiculo?id=carta_de_servico_emitir_certidao_propriedade_veiculo'},
+  {id:'s9', label:'Certidão negativa veículo DETRAN', ob:false, link:'https://www.detran.sp.gov.br/detransp/pb/servico/veiculos/emitir_certidao_propriedade_veiculo?id=carta_de_servico_emitir_certidao_propriedade_veiculo'},
   {id:'s10', label:'Registrato BACEN', ob:true, link:'https://www.bcb.gov.br/cidadaniafinanceira/registrato'},
 ];
 
 // ============ CRM MESSAGES ============
 const CRM_MSGS_DI = [
-  {dia:0, titulo:'Boas-vindas e pr&#243;ximos passos', intervalo:'Imediato',
-   template: c => `Ol&#225;, ${c.nome.split(' ')[0]}! &#128522;\n\nConfirmamos o recebimento do seu caso. Nossa equipe do escrit&#243;rio Gadiani & D'Antraccoli j&#225; est&#225; trabalhando na sua defesa contra o banco ${c.banco||''}.\n\nSeus pr&#243;ximos passos:\n&#9989; Envie os documentos solicitados\n&#128203; Nossa equipe montar&#225; a peti&#231;&#227;o\n&#9878;&#65039; Protocolaremos a a&#231;&#227;o\n\nQualquer d&#250;vida, estamos &#224; disposi&#231;&#227;o!`},
-  {dia:3, titulo:'Import&#226;ncia dos documentos', intervalo:'3 dias',
-   template: c => `Bom dia, ${c.nome.split(' ')[0]}! &#128075;\n\nSabemos que reunir documentos pode ser trabalhoso, mas cada um deles &#233; fundamental para fortalecer seu caso.\n\nOs documentos s&#227;o usados para comprovar o desconto indevido e garantir que voc&#234; receba de volta em dobro o que foi cobrado incorretamente.\n\nCaso tenha dificuldade em obter algum, entre em contato que orientamos!`},
-  {dia:6, titulo:'Lembrete &#8212; documentos pendentes', intervalo:'6 dias',
-   template: c => `Ol&#225;, ${c.nome.split(' ')[0]}! Passamos para verificar se conseguiu reunir a documenta&#231;&#227;o.\n\nAssim que recebermos tudo, daremos in&#237;cio imediato &#224; montagem da sua peti&#231;&#227;o. Estamos ansiosos para protocolar a a&#231;&#227;o e buscar seus direitos! &#128170;`},
-  {dia:9, titulo:'Peti&#231;&#227;o em montagem', intervalo:'9 dias',
-   template: c => `${c.nome.split(' ')[0]}, &#243;timas not&#237;cias! &#128203;\n\nSua peti&#231;&#227;o est&#225; sendo elaborada por nossa equipe jur&#237;dica. Estamos preparando todos os argumentos para garantir:\n\n&#10004; Devolu&#231;&#227;o em dobro do valor descontado\n&#10004; Indeniza&#231;&#227;o por danos morais\n&#10004; Declara&#231;&#227;o de nulidade do contrato\n\nEm breve enviaremos o n&#250;mero do protocolo!`},
-  {dia:19, titulo:'A&#231;&#227;o protocolada &#8212; o que vem agora', intervalo:'10 dias',
-   template: c => `${c.nome.split(' ')[0]}, sua a&#231;&#227;o j&#225; est&#225; no Judici&#225;rio! &#9878;&#65039;\n\nAgora o banco ser&#225; citado e ter&#225; prazo para se manifestar. Fique tranquilo &#8212; acompanharemos cada passo do processo e manteremos voc&#234; sempre informado.\n\nEsta fase pode levar algumas semanas. Estamos na torcida pelo seu sucesso!`},
-  {dia:29, titulo:'Atualiza&#231;&#227;o processual &#8212; 1 m&#234;s', intervalo:'10 dias',
-   template: c => `Ol&#225;, ${c.nome.split(' ')[0]}! &#128197;\n\nCompletou 1 m&#234;s desde o protocolo da sua a&#231;&#227;o. Estamos monitorando ativamente o andamento processual.\n\nO processo judicial tem seu pr&#243;prio ritmo, mas nossa equipe est&#225; atenta a cada movimenta&#231;&#227;o para agir da melhor forma poss&#237;vel.\n\nFique em paz &#8212; voc&#234; est&#225; nas m&#227;os certas! &#129309;`},
-  {dia:39, titulo:'Aguardando manifesta&#231;&#227;o do banco', intervalo:'10 dias',
-   template: c => `${c.nome.split(' ')[0]}, aqui &#233; a equipe do escrit&#243;rio Gadiani & D'Antraccoli! &#128104;&#8205;&#9878;&#65039;\n\nSua a&#231;&#227;o est&#225; dentro do prazo processual normal. Os bancos costumam aguardar at&#233; o &#250;ltimo momento para se manifestar &#8212; &#233; uma estrat&#233;gia deles que conhecemos bem.\n\nEstamos preparados para responder da melhor forma. Qualquer novidade, voc&#234; ser&#225; o primeiro a saber!`},
+  {dia:0, titulo:'Boas-vindas e próximos passos', intervalo:'Imediato',
+   template: c => `Olá, ${c.nome.split(' ')[0]}! 😊\n\nConfirmamos o recebimento do seu caso. Nossa equipe do escritório Gadiani & D'Antraccoli já está trabalhando na sua defesa contra o banco ${c.banco||''}.\n\nSeus próximos passos:\n✅ Envie os documentos solicitados\n📋 Nossa equipe montará a petição\n⚖️ Protocolaremos a ação\n\nQualquer dúvida, estamos à disposição!`},
+  {dia:3, titulo:'Importância dos documentos', intervalo:'3 dias',
+   template: c => `Bom dia, ${c.nome.split(' ')[0]}! 👋\n\nSabemos que reunir documentos pode ser trabalhoso, mas cada um deles é fundamental para fortalecer seu caso.\n\nOs documentos são usados para comprovar o desconto indevido e garantir que você receba de volta em dobro o que foi cobrado incorretamente.\n\nCaso tenha dificuldade em obter algum, entre em contato que orientamos!`},
+  {dia:6, titulo:'Lembrete — documentos pendentes', intervalo:'6 dias',
+   template: c => `Olá, ${c.nome.split(' ')[0]}! Passamos para verificar se conseguiu reunir a documentação.\n\nAssim que recebermos tudo, daremos início imediato à montagem da sua petição. Estamos ansiosos para protocolar a ação e buscar seus direitos! 💪`},
+  {dia:9, titulo:'Petição em montagem', intervalo:'9 dias',
+   template: c => `${c.nome.split(' ')[0]}, ótimas notícias! 📋\n\nSua petição está sendo elaborada por nossa equipe jurídica. Estamos preparando todos os argumentos para garantir:\n\n✔ Devolução em dobro do valor descontado\n✔ Indenização por danos morais\n✔ Declaração de nulidade do contrato\n\nEm breve enviaremos o número do protocolo!`},
+  {dia:19, titulo:'Ação protocolada — o que vem agora', intervalo:'10 dias',
+   template: c => `${c.nome.split(' ')[0]}, sua ação já está no Judiciário! ⚖️\n\nAgora o banco será citado e terá prazo para se manifestar. Fique tranquilo — acompanharemos cada passo do processo e manteremos você sempre informado.\n\nEsta fase pode levar algumas semanas. Estamos na torcida pelo seu sucesso!`},
+  {dia:29, titulo:'Atualização processual — 1 mês', intervalo:'10 dias',
+   template: c => `Olá, ${c.nome.split(' ')[0]}! 📅\n\nCompletou 1 mês desde o protocolo da sua ação. Estamos monitorando ativamente o andamento processual.\n\nO processo judicial tem seu próprio ritmo, mas nossa equipe está atenta a cada movimentação para agir da melhor forma possível.\n\nFique em paz — você está nas mãos certas! 🤝`},
+  {dia:39, titulo:'Aguardando manifestação do banco', intervalo:'10 dias',
+   template: c => `${c.nome.split(' ')[0]}, aqui é a equipe do escritório Gadiani & D'Antraccoli! 👨‍⚖️\n\nSua ação está dentro do prazo processual normal. Os bancos costumam aguardar até o último momento para se manifestar — é uma estratégia deles que conhecemos bem.\n\nEstamos preparados para responder da melhor forma. Qualquer novidade, você será o primeiro a saber!`},
   {dia:49, titulo:'Direitos do consumidor em foco', intervalo:'10 dias',
-   template: c => `Ol&#225;, ${c.nome.split(' ')[0]}! &#128161;\n\nSabia que o C&#243;digo de Defesa do Consumidor garante que cobran&#231;as indevidas devem ser devolvidas em DOBRO? &#201; exatamente isso que buscamos para voc&#234;.\n\nAl&#233;m disso, o desconto indevido em benef&#237;cio previdenci&#225;rio &#233; tratado com especial gravidade pelos ju&#237;zes, pois afeta sua renda de sobreviv&#234;ncia.\n\nContinuamos firmes na sua defesa!`},
-  {dia:59, titulo:'Proximidade do escrit&#243;rio', intervalo:'10 dias',
-   template: c => `${c.nome.split(' ')[0]}, bom dia! &#9728;&#65039;\n\nPassamos para reafirmar nosso comprometimento com seu caso. Processos contra institui&#231;&#245;es financeiras exigem paci&#234;ncia, mas os resultados valem a espera.\n\nNossa equipe est&#225; dedicada exclusivamente a garantir que voc&#234; receba o que &#233; seu por direito. Conte conosco!`},
+   template: c => `Olá, ${c.nome.split(' ')[0]}! 💡\n\nSabia que o Código de Defesa do Consumidor garante que cobranças indevidas devem ser devolvidas em DOBRO? É exatamente isso que buscamos para você.\n\nAlém disso, o desconto indevido em benefício previdenciário é tratado com especial gravidade pelos juízes, pois afeta sua renda de sobrevivência.\n\nContinuamos firmes na sua defesa!`},
+  {dia:59, titulo:'Proximidade do escritório', intervalo:'10 dias',
+   template: c => `${c.nome.split(' ')[0]}, bom dia! ☀️\n\nPassamos para reafirmar nosso comprometimento com seu caso. Processos contra instituições financeiras exigem paciência, mas os resultados valem a espera.\n\nNossa equipe está dedicada exclusivamente a garantir que você receba o que é seu por direito. Conte conosco!`},
 ];
 
 const CRM_MSGS_SE = [
-  {dia:0, titulo:'Boas-vindas &#8212; Superendividamento', intervalo:'Imediato',
-   template: c => `Ol&#225;, ${c.nome.split(' ')[0]}! &#128522;\n\nSua situa&#231;&#227;o de superendividamento foi acolhida pelo escrit&#243;rio Gadiani & D'Antraccoli. A Lei 14.181/2021 foi criada exatamente para casos como o seu e vamos utiliz&#225;-la em sua defesa.\n\nSeu caminho conosco:\n&#9989; Reunir a documenta&#231;&#227;o\n&#128203; Montar o plano de pagamento\n&#9878;&#65039; Protocolar a a&#231;&#227;o de repactua&#231;&#227;o\n&#128154; Retomar sua vida financeira\n\nEstamos juntos nessa!`},
-  {dia:3, titulo:'O que &#233; superendividamento?', intervalo:'3 dias',
-   template: c => `${c.nome.split(' ')[0]}, voc&#234; sabia que o superendividamento &#233; reconhecido por lei no Brasil? &#128218;\n\nA Lei 14.181/2021 protege consumidores que, como voc&#234;, comprometeram mais do que 30% da renda com d&#237;vidas, preservando 70% para as necessidades b&#225;sicas (o "m&#237;nimo existencial").\n\nIsso significa que a lei est&#225; do SEU lado. Vamos utiliz&#225;-la para reequilibrar suas d&#237;vidas de forma justa!`},
-  {dia:6, titulo:'Documentos &#8212; por que s&#227;o importantes', intervalo:'6 dias',
-   template: c => `Ol&#225;, ${c.nome.split(' ')[0]}! &#128196;\n\nEm casos de superendividamento, a documenta&#231;&#227;o completa &#233; nossa principal arma. Com ela, provamos ao juiz sua situa&#231;&#227;o de vulnerabilidade e garantimos um plano de pagamento que respeita sua renda.\n\nCada extrato, cada comprovante conta uma hist&#243;ria &#8212; a hist&#243;ria de quem merece uma segunda chance financeira.`},
+  {dia:0, titulo:'Boas-vindas — Superendividamento', intervalo:'Imediato',
+   template: c => `Olá, ${c.nome.split(' ')[0]}! 😊\n\nSua situação de superendividamento foi acolhida pelo escritório Gadiani & D'Antraccoli. A Lei 14.181/2021 foi criada exatamente para casos como o seu e vamos utilizá-la em sua defesa.\n\nSeu caminho conosco:\n✅ Reunir a documentação\n📋 Montar o plano de pagamento\n⚖️ Protocolar a ação de repactuação\n💚 Retomar sua vida financeira\n\nEstamos juntos nessa!`},
+  {dia:3, titulo:'O que é superendividamento?', intervalo:'3 dias',
+   template: c => `${c.nome.split(' ')[0]}, você sabia que o superendividamento é reconhecido por lei no Brasil? 📚\n\nA Lei 14.181/2021 protege consumidores que, como você, comprometeram mais do que 30% da renda com dívidas, preservando 70% para as necessidades básicas (o "mínimo existencial").\n\nIsso significa que a lei está do SEU lado. Vamos utilizá-la para reequilibrar suas dívidas de forma justa!`},
+  {dia:6, titulo:'Documentos — por que são importantes', intervalo:'6 dias',
+   template: c => `Olá, ${c.nome.split(' ')[0]}! 📄\n\nEm casos de superendividamento, a documentação completa é nossa principal arma. Com ela, provamos ao juiz sua situação de vulnerabilidade e garantimos um plano de pagamento que respeita sua renda.\n\nCada extrato, cada comprovante conta uma história — a história de quem merece uma segunda chance financeira.`},
   {dia:9, titulo:'O plano de pagamento em 60 meses', intervalo:'9 dias',
-   template: c => `${c.nome.split(' ')[0]}, deixa eu explicar como funciona o plano que montaremos para voc&#234;! &#128202;\n\nO juiz pode determinar que suas d&#237;vidas sejam renegociadas em at&#233; 60 meses, com:\n&#10004; Suspens&#227;o imediata dos descontos abusivos\n&#10004; Elimina&#231;&#227;o de multas e mora\n&#10004; Juros reduzidos para 1% ao m&#234;s\n&#10004; Prote&#231;&#227;o de 70% da sua renda\n\n&#201; um recome&#231;o real!`},
-  {dia:19, titulo:'A&#231;&#227;o protocolada', intervalo:'10 dias',
-   template: c => `${c.nome.split(' ')[0]}, sua a&#231;&#227;o de superendividamento foi protocolada! &#9878;&#65039;\n\nAgora os credores ser&#227;o notificados e ter&#227;o prazo para comparecer &#224; audi&#234;ncia de concilia&#231;&#227;o. Nosso objetivo: um acordo justo que preserve sua dignidade e renda.\n\nEstamos com voc&#234; em cada passo!`},
-  {dia:29, titulo:'Fase de concilia&#231;&#227;o', intervalo:'10 dias',
-   template: c => `Ol&#225;, ${c.nome.split(' ')[0]}! &#129309;\n\nSua a&#231;&#227;o est&#225; na fase de concilia&#231;&#227;o &#8212; o momento em que os credores podem aceitar o plano de pagamento proposto.\n\nEssa fase &#233; muito importante: quanto mais credores aceitarem, mais r&#225;pido voc&#234; volta a ter controle da sua vida financeira. Estamos trabalhando para o melhor resultado!`},
+   template: c => `${c.nome.split(' ')[0]}, deixa eu explicar como funciona o plano que montaremos para você! 📊\n\nO juiz pode determinar que suas dívidas sejam renegociadas em até 60 meses, com:\n✔ Suspensão imediata dos descontos abusivos\n✔ Eliminação de multas e mora\n✔ Juros reduzidos para 1% ao mês\n✔ Proteção de 70% da sua renda\n\nÉ um recomeço real!`},
+  {dia:19, titulo:'Ação protocolada', intervalo:'10 dias',
+   template: c => `${c.nome.split(' ')[0]}, sua ação de superendividamento foi protocolada! ⚖️\n\nAgora os credores serão notificados e terão prazo para comparecer à audiência de conciliação. Nosso objetivo: um acordo justo que preserve sua dignidade e renda.\n\nEstamos com você em cada passo!`},
+  {dia:29, titulo:'Fase de conciliação', intervalo:'10 dias',
+   template: c => `Olá, ${c.nome.split(' ')[0]}! 🤝\n\nSua ação está na fase de conciliação — o momento em que os credores podem aceitar o plano de pagamento proposto.\n\nEssa fase é muito importante: quanto mais credores aceitarem, mais rápido você volta a ter controle da sua vida financeira. Estamos trabalhando para o melhor resultado!`},
   {dia:39, titulo:'Seus direitos protegidos', intervalo:'10 dias',
-   template: c => `${c.nome.split(' ')[0]}, sabia que enquanto sua a&#231;&#227;o tramita, voc&#234; tem direito &#224; suspens&#227;o das cobran&#231;as que ultrapassem 30% da sua renda? &#128170;\n\nJ&#225; providenciamos esse pedido para proteger seu sal&#225;rio/benef&#237;cio. Se alguma cobran&#231;a indevida aparecer, nos avise imediatamente!`},
-  {dia:49, titulo:'Atualiza&#231;&#227;o e proximidade', intervalo:'10 dias',
-   template: c => `Bom dia, ${c.nome.split(' ')[0]}! &#9728;&#65039;\n\nPassamos para refor&#231;ar: sua situa&#231;&#227;o &#233; nossa prioridade. O processo de superendividamento &#233; uma jornada, mas ao final voc&#234; estar&#225; com as d&#237;vidas controladas e a vida reconstru&#237;da.\n\nConte conosco para qualquer d&#250;vida ou novidade. Estamos sempre aqui! &#128153;`},
+   template: c => `${c.nome.split(' ')[0]}, sabia que enquanto sua ação tramita, você tem direito à suspensão das cobranças que ultrapassem 30% da sua renda? 💪\n\nJá providenciamos esse pedido para proteger seu salário/benefício. Se alguma cobrança indevida aparecer, nos avise imediatamente!`},
+  {dia:49, titulo:'Atualização e proximidade', intervalo:'10 dias',
+   template: c => `Bom dia, ${c.nome.split(' ')[0]}! ☀️\n\nPassamos para reforçar: sua situação é nossa prioridade. O processo de superendividamento é uma jornada, mas ao final você estará com as dívidas controladas e a vida reconstruída.\n\nConte conosco para qualquer dúvida ou novidade. Estamos sempre aqui! 💙`},
 ];
 
 // ============ CSV PARSE ============
@@ -783,10 +783,9 @@ async function fetchCSV(sheetId, gid) {
       if (d.ok && d.data) {
         return d.data.map(function(row) {
           return row.map(function(c) {
-            return '"' + String(c).replace(/"/g, '""') + '"';
+            return String(c);
           }).join(',');
-        }).join('
-');
+        }).join('\n');
       }
     } catch(e) { console.warn('Apps Script fetch falhou:', e.message); }
   }
@@ -800,7 +799,7 @@ async function fetchCSV(sheetId, gid) {
   document.getElementById('status-bar').style.display = 'block';
   var proxyUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(sheetUrl);
   var r3 = await fetch(proxyUrl);
-  if (!r3.ok) throw new Error('N&#227;o foi poss&#237;vel carregar a planilha.');
+  if (!r3.ok) throw new Error('Não foi possível carregar a planilha.');
   return r3.text();
 }
 
@@ -843,10 +842,10 @@ async function diCarregarPlanilha() {
     document.getElementById('di-loading').innerHTML = `<div class="err">
   <strong>Erro ao carregar clientes.</strong><br>
   Detalhe: ${e.message}<br><br>
-  <strong>Solu&#231;&#245;es:</strong><br>
-  1. Verifique se a planilha est&#225; p&#250;blica: Compartilhar &#8594; "Qualquer pessoa com o link" &#8594; Visualizador<br>
-  2. Se o problema persistir, voc&#234; pode estar abrindo o arquivo localmente &#8212; use o Replit.<br><br>
-  <button class="btn btns" onclick="diCarregarPlanilha()" style="margin-top:4px">&#8634; Tentar novamente</button>
+  <strong>Soluções:</strong><br>
+  1. Verifique se a planilha está pública: Compartilhar → "Qualquer pessoa com o link" → Visualizador<br>
+  2. Se o problema persistir, você pode estar abrindo o arquivo localmente — use o Replit.<br><br>
+  <button class="btn btns" onclick="diCarregarPlanilha()" style="margin-top:4px">↺ Tentar novamente</button>
 </div>`;
   }
 }
@@ -873,9 +872,9 @@ function diPct(cid) {
 
 function diStatusLabel(c) {
   const st = appState[c.id] || {};
-  if (st.urgente) return '<span class="queue-badge q-urgent">&#9889; URGENTE</span>';
-  if (st.protocolado) return '<span class="badge bg">&#9989; Protocolado</span>';
-  if (st.paraProtocolo) return '<span class="queue-badge q-protocol">&#9203; Para protocolo</span>';
+  if (st.urgente) return '<span class="queue-badge q-urgent">⚡ URGENTE</span>';
+  if (st.protocolado) return '<span class="badge bg">✅ Protocolado</span>';
+  if (st.paraProtocolo) return '<span class="queue-badge q-protocol">⏳ Para protocolo</span>';
   const p = diPct(c.id);
   if (p >= 100) return '<span class="badge bi">Docs completos</span>';
   if (p > 0) return '<span class="badge bo">Em andamento</span>';
@@ -908,14 +907,14 @@ function diRenderFila(filtro = '', tipo = 'todos') {
     const p = diPct(c.id);
     const pbColor = p >= 100 ? 'pb-green' : p > 40 ? 'pb-orange' : 'pb-red';
     const dias = diasDesde(st.ultimaAtualizacao || c.data);
-    const diasStr = dias < 999 ? `${dias}d atr&#225;s` : '';
+    const diasStr = dias < 999 ? `${dias}d atrás` : '';
     return `<div class="cli-row ${st.urgente ? 'urgent' : ''}" onclick="diIrDocs('${c.id}')">
       <div style="flex:1">
-        <div class="cli-nome">${st.urgente ? '&#9889; ' : ''}${c.nome}</div>
-        <div class="cli-sub">${c.banco||'&#8212;'} &#183; ${c.valor||'&#8212;'} &#183; ${c.cidade||'&#8212;'} ${diasStr ? '&#183; atualizado ' + diasStr : ''}</div>
+        <div class="cli-nome">${st.urgente ? '⚡ ' : ''}${c.nome}</div>
+        <div class="cli-sub">${c.banco||'—'} · ${c.valor||'—'} · ${c.cidade||'—'} ${diasStr ? '· atualizado ' + diasStr : ''}</div>
         <div class="pw" style="width:180px;margin-top:4px"><div class="pb ${pbColor}" style="width:${p}%"></div></div>
-        ${st.numAcao ? `<div style="font-size:10px;color:#1b5e20;margin-top:2px">N&#186; ${st.numAcao}</div>` : ''}
-        ${st.urgente && st.urgenteMotivo ? `<div style="font-size:10px;color:#c62828;margin-top:2px">&#9888; ${st.urgenteMotivo}</div>` : ''}
+        ${st.numAcao ? `<div style="font-size:10px;color:#1b5e20;margin-top:2px">Nº ${st.numAcao}</div>` : ''}
+        ${st.urgente && st.urgenteMotivo ? `<div style="font-size:10px;color:#c62828;margin-top:2px">⚠ ${st.urgenteMotivo}</div>` : ''}
       </div>
       <div style="text-align:right">${diStatusLabel(c)}<div style="font-size:11px;color:#bbb;margin-top:4px">${c.tel||'sem tel.'}</div></div>
     </div>`;
@@ -929,7 +928,7 @@ function diPopularSelects() {
     const s = document.getElementById(id); if (!s) return;
     const v = s.value;
     s.innerHTML = '<option value="">Selecionar...</option>';
-    diClientes.forEach(c => { s.innerHTML += `<option value="${c.id}">${c.nome} &#8212; ${c.banco||'&#8212;'}</option>`; });
+    diClientes.forEach(c => { s.innerHTML += `<option value="${c.id}">${c.nome} — ${c.banco||'—'}</option>`; });
     if (v) s.value = v;
   });
   // also SE modal
@@ -949,14 +948,14 @@ function diCarregarDocs() {
   diCurrent = c;
   document.getElementById('di-docs-wrap').style.display = 'block';
   document.getElementById('di-cli-info').innerHTML = `
-    <div class="ct">Ficha &#8212; ${c.nome}</div>
+    <div class="ct">Ficha — ${c.nome}</div>
     <div class="g2" style="gap:8px">
-      <div><div style="font-size:10px;color:#aaa">CPF</div><div style="font-weight:600">${c.cpf||'&#8212;'}</div></div>
-      <div><div style="font-size:10px;color:#aaa">Telefone</div><div style="font-weight:700;color:#25d366">${c.tel||'&#8212;'}</div></div>
-      <div><div style="font-size:10px;color:#aaa">Banco r&#233;u</div><div style="font-weight:700;color:#c62828">${c.banco||'&#8212;'}</div></div>
-      <div><div style="font-size:10px;color:#aaa">Desconto mensal</div><div style="font-weight:700">${c.valor||'&#8212;'}</div></div>
+      <div><div style="font-size:10px;color:#aaa">CPF</div><div style="font-weight:600">${c.cpf||'—'}</div></div>
+      <div><div style="font-size:10px;color:#aaa">Telefone</div><div style="font-weight:700;color:#25d366">${c.tel||'—'}</div></div>
+      <div><div style="font-size:10px;color:#aaa">Banco réu</div><div style="font-weight:700;color:#c62828">${c.banco||'—'}</div></div>
+      <div><div style="font-size:10px;color:#aaa">Desconto mensal</div><div style="font-weight:700">${c.valor||'—'}</div></div>
     </div>
-    ${c.doencas ? `<div style="margin-top:8px;font-size:11px;background:#fff8e1;padding:6px 10px;border-radius:6px;color:#e65100">&#9877; ${c.doencas}</div>` : ''}
+    ${c.doencas ? `<div style="margin-top:8px;font-size:11px;background:#fff8e1;padding:6px 10px;border-radius:6px;color:#e65100">⚕ ${c.doencas}</div>` : ''}
   `;
   diRenderDocs(c);
 }
@@ -981,8 +980,8 @@ function diRenderDocs(c) {
     const ck = r[d.id];
     return `<div class="doc-item">
       <div class="chk ${ck?'ck':''}" onclick="diToggle('${c.id}','${d.id}')">${ck?SVG_CK:''}</div>
-      <div class="dl ${ck?'dn':''}">${d.ob?'<span class="tag-ob">Obrigat&#243;rio</span>':''} ${d.label}${d.obs?` <small style="color:#bbb">(${d.obs})</small>`:''}</div>
-      <span class="ds ${ck?'dok':'dno'}">${ck?'&#10003;':'Falta'}</span>
+      <div class="dl ${ck?'dn':''}">${d.ob?'<span class="tag-ob">Obrigatório</span>':''} ${d.label}${d.obs?` <small style="color:#bbb">(${d.obs})</small>`:''}</div>
+      <span class="ds ${ck?'dok':'dno'}">${ck?'✓':'Falta'}</span>
     </div>`;
   }).join('');
   const okG = DOCS_DI_GOV.filter(d => r[d.id]).length;
@@ -992,13 +991,13 @@ function diRenderDocs(c) {
     const ck = r[d.id];
     return `<div class="doc-item">
       <div class="chk ${ck?'ck':''}" onclick="diToggle('${c.id}','${d.id}')">${ck?SVG_CK:''}</div>
-      <div class="dl ${ck?'dn':''}"><span class="tag-gov">.gov</span>${d.ob?'<span class="tag-ob">Obrig.</span>':''} ${d.label}${d.link?` <a class="link" href="${d.link}" target="_blank">&#8599;</a>`:''}</div>
-      <span class="ds ${ck?'dok':'dna'}">${ck?'&#10003;':'Pendente'}</span>
+      <div class="dl ${ck?'dn':''}"><span class="tag-gov">.gov</span>${d.ob?'<span class="tag-ob">Obrig.</span>':''} ${d.label}${d.link?` <a class="link" href="${d.link}" target="_blank">↗</a>`:''}</div>
+      <span class="ds ${ck?'dok':'dna'}">${ck?'✓':'Pendente'}</span>
     </div>`;
   }).join('');
   const obFalt = [...DOCS_DI_CLI,...DOCS_DI_GOV].filter(d => d.ob && !r[d.id]);
   const al = document.getElementById('di-doc-alerta');
-  if (obFalt.length) { al.style.display = 'block'; al.innerHTML = `&#9888; Obrigat&#243;rios pendentes: <strong>${obFalt.map(d=>d.label).join(', ')}</strong>`; }
+  if (obFalt.length) { al.style.display = 'block'; al.innerHTML = `⚠ Obrigatórios pendentes: <strong>${obFalt.map(d=>d.label).join(', ')}</strong>`; }
   else al.style.display = 'none';
 }
 
@@ -1013,14 +1012,14 @@ function diCalcContrato() {
   const meses = Math.min(Math.floor((hoje-inicio)/(1000*60*60*24*30.44)), nParc);
   const total = meses * parcela;
   el.style.display = 'block';
-  el.innerHTML = `In&#237;cio: <strong>${inicio.toLocaleDateString('pt-BR')}</strong> &nbsp;|&nbsp; Meses descontados: <strong>${meses}/${nParc}</strong><br>Total descontado at&#233; hoje: <strong>R$ ${total.toLocaleString('pt-BR',{minimumFractionDigits:2})}</strong> &nbsp;|&nbsp; Total do contrato: <strong>R$ ${(nParc*parcela).toLocaleString('pt-BR',{minimumFractionDigits:2})}</strong>`;
+  el.innerHTML = `Início: <strong>${inicio.toLocaleDateString('pt-BR')}</strong> &nbsp;|&nbsp; Meses descontados: <strong>${meses}/${nParc}</strong><br>Total descontado até hoje: <strong>R$ ${total.toLocaleString('pt-BR',{minimumFractionDigits:2})}</strong> &nbsp;|&nbsp; Total do contrato: <strong>R$ ${(nParc*parcela).toLocaleString('pt-BR',{minimumFractionDigits:2})}</strong>`;
   document.getElementById('di-pet-contrato').value = document.getElementById('di-contrato').value;
   document.getElementById('di-pet-parcela').value = parcela;
   document.getElementById('di-pet-nparcelas').value = nParc;
   document.getElementById('di-pet-dataini').value = dataIni;
 }
 
-// ============ PEND&#202;NCIAS ============
+// ============ PENDÊNCIAS ============
 function diRenderPendencias(tipo) {
   const el = document.getElementById('di-pendencias-lista');
   let lista = [...diClientes];
@@ -1044,12 +1043,12 @@ function diRenderPendencias(tipo) {
     return `<div class="alert-item">
       <div class="alert-dot ${urgClass}" style="margin-top:6px"></div>
       <div style="flex:1">
-        <div style="font-weight:600;font-size:13px">${c.nome} <span style="font-size:10px;color:#aaa;font-weight:400">&#8212; ${dias < 999 ? dias+'d sem atualiza&#231;&#227;o' : 'cadastro antigo'}</span></div>
-        <div style="font-size:11px;color:#888;margin-top:2px">${c.banco||'&#8212;'} &#183; ${c.tel||'sem tel.'}</div>
+        <div style="font-weight:600;font-size:13px">${c.nome} <span style="font-size:10px;color:#aaa;font-weight:400">— ${dias < 999 ? dias+'d sem atualização' : 'cadastro antigo'}</span></div>
+        <div style="font-size:11px;color:#888;margin-top:2px">${c.banco||'—'} · ${c.tel||'sem tel.'}</div>
         ${obFalt.length ? `<div style="font-size:11px;color:#c62828;margin-top:3px">Faltam: ${obFalt.map(d=>d.label).join(', ')}</div>` : ''}
-        ${st.urgenteMotivo ? `<div style="font-size:11px;color:#e65100;margin-top:2px">&#9889; ${st.urgenteMotivo}</div>` : ''}
+        ${st.urgenteMotivo ? `<div style="font-size:11px;color:#e65100;margin-top:2px">⚡ ${st.urgenteMotivo}</div>` : ''}
       </div>
-      <button class="btn btnw btns" onclick="diCobrarWACliente('${c.id}')">&#128241; Cobrar</button>
+      <button class="btn btnw btns" onclick="diCobrarWACliente('${c.id}')">📱 Cobrar</button>
     </div>`;
   }).join('');
 }
@@ -1061,7 +1060,7 @@ async function diCobrarWACliente(cid) {
   if (!c || !c.tel) { alert('Cliente sem telefone cadastrado.'); return; }
   const r = getRec('di_docs', cid);
   const faltando = [...DOCS_DI_CLI,...DOCS_DI_GOV].filter(d => !r[d.id]).map(d => d.label);
-  const msg = `Ol&#225;, ${c.nome.split(' ')[0]}! &#128075;\n\nPassamos para solicitar os documentos ainda pendentes para seu processo contra o banco ${c.banco}:\n\n${faltando.map((d,i)=>`${i+1}. ${d}`).join('\n')}\n\nAssim que recebermos, daremos andamento imediato. Qualquer d&#250;vida, estamos &#224; disposi&#231;&#227;o!\n\n&#9989; Escrit&#243;rio Gadiani & D'Antraccoli`;
+  const msg = `Olá, ${c.nome.split(' ')[0]}! 👋\n\nPassamos para solicitar os documentos ainda pendentes para seu processo contra o banco ${c.banco}:\n\n${faltando.map((d,i)=>`${i+1}. ${d}`).join('\n')}\n\nAssim que recebermos, daremos andamento imediato. Qualquer dúvida, estamos à disposição!\n\n✅ Escritório Gadiani & D'Antraccoli`;
   const tel = c.tel.replace(/\D/g,'');
   window.open(`https://wa.me/55${tel}?text=${encodeURIComponent(msg)}`, '_blank');
   // Atualizar data de contato
@@ -1070,7 +1069,7 @@ async function diCobrarWACliente(cid) {
   await salvarEstado();
 }
 
-// ============ PETI&#199;&#195;O DI ============
+// ============ PETIÇÃO DI ============
 function diVerificarBloqueio() {
   const id = document.getElementById('di-sel-pet').value;
   if (!id) return;
@@ -1078,7 +1077,7 @@ function diVerificarBloqueio() {
   const r = getRec('di_docs', id);
   const obFalt = [...DOCS_DI_CLI,...DOCS_DI_GOV].filter(d => d.ob && !r[d.id]);
   const el = document.getElementById('di-pet-bloqueio');
-  if (obFalt.length) { el.style.display = 'block'; el.innerHTML = `&#128274; Documentos obrigat&#243;rios pendentes: <strong>${obFalt.map(d=>d.label).join(', ')}</strong>`; }
+  if (obFalt.length) { el.style.display = 'block'; el.innerHTML = `🔒 Documentos obrigatórios pendentes: <strong>${obFalt.map(d=>d.label).join(', ')}</strong>`; }
   else el.style.display = 'none';
   // Pre-fill fields from contrato data
   const st = appState[id] || {};
@@ -1107,20 +1106,20 @@ async function diGerarPeticao() {
   const totalStr = `R$ ${total.toLocaleString('pt-BR',{minimumFractionDigits:2})}`;
   document.getElementById('di-pet-out').style.display = 'block';
   const out = document.getElementById('di-pet-texto');
-  out.className = 'out ld'; out.textContent = 'Gerando peti&#231;&#227;o com IA (pode levar 30&#8211;60 segundos)...';
+  out.className = 'out ld'; out.textContent = 'Gerando petição com IA (pode levar 30–60 segundos)...';
   document.getElementById('di-pet-label').textContent = 'Aguarde...';
   try {
-    const txt = await callClaude(`Atue como advogado s&#234;nior e redija PETI&#199;&#195;O INICIAL completa de DESCONTOS INDEVIDOS. Calibri 12, justificado, 1,5. T&#237;tulos em NEGRITO MAI&#218;SCULO. N&#195;O cite jurisprud&#234;ncia.
+    const txt = await callClaude(`Atue como advogado sênior e redija PETIÇÃO INICIAL completa de DESCONTOS INDEVIDOS. Calibri 12, justificado, 1,5. Títulos em NEGRITO MAIÚSCULO. NÃO cite jurisprudência.
 
-CLIENTE: ${c.nome} | CPF: ${c.cpf||'&#8212;'} | Nasc: ${c.nasc||'&#8212;'} | Profiss&#227;o: ${c.prof||'aposentado'} | Cidade: ${c.cidade||'&#8212;'} | Doen&#231;as: ${c.doencas||'nenhuma'}
-BANCO R&#201;U: ${c.banco} | Desconto: ${c.valor} | Tipo: ${c.tipo||'Cart&#227;o RMC n&#227;o contratado'}
-CONTRATO: ${contrato} | Parcela: R$ ${parcela} | Parcelas: ${nParc} | In&#237;cio: ${dataIni?new Date(dataIni+'T12:00:00').toLocaleDateString('pt-BR'):'&#8212;'} | Descontado (${meses} meses): ${totalStr}
+CLIENTE: ${c.nome} | CPF: ${c.cpf||'—'} | Nasc: ${c.nasc||'—'} | Profissão: ${c.prof||'aposentado'} | Cidade: ${c.cidade||'—'} | Doenças: ${c.doencas||'nenhuma'}
+BANCO RÉU: ${c.banco} | Desconto: ${c.valor} | Tipo: ${c.tipo||'Cartão RMC não contratado'}
+CONTRATO: ${contrato} | Parcela: R$ ${parcela} | Parcelas: ${nParc} | Início: ${dataIni?new Date(dataIni+'T12:00:00').toLocaleDateString('pt-BR'):'—'} | Descontado (${meses} meses): ${totalStr}
 VARA: ${vara} | CIDADE: ${cidade} | DATA: ${hoje}
 
-ESTRUTURA: (1) Endere&#231;amento centralizado; (2) Qualifica&#231;&#227;o do autor; (3) Nome da a&#231;&#227;o: A&#199;&#195;O DE REPETI&#199;&#195;O DO IND&#201;BITO C/C INDENIZA&#199;&#195;O POR DANOS MORAIS; (4) Qualifica&#231;&#227;o do r&#233;u; (5) DA JUSTI&#199;A GRATUITA &#8212; hipervulnerabilidade${c.doencas?', doen&#231;as: '+c.doencas:''}; ${c.doencas||c.nasc?'(6) DA PRIORIDADE NA TRAMITA&#199;&#195;O;':''} (7) DOS FATOS &#8212; contrato ${contrato}, R$ ${parcela}/m&#234;s, ${nParc} parcelas, total descontado ${totalStr}; (8) DO DIREITO &#8212; CDC art. 42 (dobro), invers&#227;o &#244;nus, dano moral in re ipsa, desvio produtivo; (9) DOS PEDIDOS &#8212; liminar, nulidade, dobro R$ ${(total*2).toLocaleString('pt-BR',{minimumFractionDigits:2})}, danos morais; (10) VALOR DA CAUSA; (11) ${cidade}, ${hoje}; (12) Augusto de Andrade Gadiani &#8212; OAB/SP 425.910 | Ari D'Antraccoli Neto &#8212; OAB/SP 999.999. Sem jurisprud&#234;ncia.`, 4096);
+ESTRUTURA: (1) Endereçamento centralizado; (2) Qualificação do autor; (3) Nome da ação: AÇÃO DE REPETIÇÃO DO INDÉBITO C/C INDENIZAÇÃO POR DANOS MORAIS; (4) Qualificação do réu; (5) DA JUSTIÇA GRATUITA — hipervulnerabilidade${c.doencas?', doenças: '+c.doencas:''}; ${c.doencas||c.nasc?'(6) DA PRIORIDADE NA TRAMITAÇÃO;':''} (7) DOS FATOS — contrato ${contrato}, R$ ${parcela}/mês, ${nParc} parcelas, total descontado ${totalStr}; (8) DO DIREITO — CDC art. 42 (dobro), inversão ônus, dano moral in re ipsa, desvio produtivo; (9) DOS PEDIDOS — liminar, nulidade, dobro R$ ${(total*2).toLocaleString('pt-BR',{minimumFractionDigits:2})}, danos morais; (10) VALOR DA CAUSA; (11) ${cidade}, ${hoje}; (12) Augusto de Andrade Gadiani — OAB/SP 425.910 | Ari D'Antraccoli Neto — OAB/SP 999.999. Sem jurisprudência.`, 4096);
     out.className = 'out'; out.textContent = txt;
     diPetTextoFinal = txt;
-    document.getElementById('di-pet-label').textContent = '&#9989; Peti&#231;&#227;o gerada &#8212; revise antes de protocolar';
+    document.getElementById('di-pet-label').textContent = '✅ Petição gerada — revise antes de protocolar';
     document.getElementById('di-pet-dl').style.display = 'inline-flex';
   } catch(e) { out.className = 'out'; out.textContent = 'Erro: ' + e.message; }
 }
@@ -1139,7 +1138,7 @@ function diRenderAguardandoProtocolo() {
       <div class="alert-dot ${dias>7?'dot-red':dias>3?'dot-orange':'dot-blue'}"></div>
       <div style="flex:1">
         <div style="font-weight:600;font-size:13px">${c.nome}</div>
-        <div style="font-size:11px;color:#888">${c.banco||'&#8212;'} &#183; ${c.tel||'&#8212;'} &#183; <strong>${dias}d aguardando</strong></div>
+        <div style="font-size:11px;color:#888">${c.banco||'—'} · ${c.tel||'—'} · <strong>${dias}d aguardando</strong></div>
       </div>
     </div>`;
   }).join('');
@@ -1156,7 +1155,7 @@ async function diMarcarParaProtocolo() {
   await salvarEstado();
   // Enviar WA informando
   if (c.tel) {
-    const msg = `Ol&#225;, ${c.nome.split(' ')[0]}! &#128203;\n\nSua peti&#231;&#227;o foi conclu&#237;da e enviada para protocolo no sistema judicial.\n\nAssim que for protocolada, enviaremos o n&#250;mero da a&#231;&#227;o. Fique atento! &#128522;\n\n&#9989; Escrit&#243;rio Gadiani & D'Antraccoli`;
+    const msg = `Olá, ${c.nome.split(' ')[0]}! 📋\n\nSua petição foi concluída e enviada para protocolo no sistema judicial.\n\nAssim que for protocolada, enviaremos o número da ação. Fique atento! 😊\n\n✅ Escritório Gadiani & D'Antraccoli`;
     const tel = c.tel.replace(/\D/g,'');
     window.open(`https://wa.me/55${tel}?text=${encodeURIComponent(msg)}`,'_blank');
   }
@@ -1167,7 +1166,7 @@ async function diMarcarParaProtocolo() {
 async function diConfirmarProtocolo() {
   const id = document.getElementById('di-prot-sel2').value;
   const numAcao = document.getElementById('di-num-acao').value.trim();
-  if (!id || !numAcao) { alert('Selecione o cliente e informe o n&#250;mero da a&#231;&#227;o.'); return; }
+  if (!id || !numAcao) { alert('Selecione o cliente e informe o número da ação.'); return; }
   const c = diClientes.find(x => x.id === id);
   if (!appState[id]) appState[id] = {};
   appState[id].protocolado = true;
@@ -1175,12 +1174,12 @@ async function diConfirmarProtocolo() {
   appState[id].dataProtocolo = new Date().toISOString();
   await salvarEstado();
   if (c.tel) {
-    const msg = `&#127881; ${c.nome.split(' ')[0]}, sua a&#231;&#227;o foi PROTOCOLADA!\n\n&#9878;&#65039; N&#250;mero do processo: ${numAcao}\n&#128197; Data: ${new Date().toLocaleDateString('pt-BR')}\n\nGuarde esse n&#250;mero &#8212; voc&#234; pode acompanhar o andamento no site do Tribunal. Nossa equipe tamb&#233;m ficar&#225; de olho em cada movimenta&#231;&#227;o!\n\nContamos com voc&#234;. Juntos at&#233; o final! &#128170;\n\n&#9989; Escrit&#243;rio Gadiani & D'Antraccoli`;
+    const msg = `🎉 ${c.nome.split(' ')[0]}, sua ação foi PROTOCOLADA!\n\n⚖️ Número do processo: ${numAcao}\n📅 Data: ${new Date().toLocaleDateString('pt-BR')}\n\nGuarde esse número — você pode acompanhar o andamento no site do Tribunal. Nossa equipe também ficará de olho em cada movimentação!\n\nContamos com você. Juntos até o final! 💪\n\n✅ Escritório Gadiani & D'Antraccoli`;
     const tel = c.tel.replace(/\D/g,'');
     window.open(`https://wa.me/55${tel}?text=${encodeURIComponent(msg)}`,'_blank');
   }
   diRenderAguardandoProtocolo(); diRenderFila(); diAtualizarStats();
-  alert(`Protocolo confirmado! WA com n&#186; ${numAcao} aberto.`);
+  alert(`Protocolo confirmado! WA com nº ${numAcao} aberto.`);
 }
 
 // ============ CRM DI ============
@@ -1192,8 +1191,8 @@ async function diCarregarCRM() {
   const st = appState[id] || {};
   const dataInicio = new Date(st.dataProtocolo || st.paraProtocoloData || st.ultimaAtualizacao || Date.now());
   document.getElementById('di-crm-info').innerHTML = `
-    <strong>${c.nome}</strong> &#183; ${c.banco||'&#8212;'} &#183; ${c.tel||'sem tel.'}<br>
-    <span style="font-size:11px;color:#888">${st.numAcao ? 'Processo: '+st.numAcao+' &#183; ' : ''}Status: ${(appState[id]||{}).protocolado?'&#9989; Protocolado':''}</span>
+    <strong>${c.nome}</strong> · ${c.banco||'—'} · ${c.tel||'sem tel.'}<br>
+    <span style="font-size:11px;color:#888">${st.numAcao ? 'Processo: '+st.numAcao+' · ' : ''}Status: ${(appState[id]||{}).protocolado?'✅ Protocolado':''}</span>
   `;
   const crm = appState['crm_'+id] || {};
   document.getElementById('di-crm-msgs').innerHTML = CRM_MSGS_DI.map((m, i) => {
@@ -1203,15 +1202,15 @@ async function diCarregarCRM() {
       <div class="crm-msg-header" onclick="toggleCRM('crm-di-${i}')">
         <div style="flex:1">
           <span class="crm-day">${m.intervalo}</span>
-          <div style="font-size:13px;font-weight:600;margin-top:1px">${sent?'&#9989; ':''} ${m.titulo}</div>
+          <div style="font-size:13px;font-weight:600;margin-top:1px">${sent?'✅ ':''} ${m.titulo}</div>
         </div>
         ${sent ? `<span class="badge bg" style="font-size:10px">Enviado ${new Date(sent).toLocaleDateString('pt-BR')}</span>` :
-          c.tel ? `<button class="btn btnw btns" onclick="event.stopPropagation();diEnviarCRM('${id}',${i})">&#128241; Enviar</button>` :
+          c.tel ? `<button class="btn btnw btns" onclick="event.stopPropagation();diEnviarCRM('${id}',${i})">📱 Enviar</button>` :
           `<span style="font-size:10px;color:#bbb">Sem tel.</span>`}
       </div>
       <div class="crm-msg-body">
         <div style="font-size:12px;color:#555;white-space:pre-wrap;line-height:1.6;margin-bottom:10px">${texto}</div>
-        ${!sent && c.tel ? `<button class="btn btnw btns" onclick="diEnviarCRM('${id}',${i})">&#128241; Abrir WhatsApp e marcar como enviado</button>` : ''}
+        ${!sent && c.tel ? `<button class="btn btnw btns" onclick="diEnviarCRM('${id}',${i})">📱 Abrir WhatsApp e marcar como enviado</button>` : ''}
       </div>
     </div>`;
   }).join('');
@@ -1230,16 +1229,16 @@ async function diEnviarCRM(cid, msgIdx) {
   diCarregarCRM();
 }
 
-// ============ NOTIFICA&#199;&#195;O DI ============
+// ============ NOTIFICAÇÃO DI ============
 async function diGerarNotif() {
   const id = document.getElementById('di-sel-not').value;
   if (!id) { alert('Selecione um cliente.'); return; }
   const c = diClientes.find(x => x.id === id);
   document.getElementById('di-not-card').style.display = 'block';
   const out = document.getElementById('di-not-out');
-  out.className = 'out ld'; out.textContent = 'Gerando notifica&#231;&#227;o...';
+  out.className = 'out ld'; out.textContent = 'Gerando notificação...';
   try {
-    const txt = await callClaude(`Produza notifica&#231;&#227;o extrajudicial formal em nome do consumidor ${c.nome}, CPF ${c.cpf||'&#8212;'}, residente em ${c.cidade||'&#8212;'}, dirigida ao banco ${c.banco}. Solicite: c&#243;pias dos contratos, proposta de ades&#227;o, saldo devedor detalhado, planilha de evolu&#231;&#227;o da d&#237;vida, op&#231;&#245;es de renegocia&#231;&#227;o. Informe prazo de 10 dias, caso contr&#225;rio o consumidor registrar&#225; reclama&#231;&#227;o em https://www.consumidor.gov.br/ e https://www.bcb.gov.br/meubc/registrar_reclamacao. Sem advogados. Formal. Data: ${new Date().toLocaleDateString('pt-BR')}.`, 800);
+    const txt = await callClaude(`Produza notificação extrajudicial formal em nome do consumidor ${c.nome}, CPF ${c.cpf||'—'}, residente em ${c.cidade||'—'}, dirigida ao banco ${c.banco}. Solicite: cópias dos contratos, proposta de adesão, saldo devedor detalhado, planilha de evolução da dívida, opções de renegociação. Informe prazo de 10 dias, caso contrário o consumidor registrará reclamação em https://www.consumidor.gov.br/ e https://www.bcb.gov.br/meubc/registrar_reclamacao. Sem advogados. Formal. Data: ${new Date().toLocaleDateString('pt-BR')}.`, 800);
     out.className = 'out'; out.textContent = txt;
   } catch(e) { out.className = 'out'; out.textContent = 'Erro: '+e.message; }
 }
@@ -1271,7 +1270,7 @@ async function seCarregarPlanilha() {
     document.getElementById('se-loading').innerHTML = `<div class="err">
   <strong>Erro ao carregar clientes.</strong><br>
   Detalhe: ${e.message}<br>
-  <button class="btn btns" onclick="seCarregarPlanilha()" style="margin-top:6px">&#8634; Tentar novamente</button>
+  <button class="btn btns" onclick="seCarregarPlanilha()" style="margin-top:6px">↺ Tentar novamente</button>
 </div>`;
   }
 }
@@ -1306,13 +1305,13 @@ function seRenderFila(filtro='') {
     const rLiq=parseFloat(c.rendaLiquida)||0;
     return `<div class="cli-row ${st.urgente?'urgent':''}" onclick="seIrDocs('${c.id}')">
       <div style="flex:1">
-        <div class="cli-nome">${st.urgente?'&#9889; ':''}${c.nome}</div>
-        <div class="cli-sub">${c.prof||'&#8212;'} &#183; D&#237;vida: ${c.totalDividas||'&#8212;'} &#183; Renda l&#237;q.: R$ ${rLiq.toLocaleString('pt-BR')}</div>
+        <div class="cli-nome">${st.urgente?'⚡ ':''}${c.nome}</div>
+        <div class="cli-sub">${c.prof||'—'} · Dívida: ${c.totalDividas||'—'} · Renda líq.: R$ ${rLiq.toLocaleString('pt-BR')}</div>
         <div class="pw" style="width:180px;margin-top:4px"><div class="pb ${p>=100?'pb-green':p>40?'pb-orange':'pb-red'}" style="width:${p}%"></div></div>
-        ${st.numAcao?`<div style="font-size:10px;color:#1b5e20;margin-top:2px">N&#186; ${st.numAcao}</div>`:''}
+        ${st.numAcao?`<div style="font-size:10px;color:#1b5e20;margin-top:2px">Nº ${st.numAcao}</div>`:''}
       </div>
       <div style="text-align:right">
-        ${st.protocolado?'<span class="badge bg">&#9989; Protocolado</span>':st.paraProtocolo?'<span class="queue-badge q-protocol">&#9203; Protocolo</span>':p>=100?'<span class="badge bi">Docs OK</span>':p>0?'<span class="badge bo">Em andamento</span>':'<span class="badge br">Pendente</span>'}
+        ${st.protocolado?'<span class="badge bg">✅ Protocolado</span>':st.paraProtocolo?'<span class="queue-badge q-protocol">⏳ Protocolo</span>':p>=100?'<span class="badge bi">Docs OK</span>':p>0?'<span class="badge bo">Em andamento</span>':'<span class="badge br">Pendente</span>'}
         <div style="font-size:11px;color:#bbb;margin-top:4px">${c.tel||'sem tel.'}</div>
       </div>
     </div>`;
@@ -1342,25 +1341,25 @@ function seCarregarDocs() {
   document.getElementById('se-docs-wrap').style.display='block';
   const rLiq=parseFloat(c.rendaLiquida)||0;
   document.getElementById('se-cli-info').innerHTML=`
-    <div class="ct">Ficha &#8212; ${c.nome}</div>
+    <div class="ct">Ficha — ${c.nome}</div>
     <div class="g2" style="gap:8px">
-      <div><div style="font-size:10px;color:#aaa">CPF</div><div>${c.cpf||'&#8212;'}</div></div>
-      <div><div style="font-size:10px;color:#aaa">Telefone</div><div style="font-weight:700;color:#25d366">${c.tel||'&#8212;'}</div></div>
-      <div><div style="font-size:10px;color:#aaa">Renda l&#237;quida</div><div style="font-weight:700">R$ ${rLiq.toLocaleString('pt-BR',{minimumFractionDigits:2})}</div></div>
-      <div><div style="font-size:10px;color:#aaa">Total d&#237;vidas</div><div style="font-weight:700;color:#c62828">${c.totalDividas||'&#8212;'}</div></div>
+      <div><div style="font-size:10px;color:#aaa">CPF</div><div>${c.cpf||'—'}</div></div>
+      <div><div style="font-size:10px;color:#aaa">Telefone</div><div style="font-weight:700;color:#25d366">${c.tel||'—'}</div></div>
+      <div><div style="font-size:10px;color:#aaa">Renda líquida</div><div style="font-weight:700">R$ ${rLiq.toLocaleString('pt-BR',{minimumFractionDigits:2})}</div></div>
+      <div><div style="font-size:10px;color:#aaa">Total dívidas</div><div style="font-weight:700;color:#c62828">${c.totalDividas||'—'}</div></div>
     </div>
     <div class="g2" style="gap:8px;margin-top:8px">
-      <div style="background:#e8f5e9;border-radius:8px;padding:8px 12px"><div style="font-size:10px;color:#1b5e20;font-weight:700">M&#205;NIMO EXISTENCIAL 70%</div><div style="font-size:14px;font-weight:700;color:#1b5e20">R$ ${(rLiq*.7).toLocaleString('pt-BR',{minimumFractionDigits:2})}</div></div>
-      <div style="background:#fff8e1;border-radius:8px;padding:8px 12px"><div style="font-size:10px;color:#e65100;font-weight:700">PARA D&#205;VIDAS 30%</div><div style="font-size:14px;font-weight:700;color:#e65100">R$ ${(rLiq*.3).toLocaleString('pt-BR',{minimumFractionDigits:2})}</div></div>
+      <div style="background:#e8f5e9;border-radius:8px;padding:8px 12px"><div style="font-size:10px;color:#1b5e20;font-weight:700">MÍNIMO EXISTENCIAL 70%</div><div style="font-size:14px;font-weight:700;color:#1b5e20">R$ ${(rLiq*.7).toLocaleString('pt-BR',{minimumFractionDigits:2})}</div></div>
+      <div style="background:#fff8e1;border-radius:8px;padding:8px 12px"><div style="font-size:10px;color:#e65100;font-weight:700">PARA DÍVIDAS 30%</div><div style="font-size:14px;font-weight:700;color:#e65100">R$ ${(rLiq*.3).toLocaleString('pt-BR',{minimumFractionDigits:2})}</div></div>
     </div>
-    ${c.doencas?`<div style="margin-top:8px;font-size:11px;background:#fff8e1;padding:6px 10px;border-radius:6px;color:#e65100">&#9877; ${c.doencas}</div>`:''}
+    ${c.doencas?`<div style="margin-top:8px;font-size:11px;background:#fff8e1;padding:6px 10px;border-radius:6px;color:#e65100">⚕ ${c.doencas}</div>`:''}
   `;
   seRenderDocs(c);
   const credores=[c.credor1,c.credor2,c.credor3].filter(cr=>cr.nome);
   document.getElementById('se-credores-lista').innerHTML=credores.length?credores.map(cr=>`
     <div class="card-inner">
       <div style="font-weight:600;font-size:13px">${cr.nome}</div>
-      <div style="font-size:11px;color:#888;margin-top:4px">Total: ${cr.valor||'&#8212;'} &#183; Parcela: R$ ${cr.prestacao||'&#8212;'} &#183; ${cr.pagas||'0'}/${cr.parcelas||'&#8212;'} pagas &#183; ${cr.sit||'&#8212;'}</div>
+      <div style="font-size:11px;color:#888;margin-top:4px">Total: ${cr.valor||'—'} · Parcela: R$ ${cr.prestacao||'—'} · ${cr.pagas||'0'}/${cr.parcelas||'—'} pagas · ${cr.sit||'—'}</div>
     </div>`).join(''):'<div style="font-size:12px;color:#bbb">Nenhum credor informado.</div>';
 }
 
@@ -1384,8 +1383,8 @@ function seRenderDocs(c) {
     const ck=r[d.id];
     return `<div class="doc-item">
       <div class="chk ${ck?'ck':''}" onclick="seToggle('${c.id}','${d.id}')">${ck?SVG_CK:''}</div>
-      <div class="dl ${ck?'dn':''}">${d.ob?'<span class="tag-ob">Obrigat&#243;rio</span>':''} ${d.label}${d.obs?` <small style="color:#bbb">(${d.obs})</small>`:''}${d.link?` <a class="link" href="${d.link}" target="_blank">&#8599;</a>`:''}</div>
-      <span class="ds ${ck?'dok':'dno'}">${ck?'&#10003;':'Falta'}</span>
+      <div class="dl ${ck?'dn':''}">${d.ob?'<span class="tag-ob">Obrigatório</span>':''} ${d.label}${d.obs?` <small style="color:#bbb">(${d.obs})</small>`:''}${d.link?` <a class="link" href="${d.link}" target="_blank">↗</a>`:''}</div>
+      <span class="ds ${ck?'dok':'dno'}">${ck?'✓':'Falta'}</span>
     </div>`;
   }).join('');
 }
@@ -1396,7 +1395,7 @@ async function seCobrarWA() {
   if (!c.tel) { alert('Cliente sem telefone.'); return; }
   const r = getRec('se_docs', c.id);
   const faltando = DOCS_SE.filter(d=>!r[d.id]).map(d=>d.label);
-  const msg = `Ol&#225;, ${c.nome.split(' ')[0]}! &#128075;\n\nPara darmos andamento ao seu processo de superendividamento, precisamos dos seguintes documentos:\n\n${faltando.map((d,i)=>`${i+1}. ${d}`).join('\n')}\n\nCom eles, montamos o plano de pagamento e protocolamos sua a&#231;&#227;o em seguida. Qualquer d&#250;vida, estamos &#224; disposi&#231;&#227;o!\n\n&#9989; Escrit&#243;rio Gadiani & D'Antraccoli`;
+  const msg = `Olá, ${c.nome.split(' ')[0]}! 👋\n\nPara darmos andamento ao seu processo de superendividamento, precisamos dos seguintes documentos:\n\n${faltando.map((d,i)=>`${i+1}. ${d}`).join('\n')}\n\nCom eles, montamos o plano de pagamento e protocolamos sua ação em seguida. Qualquer dúvida, estamos à disposição!\n\n✅ Escritório Gadiani & D'Antraccoli`;
   window.open(`https://wa.me/55${c.tel.replace(/\D/g,'')}?text=${encodeURIComponent(msg)}`,'_blank');
   if (!appState[c.id]) appState[c.id] = {};
   appState[c.id].ultimoContato = new Date().toISOString();
@@ -1415,11 +1414,11 @@ function seRenderPendencias() {
     return `<div class="alert-item">
       <div class="alert-dot ${dias>14?'dot-red':dias>7?'dot-orange':'dot-blue'}"></div>
       <div style="flex:1">
-        <div style="font-weight:600;font-size:13px">${c.nome} <span style="font-size:10px;color:#aaa">${dias<999?dias+'d sem atualiza&#231;&#227;o':''}</span></div>
-        <div style="font-size:11px;color:#888">${c.tel||'sem tel.'} &#183; D&#237;vida: ${c.totalDividas||'&#8212;'}</div>
+        <div style="font-weight:600;font-size:13px">${c.nome} <span style="font-size:10px;color:#aaa">${dias<999?dias+'d sem atualização':''}</span></div>
+        <div style="font-size:11px;color:#888">${c.tel||'sem tel.'} · Dívida: ${c.totalDividas||'—'}</div>
         ${obFalt.length?`<div style="font-size:11px;color:#c62828;margin-top:2px">Faltam: ${obFalt.map(d=>d.label).join(', ')}</div>`:''}
       </div>
-      <button class="btn btnw btns" onclick="seCobrarWACliente('${c.id}')">&#128241; Cobrar</button>
+      <button class="btn btnw btns" onclick="seCobrarWACliente('${c.id}')">📱 Cobrar</button>
     </div>`;
   }).join('') || '<div style="padding:16px;text-align:center;color:#bbb">Todos em dia!</div>';
 }
@@ -1429,15 +1428,15 @@ async function seCobrarWACliente(cid) {
   await seCobrarWA();
 }
 
-// ============ PETI&#199;&#195;O SE ============
+// ============ PETIÇÃO SE ============
 const SE_PROMPTS = [
-  c=>`Atue como advogado s&#234;nior. Redija ENDERE&#199;AMENTO E QUALIFICA&#199;&#195;O para peti&#231;&#227;o de SUPERENDIVIDAMENTO (Lei 14.181/2021). Calibri 12, justificado, 1,5. T&#237;tulos NEGRITO MAI&#218;SCULO. Inclua: cabe&#231;alho centralizado, nome da a&#231;&#227;o "A&#199;&#195;O DE REPACTUA&#199;&#195;O DE D&#205;VIDAS E SUPERENDIVIDAMENTO", qualifica&#231;&#227;o do autor: Nome: ${c.nome}, CPF: ${c.cpf||'&#8212;'}, Nasc: ${c.nasc||'&#8212;'}, ${c.civil||'&#8212;'}, ${c.prof||'&#8212;'}, Endere&#231;o: ${c.end||'&#8212;'}. Deixe [QUALIFICA&#199;&#195;O DOS REQUERIDOS &#8212; PREENCHER MANUALMENTE]. Sem jurisprud&#234;ncia.`,
-  c=>`Redija DA JUSTI&#199;A GRATUITA E PRIORIDADE para peti&#231;&#227;o de superendividamento de ${c.nome}. Renda l&#237;quida: R$ ${c.rendaLiquida||'&#8212;'}. D&#237;vidas: ${c.totalDividas||'&#8212;'}. Doen&#231;as: ${c.doencas||'nenhuma'}. Gastos: aluguel R$ ${c.aluguel||'&#8212;'}, alimenta&#231;&#227;o R$ ${c.alimentacao||'&#8212;'}. CF art. 5&#186; LXXIV, CPC art. 98, CDC arts. 2&#186; e 3&#186;. ${c.doencas?'Prioridade tramita&#231;&#227;o: doen&#231;a grave, CPC art. 1.048.':''} Sem jurisprud&#234;ncia.`,
-  c=>{const rLiq=parseFloat(c.rendaLiquida)||0;const cr=[c.credor1,c.credor2,c.credor3].filter(x=>x.nome).map(x=>`${x.nome}: R$ ${x.valor||'&#8212;'} (${x.forma||'&#8212;'}, parcela R$ ${x.prestacao||'&#8212;'}, ${x.pagas||'0'}/${x.parcelas||'&#8212;'} pagas, ${x.sit||'&#8212;'})`).join('; ');return`Redija DOS FATOS para peti&#231;&#227;o superendividamento de ${c.nome}. Prosa fluida, sem enumera&#231;&#245;es. Enquadramento CDC art. 54-A. Motivos: ${c.motivos||'n&#227;o informado'}. Credores: ${cr||'a informar'}. Renda: R$ ${c.rendaLiquida||'&#8212;'}. Gastos: aluguel R$ ${c.aluguel||'&#8212;'}, alimenta&#231;&#227;o R$ ${c.alimentacao||'&#8212;'}. Defenda 70% (R$ ${(rLiq*.7).toLocaleString('pt-BR',{minimumFractionDigits:2})}) m&#237;nimo existencial e 30% (R$ ${(rLiq*.3).toLocaleString('pt-BR',{minimumFractionDigits:2})}) para d&#237;vidas. Sem jurisprud&#234;ncia.`},
-  c=>{const rLiq=parseFloat(c.rendaLiquida)||0;return`Redija TUTELA DE URG&#202;NCIA para ${c.nome}. CPC art. 300. 1) Suspens&#227;o integral dos descontos; 2) Subsidiariamente, suspens&#227;o dos que superem 30% da renda (R$ ${(rLiq*.3).toLocaleString('pt-BR',{minimumFractionDigits:2})}). CDC art. 104-A, CPC arts. 300-301. Sem jurisprud&#234;ncia.`},
-  c=>`Redija PEDIDOS e encerramento da peti&#231;&#227;o de superendividamento de ${c.nome}. Inclua: tutela urg&#234;ncia; cita&#231;&#227;o dos r&#233;us; repactua&#231;&#227;o 60 meses (CDC art. 104-A) com exclus&#227;o encargos morat&#243;rios, juros 1% a.m.; extin&#231;&#227;o cobran&#231;as; exclus&#227;o Serasa 10 dias &#250;teis; pedido subsidi&#225;rio plano compuls&#243;rio (CDC art. 104-B); honor&#225;rios e custas. EMENTA com 6 palavras-chave. Encerre: ${new Date().toLocaleDateString('pt-BR')}, [cidade], Augusto de Andrade Gadiani OAB/SP 425.910, Ari D'Antraccoli Neto OAB/SP 999.999. Sem jurisprud&#234;ncia.`
+  c=>`Atue como advogado sênior. Redija ENDEREÇAMENTO E QUALIFICAÇÃO para petição de SUPERENDIVIDAMENTO (Lei 14.181/2021). Calibri 12, justificado, 1,5. Títulos NEGRITO MAIÚSCULO. Inclua: cabeçalho centralizado, nome da ação "AÇÃO DE REPACTUAÇÃO DE DÍVIDAS E SUPERENDIVIDAMENTO", qualificação do autor: Nome: ${c.nome}, CPF: ${c.cpf||'—'}, Nasc: ${c.nasc||'—'}, ${c.civil||'—'}, ${c.prof||'—'}, Endereço: ${c.end||'—'}. Deixe [QUALIFICAÇÃO DOS REQUERIDOS — PREENCHER MANUALMENTE]. Sem jurisprudência.`,
+  c=>`Redija DA JUSTIÇA GRATUITA E PRIORIDADE para petição de superendividamento de ${c.nome}. Renda líquida: R$ ${c.rendaLiquida||'—'}. Dívidas: ${c.totalDividas||'—'}. Doenças: ${c.doencas||'nenhuma'}. Gastos: aluguel R$ ${c.aluguel||'—'}, alimentação R$ ${c.alimentacao||'—'}. CF art. 5º LXXIV, CPC art. 98, CDC arts. 2º e 3º. ${c.doencas?'Prioridade tramitação: doença grave, CPC art. 1.048.':''} Sem jurisprudência.`,
+  c=>{const rLiq=parseFloat(c.rendaLiquida)||0;const cr=[c.credor1,c.credor2,c.credor3].filter(x=>x.nome).map(x=>`${x.nome}: R$ ${x.valor||'—'} (${x.forma||'—'}, parcela R$ ${x.prestacao||'—'}, ${x.pagas||'0'}/${x.parcelas||'—'} pagas, ${x.sit||'—'})`).join('; ');return`Redija DOS FATOS para petição superendividamento de ${c.nome}. Prosa fluida, sem enumerações. Enquadramento CDC art. 54-A. Motivos: ${c.motivos||'não informado'}. Credores: ${cr||'a informar'}. Renda: R$ ${c.rendaLiquida||'—'}. Gastos: aluguel R$ ${c.aluguel||'—'}, alimentação R$ ${c.alimentacao||'—'}. Defenda 70% (R$ ${(rLiq*.7).toLocaleString('pt-BR',{minimumFractionDigits:2})}) mínimo existencial e 30% (R$ ${(rLiq*.3).toLocaleString('pt-BR',{minimumFractionDigits:2})}) para dívidas. Sem jurisprudência.`},
+  c=>{const rLiq=parseFloat(c.rendaLiquida)||0;return`Redija TUTELA DE URGÊNCIA para ${c.nome}. CPC art. 300. 1) Suspensão integral dos descontos; 2) Subsidiariamente, suspensão dos que superem 30% da renda (R$ ${(rLiq*.3).toLocaleString('pt-BR',{minimumFractionDigits:2})}). CDC art. 104-A, CPC arts. 300-301. Sem jurisprudência.`},
+  c=>`Redija PEDIDOS e encerramento da petição de superendividamento de ${c.nome}. Inclua: tutela urgência; citação dos réus; repactuação 60 meses (CDC art. 104-A) com exclusão encargos moratórios, juros 1% a.m.; extinção cobranças; exclusão Serasa 10 dias úteis; pedido subsidiário plano compulsório (CDC art. 104-B); honorários e custas. EMENTA com 6 palavras-chave. Encerre: ${new Date().toLocaleDateString('pt-BR')}, [cidade], Augusto de Andrade Gadiani OAB/SP 425.910, Ari D'Antraccoli Neto OAB/SP 999.999. Sem jurisprudência.`
 ];
-const SE_LABELS=['Endere&#231;amento e qualifica&#231;&#227;o','Justi&#231;a gratuita e prioridade','Dos fatos','Tutela de urg&#234;ncia','Pedidos e encerramento'];
+const SE_LABELS=['Endereçamento e qualificação','Justiça gratuita e prioridade','Dos fatos','Tutela de urgência','Pedidos e encerramento'];
 
 function seSelecionarCliente() {
   const id=document.getElementById('se-sel-pet').value;
@@ -1449,7 +1448,7 @@ function seSelecionarCliente() {
     <div class="step-row ${i===0?'cur':''}" id="sr${i}">
       <div class="step-num ${i===0?'cur':''}" id="sn${i}">${i+1}</div>
       <div style="flex:1"><div style="font-size:13px;font-weight:600">${l}</div></div>
-      <button class="btn btns ${i===0?'btnp':''}" id="sb${i}" onclick="seGerarEtapa(${i})" ${i>0?'disabled':''}>Gerar &#8599;</button>
+      <button class="btn btns ${i===0?'btnp':''}" id="sb${i}" onclick="seGerarEtapa(${i})" ${i>0?'disabled':''}>Gerar ↗</button>
     </div>`).join('');
   document.getElementById('se-pet-dl').style.display='none';
   document.getElementById('se-pet-out').style.display='none';
@@ -1459,7 +1458,7 @@ async function seGerarEtapa(step) {
   if(!seCurrentCliente){alert('Selecione um cliente.');return;}
   const c=seCurrentCliente;
   document.getElementById('se-pet-out').style.display='block';
-  document.getElementById('se-etapa-label').textContent=`Etapa ${step+1} &#8212; ${SE_LABELS[step]} &#8212; gerando...`;
+  document.getElementById('se-etapa-label').textContent=`Etapa ${step+1} — ${SE_LABELS[step]} — gerando...`;
   const out=document.getElementById('se-pet-texto');
   out.className='out ld';out.textContent='Aguarde...';
   document.getElementById('sb'+step).disabled=true;
@@ -1467,7 +1466,7 @@ async function seGerarEtapa(step) {
     const txt=await callClaude(SE_PROMPTS[step](c),2000);
     sePetTextos[step]=txt;
     out.className='out';out.textContent=txt;
-    document.getElementById('se-etapa-label').textContent=`&#9989; Etapa ${step+1} conclu&#237;da &#8212; ${SE_LABELS[step]}`;
+    document.getElementById('se-etapa-label').textContent=`✅ Etapa ${step+1} concluída — ${SE_LABELS[step]}`;
     document.getElementById('sn'+step).className='step-num done';
     document.getElementById('sr'+step).className='step-row done';
     if(step<4){
@@ -1484,7 +1483,7 @@ async function seGerarEtapa(step) {
 }
 
 function seDownloadPeticao() {
-  const txt=sePetTextos.join('\n\n'+'&#9472;'.repeat(60)+'\n\n');
+  const txt=sePetTextos.join('\n\n'+'─'.repeat(60)+'\n\n');
   downloadBlob(txt,'peticao_superendividamento.txt');
 }
 
@@ -1498,9 +1497,9 @@ async function seGerarPlano() {
   out.className='out ld';out.textContent='Calculando plano...';
   const rLiq=parseFloat(c.rendaLiquida)||0;
   const credores=[c.credor1,c.credor2,c.credor3].filter(cr=>cr.nome);
-  const credList=credores.map(cr=>`${cr.nome}: R$ ${cr.valor||'0'} (parcela atual: R$ ${cr.prestacao||'&#8212;'})`).join(', ');
+  const credList=credores.map(cr=>`${cr.nome}: R$ ${cr.valor||'0'} (parcela atual: R$ ${cr.prestacao||'—'})`).join(', ');
   try {
-    const txt=await callClaude(`Especialista jur&#237;dico. Plano de pagamento PROVIS&#211;RIO art. 104-A CDC para ${c.nome}, CPF ${c.cpf||'&#8212;'}. Renda l&#237;quida: R$ ${rLiq.toFixed(2)}. 70% existencial: R$ ${(rLiq*.7).toFixed(2)}. 30% d&#237;vidas: R$ ${(rLiq*.3).toFixed(2)}. Credores: ${credList||'a informar'}. Total d&#237;vidas: ${c.totalDividas||'&#8212;'}. 60 meses, exclus&#227;o encargos, juros 1% a.m.+INPC, exclus&#227;o Serasa. Distribua 30% proporcionalmente. Formato escrito, claro, sem tabelas. Data: ${new Date().toLocaleDateString('pt-BR')}.`,2000);
+    const txt=await callClaude(`Especialista jurídico. Plano de pagamento PROVISÓRIO art. 104-A CDC para ${c.nome}, CPF ${c.cpf||'—'}. Renda líquida: R$ ${rLiq.toFixed(2)}. 70% existencial: R$ ${(rLiq*.7).toFixed(2)}. 30% dívidas: R$ ${(rLiq*.3).toFixed(2)}. Credores: ${credList||'a informar'}. Total dívidas: ${c.totalDividas||'—'}. 60 meses, exclusão encargos, juros 1% a.m.+INPC, exclusão Serasa. Distribua 30% proporcionalmente. Formato escrito, claro, sem tabelas. Data: ${new Date().toLocaleDateString('pt-BR')}.`,2000);
     out.className='out';out.textContent=txt;
   } catch(e){out.className='out';out.textContent='Erro: '+e.message;}
 }
@@ -1514,7 +1513,7 @@ function seRenderAguardandoProtocolo() {
     const st=appState[c.id]||{};
     const dias=diasDesde(st.paraProtocoloData);
     return `<div class="alert-item"><div class="alert-dot ${dias>7?'dot-red':dias>3?'dot-orange':'dot-blue'}"></div>
-      <div style="flex:1"><div style="font-weight:600;font-size:13px">${c.nome}</div><div style="font-size:11px;color:#888">${c.tel||'&#8212;'} &#183; ${dias}d aguardando</div></div>
+      <div style="flex:1"><div style="font-weight:600;font-size:13px">${c.nome}</div><div style="font-size:11px;color:#888">${c.tel||'—'} · ${dias}d aguardando</div></div>
     </div>`;
   }).join(''):'<div style="padding:12px;text-align:center;color:#bbb;font-size:13px">Nenhum aguardando.</div>';
 }
@@ -1528,7 +1527,7 @@ async function seMarcarParaProtocolo() {
   appState[id].paraProtocoloData=new Date().toISOString();
   await salvarEstado();
   if(c.tel){
-    const msg=`Ol&#225;, ${c.nome.split(' ')[0]}! &#128203;\n\nSua peti&#231;&#227;o de superendividamento foi conclu&#237;da e enviada para protocolo!\n\nAssim que for protocolada no sistema judicial, enviaremos o n&#250;mero do processo. Voc&#234; est&#225; um passo mais perto de resolver suas d&#237;vidas! &#128170;\n\n&#9989; Escrit&#243;rio Gadiani & D'Antraccoli`;
+    const msg=`Olá, ${c.nome.split(' ')[0]}! 📋\n\nSua petição de superendividamento foi concluída e enviada para protocolo!\n\nAssim que for protocolada no sistema judicial, enviaremos o número do processo. Você está um passo mais perto de resolver suas dívidas! 💪\n\n✅ Escritório Gadiani & D'Antraccoli`;
     window.open(`https://wa.me/55${c.tel.replace(/\D/g,'')}?text=${encodeURIComponent(msg)}`,'_blank');
   }
   seRenderAguardandoProtocolo(); seRenderFila(); seAtualizarStats();
@@ -1537,7 +1536,7 @@ async function seMarcarParaProtocolo() {
 async function seConfirmarProtocolo() {
   const id=document.getElementById('se-prot-sel2').value;
   const num=document.getElementById('se-num-acao').value.trim();
-  if(!id||!num){alert('Selecione o cliente e informe o n&#250;mero.');return;}
+  if(!id||!num){alert('Selecione o cliente e informe o número.');return;}
   const c=seClientes.find(x=>x.id===id);
   if(!appState[id]) appState[id]={};
   appState[id].protocolado=true;
@@ -1545,7 +1544,7 @@ async function seConfirmarProtocolo() {
   appState[id].dataProtocolo=new Date().toISOString();
   await salvarEstado();
   if(c.tel){
-    const msg=`&#127881; ${c.nome.split(' ')[0]}, sua a&#231;&#227;o de SUPERENDIVIDAMENTO foi PROTOCOLADA!\n\n&#9878;&#65039; Processo n&#186;: ${num}\n&#128197; ${new Date().toLocaleDateString('pt-BR')}\n\nGuarde esse n&#250;mero! Os credores ser&#227;o notificados e convocados para a audi&#234;ncia de concilia&#231;&#227;o.\n\nEstamos juntos nessa jornada para sua liberdade financeira! &#128153;\n\n&#9989; Escrit&#243;rio Gadiani & D'Antraccoli`;
+    const msg=`🎉 ${c.nome.split(' ')[0]}, sua ação de SUPERENDIVIDAMENTO foi PROTOCOLADA!\n\n⚖️ Processo nº: ${num}\n📅 ${new Date().toLocaleDateString('pt-BR')}\n\nGuarde esse número! Os credores serão notificados e convocados para a audiência de conciliação.\n\nEstamos juntos nessa jornada para sua liberdade financeira! 💙\n\n✅ Escritório Gadiani & D'Antraccoli`;
     window.open(`https://wa.me/55${c.tel.replace(/\D/g,'')}?text=${encodeURIComponent(msg)}`,'_blank');
   }
   seRenderAguardandoProtocolo(); seRenderFila(); seAtualizarStats();
@@ -1558,21 +1557,21 @@ async function seCarregarCRM() {
   const c=seClientes.find(x=>x.id===id);
   document.getElementById('se-crm-wrap').style.display='block';
   const st=appState[id]||{};
-  document.getElementById('se-crm-info').innerHTML=`<strong>${c.nome}</strong> &#183; ${c.tel||'sem tel.'} &#183; Renda: R$ ${c.rendaLiquida||'&#8212;'} &#183; D&#237;vida: ${c.totalDividas||'&#8212;'}${st.numAcao?' &#183; N&#186; '+st.numAcao:''}`;
+  document.getElementById('se-crm-info').innerHTML=`<strong>${c.nome}</strong> · ${c.tel||'sem tel.'} · Renda: R$ ${c.rendaLiquida||'—'} · Dívida: ${c.totalDividas||'—'}${st.numAcao?' · Nº '+st.numAcao:''}`;
   const crm=appState['crm_'+id]||{};
   document.getElementById('se-crm-msgs').innerHTML=CRM_MSGS_SE.map((m,i)=>{
     const sent=crm[i];
     const texto=m.template(c);
     return `<div class="crm-msg ${sent?'crm-sent':''}" id="crm-se-${i}">
       <div class="crm-msg-header" onclick="toggleCRM('crm-se-${i}')">
-        <div style="flex:1"><span class="crm-day">${m.intervalo}</span><div style="font-size:13px;font-weight:600;margin-top:1px">${sent?'&#9989; ':''}${m.titulo}</div></div>
+        <div style="flex:1"><span class="crm-day">${m.intervalo}</span><div style="font-size:13px;font-weight:600;margin-top:1px">${sent?'✅ ':''}${m.titulo}</div></div>
         ${sent?`<span class="badge bg" style="font-size:10px">Enviado ${new Date(sent).toLocaleDateString('pt-BR')}</span>`:
-          c.tel?`<button class="btn btnw btns" onclick="event.stopPropagation();seEnviarCRM('${id}',${i})">&#128241; Enviar</button>`:
+          c.tel?`<button class="btn btnw btns" onclick="event.stopPropagation();seEnviarCRM('${id}',${i})">📱 Enviar</button>`:
           `<span style="font-size:10px;color:#bbb">Sem tel.</span>`}
       </div>
       <div class="crm-msg-body">
         <div style="font-size:12px;color:#555;white-space:pre-wrap;line-height:1.6;margin-bottom:10px">${texto}</div>
-        ${!sent&&c.tel?`<button class="btn btnw btns" onclick="seEnviarCRM('${id}',${i})">&#128241; Enviar via WhatsApp</button>`:''}
+        ${!sent&&c.tel?`<button class="btn btnw btns" onclick="seEnviarCRM('${id}',${i})">📱 Enviar via WhatsApp</button>`:''}
       </div>
     </div>`;
   }).join('');
@@ -1588,25 +1587,25 @@ async function seEnviarCRM(cid,idx) {
   seCarregarCRM();
 }
 
-// ============ NOTIFICA&#199;&#195;O SE ============
+// ============ NOTIFICAÇÃO SE ============
 async function seGerarNotif() {
   const id=document.getElementById('se-sel-not').value;
   if(!id){alert('Selecione um cliente.');return;}
   const c=seClientes.find(x=>x.id===id);
   const credores=[c.credor1,c.credor2,c.credor3].filter(cr=>cr.nome);
   if(!credores.length){alert('Nenhum credor na planilha.');return;}
-  document.getElementById('se-not-wrap').innerHTML=`<div style="padding:20px;text-align:center;color:#aaa"><span class="spin"></span> Gerando ${credores.length} notifica&#231;&#227;o(&#245;es)...</div>`;
+  document.getElementById('se-not-wrap').innerHTML=`<div style="padding:20px;text-align:center;color:#aaa"><span class="spin"></span> Gerando ${credores.length} notificação(ões)...</div>`;
   try {
     const nots=await Promise.all(credores.map(async cr=>{
-      const txt=await callClaude(`Notifica&#231;&#227;o extrajudicial formal em nome de ${c.nome}, CPF ${c.cpf||'&#8212;'}, ao credor ${cr.nome}. Solicite: contratos, proposta, saldo devedor, planilha evolu&#231;&#227;o, op&#231;&#245;es renegocia&#231;&#227;o. Prazo 10 dias, sen&#227;o consumidor.gov e BCB. Sem advogados. Data: ${new Date().toLocaleDateString('pt-BR')}.`,700);
+      const txt=await callClaude(`Notificação extrajudicial formal em nome de ${c.nome}, CPF ${c.cpf||'—'}, ao credor ${cr.nome}. Solicite: contratos, proposta, saldo devedor, planilha evolução, opções renegociação. Prazo 10 dias, senão consumidor.gov e BCB. Sem advogados. Data: ${new Date().toLocaleDateString('pt-BR')}.`,700);
       return{credor:cr.nome,texto:txt};
     }));
     window._seNots=nots;
     document.getElementById('se-not-wrap').innerHTML=nots.map((n,i)=>`
       <div class="card">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-          <div class="ct" style="margin-bottom:0">Notifica&#231;&#227;o &#8212; ${n.credor}</div>
-          <button class="btn btns" onclick="copiarN(${i})">&#128203; Copiar</button>
+          <div class="ct" style="margin-bottom:0">Notificação — ${n.credor}</div>
+          <button class="btn btns" onclick="copiarN(${i})">📋 Copiar</button>
         </div>
         <div class="out" id="sn-out-${i}">${n.texto}</div>
       </div>`).join('');
@@ -1664,7 +1663,7 @@ window.addEventListener('load', async () => {
   await carregarEstado();
   await diCarregarPlanilha();
   ocultarIndicadorSync();
-  // Alerta autom&#225;tico de pend&#234;ncias
+  // Alerta automático de pendências
   setTimeout(() => {
     const pendentes = diClientes.filter(c => {
       const st = appState[c.id]||{};
@@ -1672,12 +1671,12 @@ window.addEventListener('load', async () => {
       return diasDesde(st.ultimoContato || c.data) >= 3 && diPct(c.id) < 100;
     });
     if (pendentes.length > 0) {
-      console.info(`[Alerta] ${pendentes.length} cliente(s) com docs pendentes h&#225; 3+ dias.`);
+      console.info(`[Alerta] ${pendentes.length} cliente(s) com docs pendentes há 3+ dias.`);
     }
   }, 3000);
 });
 
-// &#9472;&#9472; Indicador de sincroniza&#231;&#227;o &#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;
+// ── Indicador de sincronização ────────────────────────────
 function mostrarIndicadorSync(msg) {
   let el = document.getElementById('sync-indicator');
   if (!el) {
@@ -1694,7 +1693,7 @@ function ocultarIndicadorSync() {
   if (el) el.style.display = 'none';
 }
 
-// Bot&#227;o para reconfigurar URL do script
+// Botão para reconfigurar URL do script
 function reconfigurarScript() {
   localStorage.removeItem('gadiani_script_url');
   APPS_SCRIPT_URL = '';
