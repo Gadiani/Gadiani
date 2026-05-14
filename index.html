@@ -357,6 +357,15 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#1a1a1a}
     <div id="se-docs-wrap" style="display:none">
       <div class="card" id="se-ficha"></div>
       <div class="card">
+        <div class="info-box" style="margin-bottom:10px">Para extrair consignados automaticamente, peca ao cliente o <strong>holerite, extrato de beneficio ou contracheque em PDF</strong> e use o campo abaixo para analisar com IA.</div>
+        <div style="margin-bottom:10px">
+          <label style="margin-top:0">Analisar PDF de holerite/extrato para extrair consignados:</label>
+          <div style="display:flex;gap:8px;align-items:center">
+            <input type="file" id="se-pdf-upload" accept=".pdf,image/*" style="flex:1;font-size:12px;padding:6px">
+            <button class="btn btnp" onclick="seAnalisarPDF()">Analisar com IA</button>
+          </div>
+          <div id="se-pdf-resultado" style="display:none;margin-top:8px" class="out"></div>
+        </div>
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
           <div><div class="ct" style="margin-bottom:3px">Documentos necessarios</div><span class="badge bi" id="se-badge-d">0/10</span></div>
           <button class="btn btnw" onclick="seCobrarWA(null)">Cobrar WhatsApp</button>
@@ -729,9 +738,14 @@ function diCarregar(){
       var r=rows[i];
       if(!r[1]||!r[1].trim()||r[1]==='Nome Completo')continue;
       diClientes.push({
-        id:'di_'+i, nome:r[1]||'', prof:r[2]||'', cpf:r[4]||'', nasc:r[5]||'',
-        tel:r[8]||'', email:r[9]||'', cidade:r[7]||'', banco:r[14]||'',
-        valor:r[15]||'', tipo:r[13]||'', doencas:r[21]||'', data:r[0]||''
+        id:'di_'+i,
+        data:r[0]||'', nome:r[1]||'', prof:r[2]||'', civil:r[3]||'',
+        cpf:r[4]||'', nasc:r[5]||'', end:r[6]||'', cidade:r[7]||'',
+        tel:r[8]||'', email:r[9]||'', origem:r[10]||'', dataDesc:r[11]||'',
+        contratou:r[12]||'', tipo:r[13]||'', banco:r[14]||'', valor:r[15]||'',
+        procurou:r[16]||'', renda:r[19]||'', doencas:r[21]||'',
+        meuInss:r[24]||'', senhaGov:r[25]||'', extratoConsig:r[26]||'',
+        contato1:r[27]||'', contato1Tel:r[28]||''
       });
     }
     diPopularSels();diRenderFila();diStats();diRenderAguard();diRenderPend('docs');
@@ -784,7 +798,7 @@ function diRenderFila(filtro, tipo){
     return '<div class="cli-row'+(st.urgente?' urgente':'')+'" onclick="diIrDocs(\''+c.id+'\')">'
       +'<div style="flex:1">'
       +'<div style="font-weight:600;font-size:13px">'+(st.urgente?'&#9889; ':'')+c.nome+'</div>'
-      +'<div style="font-size:11px;color:#999;margin-top:1px">'+(c.banco||'-')+' &middot; '+(c.valor||'-')+' &middot; '+(c.cidade||'-')+'</div>'
+      +'<div style="font-size:11px;color:#999;margin-top:1px">'+(c.banco||'-')+' &middot; '+(c.valor||'-')+' &middot; '+(c.prof||'-')+' &middot; '+(c.cidade||'-')+'</div>'
       +'<div class="pw" style="width:180px;margin-top:4px"><div class="pb" style="width:'+p+'%"></div></div>'
       +(st.numAcao?'<div style="font-size:10px;color:#1b5e20;margin-top:2px">No '+st.numAcao+'</div>':'')
       +(st.urgente&&st.urgenteMotivo?'<div style="font-size:10px;color:#c62828;margin-top:2px">'+st.urgenteMotivo+'</div>':'')
@@ -820,13 +834,22 @@ function diAbrirDocs(){
   diAtual=c;
   el('di-docs-wrap').style.display='block';
   el('di-ficha').innerHTML='<div class="ct">Ficha &mdash; '+c.nome+'</div>'
-    +'<div class="g2" style="gap:8px">'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">'
     +'<div><div style="font-size:10px;color:#aaa">CPF</div><div style="font-weight:600">'+(c.cpf||'-')+'</div></div>'
+    +'<div><div style="font-size:10px;color:#aaa">Nascimento</div><div>'+(c.nasc||'-')+'</div></div>'
+    +'<div><div style="font-size:10px;color:#aaa">Estado civil</div><div>'+(c.civil||'-')+'</div></div>'
+    +'<div><div style="font-size:10px;color:#aaa">Profissao</div><div>'+(c.prof||'-')+'</div></div>'
     +'<div><div style="font-size:10px;color:#aaa">Telefone</div><div style="font-weight:700;color:#25d366">'+(c.tel||'-')+'</div></div>'
+    +'<div><div style="font-size:10px;color:#aaa">Cidade</div><div>'+(c.cidade||'-')+'</div></div>'
     +'<div><div style="font-size:10px;color:#aaa">Banco reu</div><div style="font-weight:700;color:#c62828">'+(c.banco||'-')+'</div></div>'
+    +'<div><div style="font-size:10px;color:#aaa">Tipo irregularidade</div><div>'+(c.tipo||'-')+'</div></div>'
     +'<div><div style="font-size:10px;color:#aaa">Desconto mensal</div><div style="font-weight:700">'+(c.valor||'-')+'</div></div>'
+    +'<div><div style="font-size:10px;color:#aaa">Renda mensal</div><div>'+(c.renda||'-')+'</div></div>'
+    +'<div><div style="font-size:10px;color:#aaa">Senha .gov</div><div>'+(c.senhaGov?'Sim':'Nao informada')+'</div></div>'
+    +'<div><div style="font-size:10px;color:#aaa">Extrato consig.</div><div>'+(c.extratoConsig?'Sim':'Nao')+'</div></div>'
     +'</div>'
-    +(c.doencas?'<div style="margin-top:8px;font-size:11px;background:#fff8e1;padding:6px 10px;border-radius:6px;color:#e65100">'+c.doencas+'</div>':'');
+    +(c.doencas?'<div style="margin-top:8px;font-size:11px;background:#fff8e1;padding:6px 10px;border-radius:6px;color:#e65100">Enfermidade: '+c.doencas+'</div>':'')
+    +(c.contato1?'<div style="margin-top:6px;font-size:11px;color:#aaa">Contato auxiliar: '+c.contato1+' &mdash; '+c.contato1Tel+'</div>':'');
   diRenderDocs(c);
 }
 
@@ -1062,16 +1085,27 @@ function seCarregar(){
     for(var i=1;i<rows.length;i++){
       var r=rows[i];
       if(!r[1]||!r[1].trim()||r[1]==='Nome')continue;
+      function sc(n){return r[n]||'';}
       seClientes.push({
-        id:'se_'+i, nome:r[1]||'', nasc:r[20]||'', prof:r[3]||'', civil:r[4]||'',
-        cpf:r[5]||'', end:r[6]||'', tel:r[7]||'', email:r[8]||'',
-        rendaBruta:r[21]||'', rendaLiquida:r[22]||'', aluguel:r[24]||'',
-        alimentacao:r[28]||'', doencas:r[32]||'', totalDividas:r[45]||'',
-        valorMensal:r[46]||'', serasa:r[48]||'', motivos:r[75]||'',
-        c1:{nome:r[52]||'',valor:r[53]||'',forma:r[54]||'',parcelas:r[55]||'',pagas:r[56]||'',prest:r[57]||'',sit:r[58]||''},
-        c2:{nome:r[61]||'',valor:r[62]||'',forma:r[63]||'',parcelas:r[64]||'',pagas:r[65]||'',prest:r[66]||'',sit:r[67]||''},
-        c3:{nome:r[70]||'',valor:r[71]||'',forma:r[72]||'',parcelas:r[73]||'',prest:r[74]||'',sit:r[76]||''},
-        data:r[0]||''
+        id:'se_'+i,
+        data:sc(0), nome:sc(1), nac:sc(2), prof:sc(3), civil:sc(4),
+        cpf:sc(5), end:sc(6), tel:sc(7), email:sc(8), nasc:sc(20),
+        rendaBruta:sc(21), rendaLiquida:sc(22), energia:sc(23), aluguel:sc(24),
+        agua:sc(25), cond:sc(26), internet:sc(27), alimentacao:sc(28),
+        pensao:sc(29), educacao:sc(30), planoSaude:sc(31), doencas:sc(32),
+        remedios:sc(33), doencaGrave:sc(35), totalDividas:sc(44),
+        valorMensal:sc(45), qtdCredores:sc(46), serasa:sc(47), senhaGov:sc(48),
+        contato1:sc(49), motivos:sc(73),
+        c1:{nome:sc(50),valor:sc(51),forma:sc(52),parcelas:sc(53),pagas:sc(54),prest:sc(55),sit:sc(56),reneg:sc(57),contrato:sc(58)},
+        c2:{nome:sc(59),valor:sc(60),forma:sc(61),parcelas:sc(62),pagas:sc(63),prest:sc(64),sit:sc(65),reneg:sc(66),contrato:sc(67)},
+        c3:{nome:sc(68),valor:sc(69),forma:sc(70),parcelas:sc(71),prest:sc(72),sit:sc(74),reneg:sc(75),contrato:sc(76)},
+        c4:{nome:sc(77),valor:sc(78),forma:sc(79),parcelas:sc(80),pagas:sc(81),prest:sc(82),sit:sc(83),reneg:sc(84),contrato:sc(85)},
+        c5:{nome:sc(86),valor:sc(87),forma:sc(88),parcelas:sc(89),pagas:sc(90),prest:sc(91),sit:sc(92),reneg:sc(93),contrato:sc(94)},
+        c6:{nome:sc(95),valor:sc(96),forma:sc(97),parcelas:sc(98),pagas:sc(99),prest:sc(100),sit:sc(101),reneg:sc(102),contrato:sc(103)},
+        c7:{nome:sc(104),valor:sc(105),forma:sc(106),parcelas:sc(107),pagas:sc(108),prest:sc(109),sit:sc(110),reneg:sc(111),contrato:sc(112)},
+        c8:{nome:sc(113),valor:sc(116),forma:sc(116),parcelas:sc(117),pagas:sc(118),prest:sc(119),sit:sc(120),reneg:sc(121),contrato:sc(122)},
+        c9:{nome:sc(123),valor:sc(124),forma:sc(126),parcelas:sc(128),pagas:sc(129),prest:sc(131),sit:sc(132),reneg:sc(133),contrato:sc(134)},
+        c10:{nome:sc(135),valor:sc(136),forma:sc(138),parcelas:sc(139),pagas:sc(140),prest:sc(141),sit:sc(142),reneg:sc(143),contrato:sc(144)}
       });
     }
     sePopularSels();seRenderFila();seStats();seRenderAguard();
@@ -1155,7 +1189,7 @@ function seAbrirDocs(){
     +'</div>'
     +(c.doencas?'<div style="margin-top:8px;font-size:11px;background:#fff8e1;padding:6px 10px;border-radius:6px;color:#e65100">'+c.doencas+'</div>':'');
   seRenderDocs(c);
-  var creds=[c.c1,c.c2,c.c3].filter(function(cr){return cr.nome;});
+  var creds=[c.c1,c.c2,c.c3,c.c4,c.c5,c.c6,c.c7,c.c8,c.c9,c.c10].filter(function(cr){return cr&&cr.nome;});
   el('se-credores').innerHTML=creds.length?creds.map(function(cr){
     return '<div style="border:1px solid #e0ddd6;border-radius:8px;padding:10px 14px;margin-bottom:8px;background:#f8f7f3">'
       +'<div style="font-weight:600;font-size:13px">'+cr.nome+'</div>'
@@ -1217,7 +1251,7 @@ function seGerarEtapa(step){
   if(!sePetCliente){alert('Selecione um cliente.');return;}
   var c=sePetCliente;
   var rLiq=parseFloat(c.rendaLiquida)||0;
-  var creds=[c.c1,c.c2,c.c3].filter(function(cr){return cr.nome;}).map(function(cr){return cr.nome+': R$ '+cr.valor+' ('+cr.forma+', parcela R$ '+cr.prest+', '+cr.pagas+'/'+cr.parcelas+' pagas, '+cr.sit+')';}).join('; ');
+  var creds=[c.c1,c.c2,c.c3,c.c4,c.c5,c.c6,c.c7,c.c8,c.c9,c.c10].filter(function(cr){return cr&&cr.nome;}).map(function(cr){return cr.nome+': R$ '+cr.valor+' ('+cr.forma+', parcela R$ '+cr.prest+', sit: '+cr.sit+')';}).join('; ');
   var prompts=[
     'Redija ENDERECAMENTO E QUALIFICACAO para peticao de SUPERENDIVIDAMENTO (Lei 14.181/2021). Calibri 12, justificado, 1,5. Titulos NEGRITO MAIUSCULO. Nome da acao: ACAO DE REPACTUACAO DE DIVIDAS E SUPERENDIVIDAMENTO. Autor: '+c.nome+', CPF: '+c.cpf+', Nasc: '+c.nasc+', '+c.civil+', '+c.prof+', Endereco: '+(c.end||c.cidade||'-')+'. Deixe [QUALIFICACAO DOS REQUERIDOS - PREENCHER MANUALMENTE]. Sem jurisprudencia.',
     'Redija DA JUSTICA GRATUITA E PRIORIDADE para '+c.nome+'. Renda liquida: R$ '+c.rendaLiquida+'. Dividas: '+c.totalDividas+'. Doencas: '+(c.doencas||'nenhuma')+'. Gastos: aluguel R$ '+(c.aluguel||'-')+', alimentacao R$ '+(c.alimentacao||'-')+'. CF art 5 LXXIV, CPC art 98, CDC arts 2 e 3.'+(c.doencas?' Prioridade tramitacao: doenca grave CPC art 1048.':'')+' Sem jurisprudencia.',
@@ -1256,7 +1290,7 @@ function seGerarPlano(){
   el('se-plano-card').style.display='block';
   el('se-plano-txt').textContent='Calculando plano...';
   var rLiq=parseFloat(c.rendaLiquida)||0;
-  var creds=[c.c1,c.c2,c.c3].filter(function(cr){return cr.nome;}).map(function(cr){return cr.nome+': R$ '+cr.valor+' (parcela atual: R$ '+cr.prest+')';}).join(', ');
+  var creds=[c.c1,c.c2,c.c3,c.c4,c.c5,c.c6,c.c7,c.c8,c.c9,c.c10].filter(function(cr){return cr&&cr.nome;}).map(function(cr){return cr.nome+': R$ '+cr.valor+' (parcela atual: R$ '+cr.prest+')';}).join(', ');
   var prompt='Especialista juridico. Plano de pagamento PROVISORIO art 104-A CDC para '+c.nome+', CPF '+c.cpf+'. Renda liquida: R$ '+rLiq.toFixed(2)+'. 70% existencial: R$ '+(rLiq*0.7).toFixed(2)+'. 30% dividas: R$ '+(rLiq*0.3).toFixed(2)+'. Credores: '+(creds||'a informar')+'. Total dividas: '+(c.totalDividas||'-')+'. 60 meses, exclusao encargos, juros 1% am+INPC, exclusao Serasa. Distribua 30% proporcionalmente. Formato escrito claro sem tabelas. Data: '+new Date().toLocaleDateString('pt-BR');
   callClaude(prompt, function(err, txt){
     el('se-plano-txt').textContent=err?'Erro: '+err.message:txt;
@@ -1318,7 +1352,7 @@ function seEnvCRM(cid, idx){
 function seGerarNot(){
   var id=el('se-not-sel').value;if(!id){alert('Selecione.');return;}
   var c=seClientes.find(function(x){return x.id===id;});
-  var creds=[c.c1,c.c2,c.c3].filter(function(cr){return cr.nome;});
+  var creds=[c.c1,c.c2,c.c3,c.c4,c.c5,c.c6,c.c7,c.c8,c.c9,c.c10].filter(function(cr){return cr&&cr.nome;});
   if(!creds.length){alert('Nenhum credor encontrado.');return;}
   el('se-not-wrap').innerHTML='<div class="loading"><span class="spin"></span> Gerando '+creds.length+' notificacao(oes)...</div>';
   var resultados=[];var count=0;
@@ -1356,6 +1390,41 @@ function salvarUrgente(){
   salvarEstado();fecharModal();
   diRenderFila();seRenderFila();diStats();seStats();
   alert('Marcado como urgente!');
+}
+
+// ===== ANALISAR PDF HOLERITE =====
+function seAnalisarPDF(){
+  var input = document.getElementById('se-pdf-upload');
+  if(!input.files||!input.files[0]){alert('Selecione um arquivo.');return;}
+  var file = input.files[0];
+  var res = document.getElementById('se-pdf-resultado');
+  res.style.display='block';
+  res.textContent='Lendo arquivo e analisando com IA...';
+  var reader = new FileReader();
+  reader.onload = function(e){
+    var base64 = e.target.result.split(',')[1];
+    var isImg = file.type.indexOf('image')>=0;
+    var body = {
+      model:'claude-sonnet-4-20250514',
+      max_tokens:1500,
+      messages:[{role:'user',content:[
+        {type:isImg?'image':'document',
+         source:{type:'base64',media_type:file.type,data:base64}},
+        {type:'text',text:'Analise este documento e extraia todos os descontos consignados listados. Para cada um informe: nome do credor/banco, numero do contrato (se visivel), valor da parcela, numero de parcelas pagas e total de parcelas. Formato de lista clara e direta. Se nao houver consignados, informe isso.'}
+      ]}]
+    };
+    fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(body)
+    })
+    .then(function(r){return r.json();})
+    .then(function(d){
+      res.textContent=d.content&&d.content[0]?d.content[0].text:'Erro ao analisar.';
+    })
+    .catch(function(e){res.textContent='Erro: '+e.message;});
+  };
+  reader.readAsDataURL(file);
 }
 
 // ===== INIT =====
