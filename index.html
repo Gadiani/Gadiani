@@ -120,7 +120,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#1a1a1a}
   </div>
 </div>
 
-<div class="mod-grid">
+<div class="mod-grid" style="grid-template-columns:1fr 1fr 1fr">
   <button class="mod-btn on" id="mbtn-di" onclick="setMod('di')">
     <div class="mod-icon">&#127974;</div>
     <div class="mod-title">Descontos Indevidos</div>
@@ -130,6 +130,11 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#1a1a1a}
     <div class="mod-icon">&#9878;</div>
     <div class="mod-title">Superendividamento</div>
     <div class="mod-sub">Plano 70/30 &middot; Peticao em etapas</div>
+  </button>
+  <button class="mod-btn" id="mbtn-pt" onclick="setMod('pt')">
+    <div class="mod-icon">&#9989;</div>
+    <div class="mod-title">Protocolados</div>
+    <div class="mod-sub">DI e SE protocolados</div>
   </button>
 </div>
 
@@ -142,7 +147,8 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#1a1a1a}
     <button id="di-n3" onclick="swDI(3)">Peticao</button>
     <button id="di-n4" onclick="swDI(4)">Protocolo</button>
     <button id="di-n5" onclick="swDI(5)">CRM</button>
-    <button id="di-n6" onclick="swDI(6)">Notificacao</button>
+    <button id="di-n6" onclick="swDI(6)">Drive</button>
+    <button id="di-n7" onclick="swDI(7)">Notificacao</button>
   </nav>
 
   <!-- FILA -->
@@ -157,13 +163,14 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#1a1a1a}
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
         <div class="ct" style="margin-bottom:0">Clientes &mdash; Descontos Indevidos</div>
         <div style="display:flex;gap:6px">
-          <input id="di-busca" placeholder="Buscar..." style="width:160px;font-size:12px;padding:6px 10px" oninput="diFiltrar()">
+          <input id="di-busca" placeholder="Nome ou telefone..." style="width:180px;font-size:12px;padding:6px 10px" oninput="diFiltrar()">
           <select id="di-filtro" style="width:130px;font-size:12px;padding:6px 8px" onchange="diFiltrar()">
             <option value="todos">Todos</option>
             <option value="urgente">Urgentes</option>
             <option value="docs">Docs pendentes</option>
             <option value="protocolo">Aguard. protocolo</option>
             <option value="protocolado">Protocolados</option>
+            <option value="arquivado">Arquivados</option>
           </select>
           <button class="btn" onclick="diCarregar()" title="Recarregar">&#8635;</button>
         </div>
@@ -294,8 +301,37 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#1a1a1a}
     </div>
   </div>
 
-  <!-- NOTIFICACAO -->
+  <!-- DRIVE -->
   <div id="di-pg6" class="pg">
+    <div class="card">
+      <div class="ct">Google Drive &mdash; Documentos do cliente</div>
+      <div class="info-box">
+        O sistema busca a pasta do cliente no Drive e lista os arquivos encontrados.
+        Requer configuracao unica do Google OAuth (ver guia abaixo).
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:12px">
+        <select id="di-drive-sel" style="flex:1"><option value="">Selecionar cliente...</option></select>
+        <button class="btn btnp" onclick="diBuscarDrive()">Buscar no Drive</button>
+      </div>
+      <div id="di-drive-resultado" style="display:none">
+        <div class="ct">Arquivos encontrados na pasta do cliente</div>
+        <div id="di-drive-lista"></div>
+      </div>
+      <div class="warn-box" style="margin-top:10px">
+        <strong>Configuracao necessaria (unica vez):</strong><br>
+        1. Acesse <a href="https://console.cloud.google.com" target="_blank" style="color:#e65100">console.cloud.google.com</a><br>
+        2. Crie um projeto &rarr; Ative a API do Google Drive<br>
+        3. Crie credenciais OAuth 2.0 &rarr; Aplicativo da Web<br>
+        4. Adicione https://gadiani.github.io como origem autorizada<br>
+        5. Cole o Client ID abaixo:<br>
+        <input id="di-drive-client-id" placeholder="Cole o Client ID do Google aqui" style="margin-top:6px;font-size:11px">
+        <button class="btn btns" onclick="salvarDriveConfig()" style="margin-top:6px">Salvar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- NOTIFICACAO -->
+  <div id="di-pg7" class="pg">
     <div class="card">
       <div class="ct">Notificacao Extrajudicial</div>
       <div class="info-box">Gerada em nome do consumidor. Registrar em Consumidor.gov e Banco Central.</div>
@@ -341,7 +377,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#1a1a1a}
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
         <div class="ct" style="margin-bottom:0">Clientes &mdash; Superendividamento</div>
         <div style="display:flex;gap:6px">
-          <input id="se-busca" placeholder="Buscar..." style="width:160px;font-size:12px;padding:6px 10px" oninput="seFiltrar()">
+          <input id="se-busca" placeholder="Nome ou telefone..." style="width:180px;font-size:12px;padding:6px 10px" oninput="seFiltrar()">
           <button class="btn" onclick="seCarregar()" title="Recarregar">&#8635;</button>
         </div>
       </div>
@@ -462,6 +498,20 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#1a1a1a}
       </div>
     </div>
     <div id="se-not-wrap"></div>
+  </div>
+</div>
+
+<!-- PROTOCOLADOS -->
+<div id="mod-pt" style="display:none">
+  <div class="card" style="margin-top:0">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <div>
+        <div class="ct" style="margin-bottom:4px">Acoes Protocoladas</div>
+        <span id="pt-count" class="badge bg">0 processos</span>
+      </div>
+      <input id="pt-busca" placeholder="Buscar..." style="width:200px;font-size:12px;padding:6px 10px" oninput="ptRender()">
+    </div>
+    <div id="pt-lista"></div>
   </div>
 </div>
 
@@ -715,12 +765,75 @@ function carregarUsuario(){var u=localStorage.getItem('gadiani_user');if(u)el('s
 function setMod(m){
   el('mod-di').style.display=m==='di'?'block':'none';
   el('mod-se').style.display=m==='se'?'block':'none';
+  el('mod-pt').style.display=m==='pt'?'block':'none';
   el('mbtn-di').className='mod-btn'+(m==='di'?' on':'');
   el('mbtn-se').className='mod-btn'+(m==='se'?' on':'');
+  el('mbtn-pt').className='mod-btn'+(m==='pt'?' on':'');
   if(m==='se'&&seClientes.length===0)seCarregar();
+  if(m==='pt')ptRender();
 }
 
-function swDI(n){for(var i=0;i<7;i++){el('di-pg'+i).className='pg'+(i===n?' on':'');el('di-n'+i).className=i===n?'on':'';}}
+function ptRender(){
+  var f=(el('pt-busca').value||'').toLowerCase();
+  // Gather all protocolados from DI and SE
+  var todos=[];
+  diClientes.forEach(function(c){
+    var st=getEst(c.id);
+    if(st.protocolado)todos.push({c:c,st:st,mod:'DI',cor:'#1565c0'});
+  });
+  seClientes.forEach(function(c){
+    var st=getEst(c.id);
+    if(st.protocolado)todos.push({c:c,st:st,mod:'SE',cor:'#2e7d32'});
+  });
+  if(f)todos=todos.filter(function(x){
+    return x.c.nome.toLowerCase().indexOf(f)>=0
+      ||(x.st.numAcao&&x.st.numAcao.toLowerCase().indexOf(f)>=0)
+      ||(x.c.tel&&x.c.tel.replace(/\D/g,'').indexOf(f.replace(/\D/g,''))>=0);
+  });
+  // Sort by protocol date, most recent first
+  todos.sort(function(a,b){
+    return new Date(b.st.dataProtocolo||0)-new Date(a.st.dataProtocolo||0);
+  });
+  el('pt-count').textContent=todos.length+' processo'+(todos.length!==1?'s':'');
+  if(!todos.length){
+    el('pt-lista').innerHTML='<div style="padding:24px;text-align:center;color:#bbb">Nenhum processo protocolado ainda.</div>';
+    return;
+  }
+  el('pt-lista').innerHTML=todos.map(function(x){
+    var c=x.c,st=x.st;
+    var dataStr=st.dataProtocolo?new Date(st.dataProtocolo).toLocaleDateString('pt-BR'):'-';
+    var banco=c.banco||(c.c1&&c.c1.nome?c.c1.nome:'varios credores');
+    return '<div style="display:flex;align-items:flex-start;gap:12px;padding:12px 0;border-bottom:1px solid #f0ede8">'
+      +'<div style="width:36px;height:36px;border-radius:50%;background:'+(x.mod==='DI'?'#e3f2fd':'#e8f5e9')+';display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:'+x.cor+';flex-shrink:0">'+x.mod+'</div>'
+      +'<div style="flex:1">'
+      +'<div style="font-weight:600;font-size:13px">'+c.nome+'</div>'
+      +'<div style="font-size:11px;color:#999;margin-top:2px">'+banco+' &middot; '+(c.valor||c.totalDividas||'-')+' &middot; '+(c.tel||'sem tel.')+'</div>'
+      +'<div style="margin-top:6px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">'
+      +'<span style="background:#e8f5e9;color:#1b5e20;border-radius:6px;padding:3px 10px;font-size:11px;font-weight:600">&#9989; No '+st.numAcao+'</span>'
+      +'<span style="font-size:11px;color:#aaa">Protocolado em '+dataStr+'</span>'
+      +'</div>'
+      +'</div>'
+      +'<div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0">'
+      +(c.tel?'<button class="btn btnw" style="padding:4px 10px;font-size:11px" onclick="ptWA(''+c.tel+'',''+c.nome+'',''+st.numAcao+'')">WhatsApp</button>':'')
+      +'<button class="btn" style="padding:4px 10px;font-size:11px;background:#fce4ec;border-color:#f8bbd0;color:#c62828" onclick="ptArquivar(''+c.id+'')">Arquivar</button>'
+      +'</div>'
+      +'</div>';
+  }).join('');
+}
+
+function ptWA(tel,nome,numAcao){
+  var msg='Ola, '+nome.split(' ')[0]+'! Passamos para informar que seu processo (No '+numAcao+') esta em andamento. Nossa equipe esta acompanhando cada movimentacao. Qualquer novidade entraremos em contato! Escritorio Gadiani & D'Antraccoli';
+  window.open('https://wa.me/55'+tel.replace(/\D/g,'')+'?text='+encodeURIComponent(msg),'_blank');
+}
+
+function ptArquivar(cid){
+  if(!confirm('Arquivar este processo? Ele sai da lista de protocolados.'))return;
+  var st=getEst(cid);
+  st.arquivado=true;st.dataArquivo=new Date().toISOString();
+  salvarEstado();ptRender();
+}
+
+function swDI(n){for(var i=0;i<8;i++){el('di-pg'+i).className='pg'+(i===n?' on':'');el('di-n'+i).className=i===n?'on':'';}}
 function swSE(n){for(var i=0;i<7;i++){el('se-pg'+i).className='pg'+(i===n?' on':'');el('se-n'+i).className=i===n?'on':'';}}
 
 // ===== DESCONTOS INDEVIDOS =====
@@ -762,6 +875,8 @@ function diStats(){
     if(diasDesde(st.ultimaAt||c.data)>=7&&diPct(c.id)<100)dp++;
   });
   el('di-s1').textContent=dp;el('di-s2').textContent=pp;el('di-s3').textContent=pt;
+  // Update protocolados count badge if visible
+  try{ptRender();}catch(e){}
 }
 
 function diPct(cid){
@@ -785,12 +900,35 @@ function diStatusLabel(c){
 function diRenderFila(filtro, tipo){
   var f=filtro||el('di-busca').value||'';
   var t=tipo||el('di-filtro').value||'todos';
-  var lista=diClientes.filter(function(c){return !f||c.nome.toLowerCase().indexOf(f.toLowerCase())>=0;});
+  // Search by name OR phone
+  var lista=diClientes.filter(function(c){
+    var st=getEst(c.id);
+    if(st.excluido)return false; // never show deleted
+    if(t==='arquivado')return !!st.arquivado;
+    if(st.arquivado)return false; // hide archived in other views
+    if(t==='protocolado')return !!st.protocolado;
+    if(st.protocolado)return false; // protocolados go to Protocolados tab
+    if(!f)return true;
+    var fLow=f.toLowerCase();
+    var fDigits=f.replace(/\D/g,'');
+    var nameMatch=c.nome.toLowerCase().indexOf(fLow)>=0;
+    var phoneMatch=fDigits.length>=4&&c.tel&&c.tel.replace(/\D/g,'').indexOf(fDigits)>=0;
+    return nameMatch||phoneMatch;
+  });
   if(t==='urgente')lista=lista.filter(function(c){return getEst(c.id).urgente;});
   else if(t==='docs')lista=lista.filter(function(c){return !getEst(c.id).protocolado&&!getEst(c.id).paraProtocolo&&diPct(c.id)<100;});
   else if(t==='protocolo')lista=lista.filter(function(c){return getEst(c.id).paraProtocolo&&!getEst(c.id).protocolado;});
   else if(t==='protocolado')lista=lista.filter(function(c){return getEst(c.id).protocolado;});
-  lista.sort(function(a,b){var sa=getEst(a.id),sb=getEst(b.id);if(sa.urgente&&!sb.urgente)return -1;if(!sa.urgente&&sb.urgente)return 1;return 0;});
+  lista.sort(function(a,b){
+    var sa=getEst(a.id),sb=getEst(b.id);
+    if(sa.urgente&&!sb.urgente)return -1;
+    if(!sa.urgente&&sb.urgente)return 1;
+    // movedToEnd goes to bottom
+    if(sa.movedToEnd&&!sb.movedToEnd)return 1;
+    if(!sa.movedToEnd&&sb.movedToEnd)return -1;
+    if(sa.movedToEnd&&sb.movedToEnd)return sa.movedToEnd-sb.movedToEnd;
+    return 0;
+  });
   if(!lista.length){el('di-lista').innerHTML='<div style="padding:16px;text-align:center;color:#bbb">Nenhum cliente encontrado.</div>';return;}
   el('di-lista').innerHTML=lista.map(function(c){
     var p=diPct(c.id);
@@ -803,15 +941,49 @@ function diRenderFila(filtro, tipo){
       +(st.numAcao?'<div style="font-size:10px;color:#1b5e20;margin-top:2px">No '+st.numAcao+'</div>':'')
       +(st.urgente&&st.urgenteMotivo?'<div style="font-size:10px;color:#c62828;margin-top:2px">'+st.urgenteMotivo+'</div>':'')
       +'</div>'
-      +'<div style="text-align:right">'+diStatusLabel(c)+'<div style="font-size:11px;color:#bbb;margin-top:4px">'+(c.tel||'sem tel.')+'</div></div>'
+      +'<div style="text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:4px">'+diStatusLabel(c)
+      +'<div style="font-size:11px;color:#bbb">'+(c.tel||'sem tel.')+'</div>'
+      +'<div style="display:flex;gap:4px;margin-top:2px">'
+      +'<button class="btn" style="padding:2px 7px;font-size:10px;background:#fff8e1;border-color:#ffcc80;color:#e65100" title="Mover para o final" onclick="event.stopPropagation();diMoverFinal(''+c.id+'')" >&#8595; Final</button>'
+      +(getEst(c.id).arquivado
+        ?'<button class="btn" style="padding:2px 7px;font-size:10px;background:#e8f5e9;border-color:#a5d6a7;color:#1b5e20" title="Desarquivar" onclick="event.stopPropagation();diDesarquivar(''+c.id+'')" >Restaurar</button>'
+        :'<button class="btn" style="padding:2px 7px;font-size:10px;background:#f5f4f0;color:#666" title="Arquivar" onclick="event.stopPropagation();diArquivar(''+c.id+'')" >Arquivar</button>')
+      +'<button class="btn" style="padding:2px 7px;font-size:10px;background:#fce4ec;border-color:#f8bbd0;color:#c62828" title="Excluir" onclick="event.stopPropagation();diExcluir(''+c.id+'')" >&#215; Excluir</button>'
+      +'</div></div>'
       +'</div>';
   }).join('');
 }
 
 function diFiltrar(){diRenderFila();}
 
+function diMoverFinal(cid){
+  var st=getEst(cid);
+  st.movedToEnd=Date.now();
+  salvarEstado();diRenderFila();
+}
+
+function diArquivar(cid){
+  if(!confirm('Arquivar este cliente? Ele sai da fila mas pode ser recuperado pelo filtro "Arquivados".'))return;
+  var st=getEst(cid);
+  st.arquivado=true;st.dataArquivo=new Date().toISOString();
+  salvarEstado();diRenderFila();diStats();
+}
+
+function diDesarquivar(cid){
+  var st=getEst(cid);
+  st.arquivado=false;
+  salvarEstado();diRenderFila();diStats();
+}
+
+function diExcluir(cid){
+  if(!confirm('EXCLUIR permanentemente este cliente do sistema? Esta acao nao pode ser desfeita.'))return;
+  var st=getEst(cid);
+  st.excluido=true;st.dataExclusao=new Date().toISOString();
+  salvarEstado();diRenderFila();diStats();
+}
+
 function diPopularSels(){
-  var sels=['di-sel-doc','di-sel-pet','di-prot1','di-prot2','di-crm-sel','di-not-sel','modal-cli'];
+  var sels=['di-sel-doc','di-sel-pet','di-prot1','di-prot2','di-crm-sel','di-not-sel','di-drive-sel','modal-cli'];
   sels.forEach(function(id){
     var s=el(id);if(!s)return;
     var v=s.value;
@@ -1030,7 +1202,7 @@ function diConfirmarProt(){
     window.open('https://wa.me/55'+c.tel.replace(/\D/g,'')+'?text='+encodeURIComponent(msg),'_blank');
   }
   diRenderAguard();diRenderFila();diStats();
-  alert('Protocolo confirmado!');
+  if(confirm('Protocolo confirmado! Deseja ir para a aba Protocolados?')){setMod('pt');}
 }
 
 function diAbrirCRM(){
@@ -1133,7 +1305,16 @@ function sePct(cid){
 
 function seRenderFila(filtro){
   var f=filtro||el('se-busca').value||'';
-  var lista=seClientes.filter(function(c){return !f||c.nome.toLowerCase().indexOf(f.toLowerCase())>=0;});
+  var lista=seClientes.filter(function(c){
+    var st=getEst(c.id);
+    if(st.excluido)return false;
+    if(st.arquivado)return false;
+    if(st.protocolado)return false; // protocolados go to Protocolados tab
+    if(!f)return true;
+    var fLow=f.toLowerCase();
+    var fDigits=f.replace(/\D/g,'');
+    return c.nome.toLowerCase().indexOf(fLow)>=0||(fDigits.length>=4&&c.tel&&c.tel.replace(/\D/g,'').indexOf(fDigits)>=0);
+  });
   lista.sort(function(a,b){var sa=getEst(a.id),sb=getEst(b.id);if(sa.urgente&&!sb.urgente)return -1;if(!sa.urgente&&sb.urgente)return 1;return 0;});
   if(!lista.length){el('se-lista').innerHTML='<div style="padding:16px;text-align:center;color:#bbb">Nenhum cliente.</div>';return;}
   el('se-lista').innerHTML=lista.map(function(c){
@@ -1321,6 +1502,7 @@ function seConfirmarProt(){
   var st=getEst(id);st.protocolado=true;st.numAcao=num;st.dataProtocolo=new Date().toISOString();salvarEstado();
   if(c.tel){var msg='Sua acao de SUPERENDIVIDAMENTO foi PROTOCOLADA!\n\nProcesso No: '+num+'\nData: '+new Date().toLocaleDateString('pt-BR')+'\n\nOs credores serao notificados. Juntos nessa jornada! Escritorio Gadiani & D\'Antraccoli';window.open('https://wa.me/55'+c.tel.replace(/\D/g,'')+'?text='+encodeURIComponent(msg),'_blank');}
   seRenderAguard();seRenderFila();seStats();
+  if(confirm('Protocolo confirmado! Deseja ir para a aba Protocolados?')){setMod('pt');}
 }
 
 function seAbrirCRM(){
@@ -1392,6 +1574,184 @@ function salvarUrgente(){
   alert('Marcado como urgente!');
 }
 
+// ===== UPLOAD DOCUMENTO + ANALISE IA =====
+function diUploadDoc(input, cid, did){
+  if(!input.files||!input.files[0])return;
+  var file=input.files[0];
+  var c=diClientes.find(function(x){return x.id===cid;});
+  var docDef=[].concat(DOCS_CLI,DOCS_GOV).find(function(d){return d.id===did;});
+  var reader=new FileReader();
+  reader.onload=function(e){
+    var base64=e.target.result.split(',')[1];
+    var isImg=file.type.indexOf('image')>=0;
+    var docNome=docDef?docDef.txt:did;
+    // Mark as received immediately
+    var r=getDocs('di',cid);
+    r[did]=true;
+    getEst(cid).ultimaAt=new Date().toISOString();
+    salvarEstado();
+    if(c){diRenderDocs(c);}
+    diStats();
+    // Optionally analyze with AI if it's an INSS extract
+    var isExtrato=docNome.toLowerCase().indexOf('extrato')>=0||docNome.toLowerCase().indexOf('consig')>=0;
+    if(isExtrato){
+      var body={model:'claude-sonnet-4-20250514',max_tokens:1000,
+        messages:[{role:'user',content:[
+          {type:isImg?'image':'document',source:{type:'base64',media_type:file.type,data:base64}},
+          {type:'text',text:'Analise este extrato e extraia: para cada contrato listado informe o numero do contrato, banco/credor, valor da parcela, data de inicio, quantidade total de parcelas e parcelas pagas. Formato de lista clara.'}
+        ]}]};
+      fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})
+        .then(function(r2){return r2.json();})
+        .then(function(d){
+          if(d.content&&d.content[0]){
+            var res=d.content[0].text;
+            // Store analysis result
+            getEst(cid)['analise_'+did]=res;
+            salvarEstado();
+            alert('Extrato analisado pela IA:\n\n'+res.substring(0,400)+'...');
+          }
+        })
+        .catch(function(){});
+    }
+  };
+  reader.readAsDataURL(file);
+}
+
+// ===== GOOGLE DRIVE INTEGRATION =====
+var DRIVE_FOLDER_ID = '1WQwlGMaX0kMPqP5EPMNATJsCdbd4ND4X';
+var driveToken = null;
+
+function salvarDriveConfig(){
+  var clientId=el('di-drive-client-id').value.trim();
+  if(!clientId){alert('Informe o Client ID.');return;}
+  localStorage.setItem('gadiani_drive_client_id', clientId);
+  alert('Client ID salvo! Clique em "Buscar no Drive" para autenticar.');
+}
+
+function diBuscarDrive(){
+  var cliId=localStorage.getItem('gadiani_drive_client_id');
+  if(!cliId){
+    alert('Configure o Client ID do Google primeiro (secao abaixo).');
+    return;
+  }
+  var id=el('di-drive-sel').value;
+  if(!id){alert('Selecione um cliente.');return;}
+  var c=diClientes.find(function(x){return x.id===id;});
+  if(driveToken){buscarArquivosCliente(c);}
+  else{autenticarDrive(function(){buscarArquivosCliente(c);});}
+}
+
+function autenticarDrive(cb){
+  var cliId=localStorage.getItem('gadiani_drive_client_id');
+  var popup=window.open(
+    'https://accounts.google.com/o/oauth2/v2/auth?client_id='+cliId
+    +'&redirect_uri='+encodeURIComponent(window.location.href.split('?')[0])
+    +'&response_type=token&scope=https://www.googleapis.com/auth/drive.readonly'
+    +'&prompt=select_account',
+    'driveauth','width=500,height=600'
+  );
+  var check=setInterval(function(){
+    try{
+      if(popup.location.hash&&popup.location.hash.indexOf('access_token')>=0){
+        var params=new URLSearchParams(popup.location.hash.substring(1));
+        driveToken=params.get('access_token');
+        clearInterval(check);popup.close();
+        if(cb)cb();
+      }
+    }catch(e){}
+    if(popup.closed){clearInterval(check);}
+  },500);
+}
+
+function buscarArquivosCliente(c){
+  var res=el('di-drive-resultado');
+  var lista=el('di-drive-lista');
+  res.style.display='block';
+  lista.innerHTML='<div class="loading"><span class="spin"></span> Buscando pasta de '+c.nome+'...</div>';
+  var nomePrimeiro=c.nome.split(' ')[0].toLowerCase();
+  var nomeCompleto=c.nome.toLowerCase();
+  // Search for folder with client name in the main Clientes folder
+  fetch('https://www.googleapis.com/drive/v3/files?q='+encodeURIComponent(
+    '"'+DRIVE_FOLDER_ID+'" in parents and mimeType="application/vnd.google-apps.folder" and trashed=false'
+  )+'&fields=files(id,name)&pageSize=100',{
+    headers:{Authorization:'Bearer '+driveToken}
+  })
+  .then(function(r){return r.json();})
+  .then(function(d){
+    if(!d.files||!d.files.length){lista.innerHTML='<div style="color:#aaa;font-size:13px">Nenhuma subpasta encontrada.</div>';return;}
+    // Find best matching folder
+    var pasta=null;
+    var melhorScore=0;
+    d.files.forEach(function(f){
+      var fn=f.name.toLowerCase();
+      var score=0;
+      if(fn.indexOf(nomeCompleto)>=0)score=100;
+      else if(fn.indexOf(nomePrimeiro)>=0)score=50;
+      // partial match on each word of name
+      nomeCompleto.split(' ').forEach(function(w){if(w.length>2&&fn.indexOf(w)>=0)score+=10;});
+      if(score>melhorScore){melhorScore=score;pasta=f;}
+    });
+    if(!pasta||melhorScore<10){
+      lista.innerHTML='<div style="color:#c62828;font-size:13px">Pasta do cliente nao encontrada. Verifique se a pasta existe com o nome "'+c.nome+'" ou similar.</div>'
+        +'<div style="margin-top:8px;font-size:12px;color:#aaa">Pastas disponiveis: '+d.files.slice(0,5).map(function(f){return f.name;}).join(', ')+'</div>';
+      return;
+    }
+    // Found folder - list files inside
+    listarArquivosPasta(pasta, c);
+  })
+  .catch(function(e){
+    lista.innerHTML='<div class="err-box">Erro ao acessar Drive: '+e.message+'. O token pode ter expirado - tente novamente.</div>';
+    driveToken=null;
+  });
+}
+
+function listarArquivosPasta(pasta, c){
+  var lista=el('di-drive-lista');
+  fetch('https://www.googleapis.com/drive/v3/files?q='+encodeURIComponent(
+    '"'+pasta.id+'" in parents and trashed=false'
+  )+'&fields=files(id,name,mimeType,size,modifiedTime)&orderBy=name&pageSize=100',{
+    headers:{Authorization:'Bearer '+driveToken}
+  })
+  .then(function(r){return r.json();})
+  .then(function(d){
+    if(!d.files||!d.files.length){
+      lista.innerHTML='<div style="color:#aaa;font-size:13px">Pasta encontrada ("'+pasta.name+'") mas esta vazia.</div>';
+      return;
+    }
+    var r=getDocs('di',c.id);
+    var html='<div class="succ-box">Pasta encontrada: <strong>'+pasta.name+'</strong> &mdash; '+d.files.length+' arquivo(s)</div>';
+    // Try to auto-match files to checklist items
+    var matched={};
+    d.files.forEach(function(f){
+      var fn=f.name.toLowerCase();
+      DOCS_CLI.concat(DOCS_GOV).forEach(function(doc){
+        var keywords=doc.txt.toLowerCase().split(' ');
+        var matches=keywords.filter(function(k){return k.length>3&&fn.indexOf(k)>=0;});
+        if(matches.length>=2&&!matched[doc.id]){
+          matched[doc.id]=f.name;
+          if(!r[doc.id]){r[doc.id]=true;getEst(c.id).ultimaAt=new Date().toISOString();salvarEstado();}
+        }
+      });
+    });
+    var matchCount=Object.keys(matched).length;
+    if(matchCount>0)html+='<div class="info-box">'+matchCount+' documento(s) identificado(s) e marcado(s) automaticamente.</div>';
+    html+='<div style="font-size:12px">';
+    d.files.forEach(function(f){
+      var icon=f.mimeType==='application/vnd.google-apps.folder'?'&#128194;':f.mimeType==='application/pdf'?'&#128196;':'&#128247;';
+      var found=Object.values(matched).indexOf(f.name)>=0;
+      html+='<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #f0ede8">'
+        +'<span>'+icon+'</span>'
+        +'<a href="https://drive.google.com/file/d/'+f.id+'/view" target="_blank" style="flex:1;color:#1565c0;text-decoration:none">'+f.name+'</a>'
+        +(found?'<span class="badge bg" style="font-size:10px">Identificado</span>':'')
+        +'</div>';
+    });
+    html+='</div>';
+    lista.innerHTML=html;
+    if(matchCount>0&&c){diRenderDocs(c);diStats();}
+  })
+  .catch(function(e){lista.innerHTML='<div class="err-box">Erro: '+e.message+'</div>';});
+}
+
 // ===== ANALISAR PDF HOLERITE =====
 function seAnalisarPDF(){
   var input = document.getElementById('se-pdf-upload');
@@ -1436,3 +1796,5 @@ window.addEventListener('load', function(){
 </script>
 </body>
 </html>
+
+
