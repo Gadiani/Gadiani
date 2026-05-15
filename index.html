@@ -283,7 +283,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#1a1a1a}
     <div class="card">
       <div class="ct">Gerar Peticao Inicial &mdash; Descontos Indevidos</div>
       <div class="warn-box">Preencha todos os campos antes de gerar. Conecte o Drive para enriquecer a peticao com os documentos do cliente.</div>
-      <select id="di-sel-pet" style="margin-bottom:12px" onchange="diCheckBlock();diPetPreench()"><option value="">Selecionar cliente...</option></select>
+      <select id="di-sel-pet" style="margin-bottom:12px" onchange="diCheckBlock();diPetPreench();diIniPet()"><option value="">Selecionar cliente...</option></select>
       <div id="di-pet-block" class="err-box" style="display:none"></div>
       <div class="g2">
         <div><label>Tratamento do(a) Juiz(a)</label><input id="di-vara-trat" value="Excelentissima Senhora Doutora Juiza de Direito"></div>
@@ -315,13 +315,16 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#1a1a1a}
           </div>
         </div>
       </div>
-      <button class="btn btnp" style="width:100%;justify-content:center;margin-top:14px;padding:11px" onclick="diGerPet()">Gerar peticao inicial completa</button>
+      <div style="margin-top:14px">
+        <div class="ct" style="margin-bottom:8px">Geracao em 4 etapas - cada etapa e revisavel antes de avancar</div>
+        <div id="di-pet-steps"></div>
+      </div>
       <div id="di-pet-area" style="display:none;margin-top:14px">
         <div style="font-size:12px;font-weight:600;color:#1b5e20;margin-bottom:6px" id="di-pet-lbl"></div>
-        <div class="out" id="di-pet-txt"></div>
-        <div style="display:flex;gap:8px;margin-top:10px">
-          <button class="btn" onclick="copiar('di-pet-txt')">Copiar</button>
-          <button class="btn btng" id="di-pet-dl" style="display:none" onclick="baixarDocx(g('di-pet-txt').textContent,'peticao_descontos.doc')">Baixar .doc</button>
+        <div class="out" id="di-pet-txt" style="min-height:200px"></div>
+        <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+          <button class="btn" onclick="copiar('di-pet-txt')">Copiar etapa</button>
+          <button class="btn btng" id="di-pet-dl" style="display:none" onclick="baixarDocx(diPetTxts.join('\n\n'),'peticao_descontos.doc')">Baixar peticao completa .doc</button>
         </div>
       </div>
     </div>
@@ -559,6 +562,7 @@ var DRIVE_FOLDER_DI = '1eT8ZckAtgcfdJ0MAhc--svyMVINzfV7b';
 var diC = [], seC = [], est = {}, saveT = null;
 var diCur = null, seCur = null, sePetC = null, sePetTxts = [];
 var driveToken = null;
+var diPetTxts = [];
 
 var DC = [
   {id:'d1',txt:'CPF / documento com foto',ob:true},
@@ -721,45 +725,47 @@ function limparMarkdown(txt){
 function baixarDocx(txt,nome){
   txt=limparMarkdown(txt);
   var LOGO='data:image/jpeg;base64,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eandXF3P4esLm003S5NptYZZyolucYyZSiiMHOApPrQB8o/sz/EL4XfCD9oay+HXw48V2GteC/GOiwmGK3kObbWbOIRyM2QBuuYFDkjq8LetfdVef/Fz4M6R8W/Dthp89xNot7pup2usadqmnIgntLmCQOjruBBBG5SCMFWIr0AZwM8mgAr5r/Z/s7e6/ae/aZM0EcxGr6MB5iBsf8S1PWvpSvA9Z/ZZ1F/iV4w8ZeGfit4q8F3Hima3n1Cy0uCykhZ4YVhQgzQOw+VfXvQBz2veH9I+F/7a3w7/AOEMtbfSZ/Guk6ovifTLBVjhuIbZEe3vJI1GBIsjNH5mMsHI5xX07XmPwn/Z/wBD+Fesan4gbVNY8W+L9UjWC88SeI7oXF48KnKwoQqrFEDzsRQM8nNenUAVNYuLi00i+ntIvOuooJHij/vuFJUficV87fsJ+EdAvv2f9B8bS29vqvi/xckmp+IdZuUElzc3jyMJY3dskLGR5YTooTp1r6UrwbWf2UxZeItV1b4e/ETxR8L01i5a71HS9DNvNYTTP/rJkgnidYpHPLMmMnnGaAOf+Gek6f8ADb9tLxt4Q8IRx2XhfVvCtt4i1TSLQBbax1M3LQrIiDiNpohuZRjcUDV9M15/8IfgnoHwZsNTXTJ9Q1bWNXnF1q2va1cG5v8AUZQMK0smBwo4VQAqjoBXoFAHM/E7wa/xE+HPijwtHqEulPrWmXGnrfQjLwGWNk3gZGSN2etfMNh421r9nf4d+H/Dvxk+DWlSeBtBW1tD4u8LPDfafbmNkSK5mtJFWWD5trFlD7SSc19X+KvDdt4w8N6nol7LdQWuoW720ktjcPbzorDG6ORCGRh1BB4NeHXX7I134jji0jxh8XPG3jPwVHLHK3hvVHtFjugjh1juZ44VlmTcq5UsM45zQB9CqwdQynKkZBHelpAAoAAwBwAKWgAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooA/9k=';
-  var nl='\n';var linhas=txt.split(nl);
-  var css='@page{margin:3cm 3cm 2.5cm 3cm}'
-    +'body{font-family:Calibri,sans-serif;font-size:12pt;line-height:1.5;margin:0;color:#000;text-align:justify}'
-    +'p{margin:0 0 6pt 0;text-align:justify;font-size:12pt;text-indent:2cm}'
-    +'.noindent{text-indent:0!important}'
-    +'.center{text-align:center!important;text-indent:0!important}'
-    +'.titulo{font-size:12pt;font-weight:bold;text-transform:uppercase;text-align:center;text-indent:0;margin:14pt 0 6pt 0}'
-    +'.subtit{font-size:12pt;font-weight:bold;text-align:justify;text-indent:0;margin:10pt 0 4pt 0}'
-    +'.cab{text-align:center;margin-bottom:20pt;border-bottom:2px solid #000;padding-bottom:10pt}'
-    +'.rod{text-align:center;font-size:10pt;margin-top:20pt;border-top:1px solid #ccc;padding-top:8pt;color:#555;text-indent:0}'
-    +'.ass{text-align:center;text-indent:0;margin-top:30pt}'
-    +'.linha{text-align:center;margin-bottom:2pt;text-indent:0}';
+  var nl='\n';
+  var linhas=txt.split(nl);
+  var mso='<xml><w:WordDocument><w:View>Print</w:View><w:Zoom>100</w:Zoom></w:WordDocument></xml>';
+  var css='@page{margin:3cm 3cm 2.5cm 3cm;mso-page-orientation:portrait}'
+    +'body{font-family:Calibri,sans-serif;font-size:12pt;line-height:150%;mso-line-height-rule:exactly;margin:0;color:#000;text-align:justify}'
+    +'p{margin:0;margin-bottom:0pt;text-align:justify;font-size:12pt;line-height:150%;mso-line-height-rule:exactly;text-indent:2cm;mso-para-rule:auto}'
+    +'.ni{text-indent:0cm!important}'
+    +'.ct{text-align:center!important;text-indent:0cm!important;font-weight:bold;text-transform:uppercase}'
+    +'.tit{text-align:center!important;text-indent:0cm!important;font-weight:bold;text-transform:uppercase;font-size:12pt}'
+    +'.sub{text-align:justify;text-indent:0cm!important;font-weight:bold;font-size:12pt}'
+    +'.ass{text-align:center!important;text-indent:0cm!important;margin-top:6pt}'
+    +'.cab{text-align:center;margin-bottom:18pt;padding-bottom:10pt;border-bottom:2px solid #000}'
+    +'.rod{text-align:center;font-size:10pt;margin-top:18pt;padding-top:8pt;border-top:1px solid #ccc;color:#555;text-indent:0}';
   var html='<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">'
-    +'<head><meta charset="utf-8"><style>'+css+'</style></head><body>';
-  html+='<div class="cab"><img src="'+LOGO+'" style="max-height:65pt;max-width:260pt"><br>'
+    +'<head><meta charset="utf-8"><!--[if gte mso 9]>'+mso+'<![endif]--><style>'+css+'</style></head><body>';
+  html+='<div class="cab"><img src="'+LOGO+'" style="max-height:60pt;max-width:250pt"><br>'
     +'<span style="font-size:9pt;letter-spacing:2pt;color:#555">GADIANI & D ANTRACCOLI ADVOGADOS</span></div>';
   var inAss=false;
   linhas.forEach(function(l){
     var t=l.trim();
-    if(!t){if(!inAss)html+='<p class="noindent">&nbsp;</p>';return;}
-    // Detect signature block
-    if(t.indexOf('_______')>=0){inAss=true;html+='<p class="linha">'+t+'</p>';return;}
+    if(!t){html+='<p class="ni">&nbsp;</p>';return;}
+    // Signature block
+    if(t.indexOf('_________')>=0){inAss=true;html+='<p class="ass">'+t+'</p>';return;}
     if(inAss){html+='<p class="ass">'+t+'</p>';return;}
-    // Detect main section titles: I -, II -, III -, IV -, V - or roman numerals alone
-    var isMainTitulo=/^(I|II|III|IV|V|VI|VII|VIII|IX|X)(\s*[-.]|$)/.test(t)||
-      /^[A-Z][A-Z\s]{5,}$/.test(t)||
-      (t===t.toUpperCase()&&t.replace(/[^A-Za-z]/g,'').length>5&&t.length<200&&t.indexOf('.')<0&&t.indexOf(',')<0);
-    // Detect subtitles: III.1, II.2, etc or lines ending with :
-    var isSubTitulo=/^\w+\.\d+\s*[-.]/.test(t)||(/^[IVX]+\.\d/.test(t));
-    // Detect centered items: ACAO, EXCELENTISSIMO, dates, city
-    var isCentro=t.indexOf('EXCELENTISSIMO')>=0||t.indexOf('ACAO ')>=0||t.indexOf('ACAO DE')>=0||
-      /^\w+\/\w+,\s*\d/.test(t)||t.indexOf('Gadiani')>=0||t.indexOf('Rua Sao Pedro')>=0||
-      t.indexOf('Fone:')>=0||t.indexOf('OAB/SP')>=0;
-    if(isMainTitulo){html+='<p class="titulo">'+t+'</p>';}
-    else if(isSubTitulo){html+='<p class="subtit">'+t+'</p>';}
-    else if(isCentro){html+='<p class="center">'+t+'</p>';}
+    // Main roman numeral titles: "I -", "II -", "III -", "IV -", "V -" alone on line
+    var isRoman=/^(I{1,3}|IV|V|VI{0,3}|IX|X)\s*[--]\s*.{3,}$/.test(t)&&t===t.toUpperCase();
+    // Section titles that are all caps and short (headings)
+    var isAllCaps=t===t.toUpperCase()&&t.replace(/[^A-Z]/g,'').length>6&&t.length<120&&t.indexOf(',')<0&&!/\d{4}/.test(t);
+    // Subtitles like "III.1 -" or "II.2 -"
+    var isSub=/^[IVX]+\.\d+\s*[--]/.test(t)||/^\d+\.\d+\s*[--]/.test(t);
+    // Centered items: addressing, action name, city/date, signatures
+    var isCenter=t.indexOf('EXCELENTISSIMO')>=0||t.indexOf('EXMO')>=0
+      ||(/^[A-Z][a-z]+\/(SP|RJ|MG|PR|RS|SC|BA|PE|CE|GO|DF)/.test(t))
+      ||(t.indexOf('OAB/SP')>=0&&t.length<60)
+      ||t.indexOf('Gadiani')>=0||t.indexOf('Rua Sao Pedro')>=0||t.indexOf('Fone:')>=0;
+    if(isRoman||isAllCaps){html+='<p class="tit">'+t+'</p>';}
+    else if(isSub){html+='<p class="sub">'+t+'</p>';}
+    else if(isCenter){html+='<p class="ct">'+t+'</p>';}
     else{html+='<p>'+t+'</p>';}
   });
-  html+='<div class="rod">Gadiani & D Antraccoli Advogados | Rua Sao Pedro, 760, Centro, Vargem Grande do Sul/SP | (19) 99412-6931</div>';
+  html+='<div class="rod">Gadiani & D Antraccoli Advogados | Rua Sao Pedro, 760, Centro, Vargem Grande do Sul/SP | (19) 99412-6931 | gadianiedantraccoli@gmail.com</div>';
   html+='</body></html>';
   var b=new Blob([html],{type:'application/msword'});
   var u=URL.createObjectURL(b);var a=document.createElement('a');
@@ -1157,7 +1163,30 @@ function diPetPreench(){
   if(primeiroReu&&!primeiroReu.value)primeiroReu.value=c.banco||'';
   g('di-pet-nr').value=g('di-nr')?g('di-nr').value||'':'';
 }
-function diGerPet(){
+var DI_PET_LABELS = [
+  'Enderecamento, Qualificacoes e Gratuidade da Justica',
+  'Dos Fatos',
+  'Do Direito',
+  'Dos Pedidos, Valor da Causa e Encerramento'
+];
+
+function diIniPet(){
+  var id=g('di-sel-pet').value;if(!id)return;
+  diPetTxts=[];
+  var html='',i;
+  for(i=0;i<DI_PET_LABELS.length;i++){
+    html+='<div class="srow'+(i===0?' cur':'')+'" id="dirow'+i+'">'
+      +'<div class="snum'+(i===0?' cur':'')+'" id="dinum'+i+'">'+(i+1)+'</div>'
+      +'<div style="flex:1"><div style="font-size:13px;font-weight:600">'+DI_PET_LABELS[i]+'</div></div>'
+      +'<button class="btn'+(i===0?' btnp':'')+'" id="dibtn'+i+'" onclick="diGerEtapa('+i+')"'+(i>0?' disabled':'')+'>Gerar</button>'
+      +'</div>';
+  }
+  g('di-pet-steps').innerHTML=html;
+  g('di-pet-dl').style.display='none';
+  g('di-pet-area').style.display='none';
+}
+
+function diGerEtapa(step){
   var id=g('di-sel-pet').value;if(!id){alert('Selecione um cliente.');return;}
   var c=diC.find(function(x){return x.id===id;});
   var trat=g('di-vara-trat').value||'Excelentissima Senhora Doutora Juiza de Direito';
@@ -1168,9 +1197,11 @@ function diGerPet(){
   var parc=parseFloat(g('di-pet-parc').value)||0;
   var np=parseInt(g('di-pet-nparc').value)||0;
   var dt=g('di-pet-dt').value;
-  var hoje=new Date().toLocaleDateString('pt-BR'),m=0,tot=0;
-  if(dt&&parc){m=Math.min(Math.floor((Date.now()-new Date(dt+'T12:00:00'))/(86400000*30.44)),np);tot=m*parc;}
+  var hoje=new Date().toLocaleDateString('pt-BR'),mes=0,tot=0;
+  if(dt&&parc){mes=Math.min(Math.floor((Date.now()-new Date(dt+'T12:00:00'))/(86400000*30.44)),np);tot=mes*parc;}
   var totStr='R$ '+tot.toLocaleString('pt-BR',{minimumFractionDigits:2});
+  var valorDobro='R$ '+(tot*2).toLocaleString('pt-BR',{minimumFractionDigits:2});
+  var valorTotal='R$ '+(tot*2+10000).toLocaleString('pt-BR',{minimumFractionDigits:2});
   var reusEls=g('di-reus').querySelectorAll('.reu-row');
   var reus=[];
   reusEls.forEach(function(row){
@@ -1180,85 +1211,98 @@ function diGerPet(){
     if(nome)reus.push({nome:nome,cnpj:cnpj,end:end});
   });
   if(!reus.length){alert('Adicione ao menos um reu.');return;}
-  var reusStr=reus.map(function(r,i){return (i+1)+') '+r.nome+(r.cnpj?' CNPJ '+r.cnpj:'')+(r.end?', com sede em '+r.end:'');}).join('; ');
+  var reusQual=reus.map(function(r){return r.nome+(r.cnpj?', pessoa juridica de direito privado, inscrita no CNPJ/MF sob o n. '+r.cnpj:'')+(r.end?', com sede em '+r.end:'');}).join('; ');
   var analises=getE(c.id).analises||{};
-  var analisesStr='';
-  Object.keys(analises).forEach(function(did){analisesStr+='['+analises[did].doc+']: '+analises[did].txt+' | ';});
-  if(!driveToken){if(!confirm('Drive nao conectado. A peticao sera gerada SEM os documentos do cliente.\nDeseja continuar mesmo assim?'))return;}
+  var analisesStr='';Object.keys(analises).forEach(function(did){analisesStr+='['+analises[did].doc+']: '+analises[did].txt+' | ';});
+  var contexto='DADOS DO CASO: Cliente: '+c.nome+' | Brasileiro(a) | '+c.civil+' | '+(c.prof||'Aposentado(a)')+' | CPF: '+c.cpf+' | Nascimento: '+c.nasc+' | Endereco: '+(c.end||c.cidade)+'/'+estado+(c.tel?' | Tel: '+c.tel:'')+(c.email?' | Email: '+c.email:'')+(c.doencas?' | Doencas: '+c.doencas:'')
+    +' | Reus: '+reusQual
+    +' | Tipo irregularidade: '+(c.tipo||'Cartao RMC/RCC nao contratado')
+    +' | Contrato: '+contrato+' | Banco: '+c.banco+' | Parcela: R$ '+parc+' | Parcelas: '+np
+    +' | Inicio: '+(dt?new Date(dt+'T12:00:00').toLocaleDateString('pt-BR'):'-')
+    +' | Meses descontados: '+mes+' | Total descontado: '+totStr
+    +' | Renda: '+(c.renda||'nao informada')
+    +(analisesStr?' | DOCUMENTOS ANALISADOS: '+analisesStr:'');
+  var regras='REGRAS ABSOLUTAS: texto puro sem markdown, sem asteriscos, sem hashtags, sem tracos decorativos. Paragrafos justificados com recuo de 2cm na primeira linha. Titulos de secao em MAIUSCULO centralizado. Subtopicos como III.1, III.2 numerados. Espacamento 1,5. Linguagem juridica formal e tecnicamente impeccavel. Use os dados reais do caso. NUNCA corte o texto no meio.';
+  var prompts=[
+    // Etapa 1: Enderecamento, qualificacoes, gratuidade
+    regras+' Voce e advogado senior especialista em direito do consumidor. Redija a PRIMEIRA PARTE da peticao inicial contendo:'
+    +' (1) ENDERECAMENTO centralizado em maiusculo: EXCELENTISSIMO(A) SENHOR(A) DOUTOR(A) JUIZ(A) DE DIREITO DA '+vara.toUpperCase()+' DA COMARCA DE '+cidade.toUpperCase()+' - ESTADO DE '+estado.toUpperCase()+';'
+    +' (2) QUALIFICACAO DO REQUERENTE completa com todos os dados: '+c.nome+', brasileiro(a), '+c.civil+', '+(c.prof||'aposentado(a)')+', CPF '+c.cpf+', nascido(a) em '+c.nasc+', residente em '+(c.end||c.cidade)+'/'+estado+(c.tel?', tel. '+c.tel:'')+(c.email?', e-mail '+c.email:'')+', vem propor a presente;'
+    +' (3) NOME DA ACAO centralizado em maiusculo: ACAO DECLARATORIA DE NULIDADE DE CONTRATO C/C REPETICAO DE INDEBITO E INDENIZACAO POR DANOS MORAIS;'
+    +' (4) QUALIFICACAO DOS REUS: '+reusQual+';'
+    +' (5) Secao I - DA GRATUIDADE DA JUSTICA E DA HIPERVULNERABILIDADE DO REQUERENTE: desenvolva extensamente. Mencione a renda de '+(c.renda||'beneficio INSS')+'. Liste os documentos juntados que comprovam a hipossuficiencia (extratos, declaracao, contracheque). Fundamente em Art. 5 LXXIV CF/88, Arts. 98 e ss. CPC, Art. 4 I e Art. 6 VIII CDC. Trate da presuncao relativa da declaracao (Art. 99 par. 3 CPC). Desenvolva a hipervulnerabilidade do beneficiario INSS: idoso, com renda fixa comprometida, sem conhecimento tecnico-juridico para identificar as irregularidades.'
+    +(c.doencas?' (6) Secao II - DA PRIORIDADE NA TRAMITACAO: portador(a) de '+c.doencas+', com fundamento no Art. 1048 I CPC. Requeira prioridade em todas as fases do processo.':'')
+    +' '+contexto,
+
+    // Etapa 2: Dos fatos
+    regras+' Voce e advogado senior. Redija a SEGUNDA PARTE da peticao. Esta parte contem APENAS a secao DOS FATOS.'
+    +' Escreva com titulo: '+(c.doencas?'III':'II')+' - DOS FATOS'
+    +' Desenvolva em subtopicos numerados ('+(c.doencas?'III':'II')+'.1, '+(c.doencas?'III':'II')+'.2 etc) cada aspecto relevante dos fatos:'
+    +' - Como o desconto indevido surgiu, quando foi descoberto pelo cliente'
+    +' - Descricao detalhada de cada contrato e desconto: contrato '+contrato+', parcela R$ '+parc+', inicio '+(dt?new Date(dt+'T12:00:00').toLocaleDateString('pt-BR'):'-')+', total de '+mes+' meses descontados, somando '+totStr
+    +' - O impacto financeiro na renda mensal de '+(c.renda||'do requerente')+': calcule que proporcao representa o desconto'
+    +' - O abalo emocional, psicologico, a angustia, o constrangimento, a restricao a dignidade'
+    +' - Qualquer tentativa de solucao extrajudicial junto ao banco ou orgaos de defesa do consumidor'
+    +' Seja detalhado, cronologico e use todos os dados reais. Paragrafos corridos sem bullets.'
+    +' '+contexto,
+
+    // Etapa 3: Do direito
+    regras+' Voce e advogado senior especialista em CDC. Redija a TERCEIRA PARTE da peticao contendo APENAS a secao DO DIREITO, com a numeracao '+(c.doencas?'IV':'III')+'.'
+    +' Titulo: '+(c.doencas?'IV':'III')+' - DO DIREITO'
+    +' Desenvolva cada subtopico com profundidade e densidade tecnica maxima:'
+    +' '+(c.doencas?'IV':'III')+'.1 - DA RELACAO DE CONSUMO E DA APLICABILIDADE DO CDC: qualifique o requerente como consumidor (Art. 2 CDC) e o banco como fornecedor (Art. 3 CDC). Sumula 297 STJ. A relacao bancaria e tipica relacao de consumo. O CDC e norma de ordem publica e interesse social (Art. 1 CDC).'
+    +' '+(c.doencas?'IV':'III')+'.2 - DA NULIDADE DO CONTRATO POR AUSENCIA DE CONSENTIMENTO VALIDO: Art. 104 e 166 CC (ausencia de manifestacao de vontade livre); Art. 39 I, III e IV CDC (pratica abusiva); Art. 46 CDC (contrato que nao da oportunidade ao consumidor). O banco nao pode provar consentimento expresso. O onus da prova e do fornecedor. Claudia Lima Marques, Contratos no Codigo de Defesa do Consumidor (RT, obra real) sobre boa-fe objetiva e transparencia.'
+    +' '+(c.doencas?'IV':'III')+'.3 - DA RESPONSABILIDADE OBJETIVA DO FORNECEDOR: Art. 14 CDC. O fornecedor responde independentemente de culpa. Teoria do risco proveito. O banco e profissional habitual e responde pelos danos de sua atividade.'
+    +' '+(c.doencas?'IV':'III')+'.4 - DA INVERSAO DO ONUS DA PROVA E DA HIPOSSUFICIENCIA TECNICA: Art. 6 VIII CDC. Hipossuficiencia tecnica (banco tem acesso exclusivo a todos os sistemas), juridica e economica. Leonardo Roscoe Bessa, Manual do Direito do Consumidor, RT (obra real) sobre hipossuficiencia tecnica do consumidor de servicos bancarios. A inversao e imperativa no caso.'
+    +' '+(c.doencas?'IV':'III')+'.5 - DA COBRANCA INDEVIDA E DA REPETICAO DO INDEBITO EM DOBRO: Art. 42 paragrafo unico CDC. Total descontado: '+totStr+'. Valor da repeticao em dobro: '+valorDobro+'. Afaste o engano justificavel: banco profissional nao pode alegar erro. Enriquecimento sem causa (Art. 884 CC). A restituicao em dobro e sancao civil com funcao pedagogica e dissuasoria.'
+    +' '+(c.doencas?'IV':'III')+'.6 - DO DANO MORAL IN RE IPSA: dano presumido, independe de prova. O requerente '+(c.prof||'aposentado')+(c.doencas?', portador de '+c.doencas:'')+', teve renda comprometida por '+mes+' meses. Descreva o abalo psicologico, a angustia da descoberta, a restricao da dignidade, o cerceamento da subsistencia. O dano moral em cobrancas indevidas e in re ipsa. Sugira indenizacao de R$ 10.000,00 considerando a gravidade e a necessidade de carater pedagogico.'
+    +' '+(c.doencas?'IV':'III')+'.7 - DA NULIDADE DAS CLAUSULAS ABUSIVAS: Art. 51 CDC. Declare nulas as clausulas que autorizem contratacao sem consentimento expresso. Nulidade de pleno direito.'
+    +' '+contexto,
+
+    // Etapa 4: Pedidos, valor da causa, encerramento
+    regras+' Voce e advogado senior. Redija a QUARTA E ULTIMA PARTE da peticao contendo:'
+    +' Titulo: '+(c.doencas?'V':'IV')+' - DOS PEDIDOS'
+    +' Desenvolva cada pedido com letra separada (a, b, c...): (a) gratuidade da justica; '+(c.doencas?'(b) prioridade tramitacao; ':'')+'(b) citacao dos reus; (c) inversao do onus da prova (Art. 6 VIII CDC); (d) declaracao de nulidade do contrato n. '+contrato+'; (e) condenacao dos reus a devolucao em dobro '+valorDobro+' (Art. 42 paragrafo unico CDC); (f) alternativamente, ao menos a devolucao simples de '+totStr+'; (g) indenizacao por danos morais de R$ 10.000,00; (h) exibicao de documentos em 15 dias; (i) producao de provas; (j) condenacao em custas e honorarios (Art. 85 CPC).'
+    +' Titulo: '+(c.doencas?'VI':'V')+' - DO VALOR DA CAUSA'
+    +' O valor corresponde a soma da repeticao em dobro ('+valorDobro+') com os danos morais (R$ 10.000,00), totalizando '+valorTotal+', nos termos do Art. 292 CPC.'
+    +' Escreva o encerramento: "Termos em que pede deferimento." seguido de linha em branco.'
+    +' Escreva a data e local: '+cidade+'/'+estado+', '+hoje+'.'
+    +' Escreva as assinaturas centralizadas com linhas: _____________________________________________  ARI D ANTRACCOLI NETO  OAB/SP n. 500.799  e  _____________________________________________  AUGUSTO DE ANDRADE GADIANI  OAB/SP n. 425.910'
+    +' Termine com: Gadiani & D Antraccoli Advogados  Rua Sao Pedro, n. 760, Centro, Vargem Grande do Sul/SP  Fone: (19) 99412-6931 | gadianiedantraccoli@gmail.com'
+    +' '+contexto
+  ];
+
   g('di-pet-area').style.display='block';
-  g('di-pet-txt').textContent='Lendo documentos do Drive...';
-  g('di-pet-lbl').textContent='Aguarde...';
+  g('di-pet-lbl').textContent='Etapa '+(step+1)+' de 4 - gerando...';
+  g('di-pet-txt').textContent='Aguarde, gerando etapa '+(step+1)+'...';
+  g('dibtn'+step).disabled=true;
+
   lerArquivosDrive(id,function(err,docsTxt){
-    var docsInfo='';
-    if(docsTxt)docsInfo='\n\nDOCUMENTOS ANALISADOS DO DRIVE: '+docsTxt;
-    if(analisesStr)docsInfo+='\n\nANALISES DE DOCUMENTOS SUBIDOS: '+analisesStr;
-    var n=(c.doencas?1:0);
-    var autorQual=c.nome+', brasileiro(a), '+c.civil+', '+(c.prof||'aposentado(a)')+', portador(a) do CPF n. '+c.cpf+(c.nasc?', nascido(a) em '+c.nasc:'')+', residente e domiciliado(a) em '+(c.end||c.cidade)+'/'+estado+(c.tel?', telefone '+c.tel:'')+(c.email?', e-mail '+c.email:'')+(c.doencas?', portador(a) de '+c.doencas:'');
-    var reusQual=reus.map(function(r){return r.nome+(r.cnpj?', pessoa juridica de direito privado, inscrita no CNPJ/MF sob o n. '+r.cnpj:'')+(r.end?', com sede em '+r.end:'');}).join('; e ');
-    var valorDobro=(tot*2).toLocaleString('pt-BR',{minimumFractionDigits:2});
-    var valorTotal=(tot*2+10000).toLocaleString('pt-BR',{minimumFractionDigits:2});
-    var prompt='Voce e advogado senior especialista em direito do consumidor com mais de 20 anos de experiencia. Redija PETICAO INICIAL completa exatamente como descrito abaixo, para ser protocolada hoje.'
-      +'\n\nREGRAS ABSOLUTAS: ZERO markdown, ZERO asteriscos, ZERO hashtags, ZERO tracos decorativos. Apenas texto puro. Titulos de secoes em MAIUSCULO centralizado. Subtopicos como III.1, III.2 etc. Paragrafos justificados com recuo de 2cm na primeira linha. Espacamento 1,5.'
-      +'\n\nESTRUTURA EXATA A SEGUIR:'
-      +'\n\n[ENDERECAMENTO - centralizado, em maiusculo]'
-      +'\nEXCELENTISSIMO(A) SENHOR(A) DOUTOR(A) JUIZ(A) DE DIREITO DA '+vara.toUpperCase()+' DA COMARCA DE '+cidade.toUpperCase()+' - ESTADO DE '+estado.toUpperCase()
-      +'\n\n[QUALIFICACAO DO REQUERENTE - justificado]'
-      +'\n'+autorQual+', vem respeitosamente a presenca de Vossa Excelencia, por intermedio de seus advogados subscritos, com escritorio na Rua Sao Pedro, n. 760, Centro, Vargem Grande do Sul/SP, propor a presente'
-      +'\n\n[NOME DA ACAO - centralizado, em maiusculo]'
-      +'\nACAO DECLARATORIA DE NULIDADE DE CONTRATO C/C REPETICAO DE INDEBITO E INDENIZACAO POR DANOS MORAIS'
-      +'\n\n[em face de - justificado]'
-      +'\nem face de:'
-      +'\n\n[QUALIFICACAO DOS REUS - justificado]'
-      +'\n'+reusQual
-      +'\n\npelos fatos e fundamentos a seguir expostos.'
-      +'\n\n[DADOS DO CASO para fundamentar - nao imprima esta linha]'
-      +'Tipo: '+(c.tipo||'contrato nao autorizado')+' | Contrato: '+contrato+' | Valor parcela: R$ '+parc+' | Parcelas: '+np+' | Inicio: '+(dt?new Date(dt+'T12:00:00').toLocaleDateString('pt-BR'):'-')+' | Total descontado: '+totStr+' ('+m+' meses) | Renda: '+(c.renda||'nao informada')+(c.doencas?' | Doencas: '+c.doencas:'')
-      +docsInfo
-      +'\n\nI - DA GRATUIDADE DA JUSTICA E DA HIPERVULNERABILIDADE DO REQUERENTE'
-      +'\nDesenvolva com profundidade: hipossuficiencia economica, tecnica e juridica; vulnerabilidade do beneficiario INSS; documentos do drive que comprovem a situacao financeira precaria; fundamente em Art. 5 LXXIV CF, Arts. 98 e ss. CPC, Art. 4 I e Art. 6 VIII CDC; mencione que a declaracao de hipossuficiencia tem presuncao relativa (Art. 99 par. 3 CPC).'
-      +(c.doencas?'\n\n'+(1+0)+'. DA PRIORIDADE NA TRAMITACAO PROCESSUAL\nPortador(a) de '+c.doencas+'. Fundamente no Art. 1048 I CPC. Requeira prioridade em todas as fases.':'')
-      +'\n\nII - DOS FATOS'
-      +'\nNarrative cronologica detalhada e fluida em paragrafos corridos sem bullets. Use TODOS os dados e documentos fornecidos. Subtopicos numerados como II.1, II.2, II.3 conforme a complexidade dos fatos. Descreva: como o desconto indevido surgiu (datas, valores, contratos); o impacto financeiro na renda de '+(c.renda||'do requerente')+'; o total de '+totStr+' descontado em '+m+' meses; o abalo emocional e financeiro; qualquer tentativa de solucao. Se houver documentos do drive, cite os dados especificos deles (numeros de contrato, datas, valores exatos).'
-      +'\n\nIII - DO DIREITO'
-      +'\nIII.1 - Da Relacao de Consumo e da Aplicabilidade do CDC\nQualifique o requerente como consumidor (Art. 2 CDC) e o banco reu como fornecedor (Art. 3 CDC). Cite que a relacao bancaria e tipica relacao de consumo conforme Sumula 297 STJ. A aplicacao do CDC e cogente e afasta qualquer norma contratual em contrario.'
-      +'\n\nIII.2 - Da Nulidade do Contrato por Ausencia de Consentimento Valido\nO contrato '+contrato+' e nulo de pleno direito. Fundamente em: Arts. 104 e 166 CC (ausencia de manifestacao de vontade livre); Art. 39 incisos I, III e IV CDC (pratica abusiva); Art. 46 CDC (contrato que nao da oportunidade ao consumidor de tomar conhecimento previo). Mencione que o banco nao pode provar o consentimento expresso do consumidor - e este e o ponto central. Aprofunde a questao do onus da prova.'
-      +'\n\nIII.3 - Da Responsabilidade Objetiva do Fornecedor\nArt. 14 CDC - responsabilidade pelo fato do servico independentemente de culpa. O banco responde pelo risco de sua atividade. Aborde a teoria do risco proveito. O fornecedor de servico bancario responde objetivamente pelos danos causados ao consumidor.'
-      +'\n\nIII.4 - Da Inversao do Onus da Prova e da Hipossuficiencia\nArt. 6 VIII CDC. Demonstre a hipossuficiencia tecnica (banco tem acesso exclusivo a todos os sistemas e contratos), juridica e economica do requerente. Cite Leonardo Roscoe Bessa, Manual do Direito do Consumidor, editora RT (obra real) sobre hipossuficiencia tecnica. Requeira a inversao formal do onus.'
-      +'\n\nIII.5 - Da Repeticao do Indebito em Dobro\nArt. 42 paragrafo unico CDC - a cobranca indevida gera direito a repeticao em dobro. Total descontado: '+totStr+'. Valor da repeticao em dobro: R$ '+valorDobro+'. Afaste a excecao do engano justificavel: o banco e profissional habitual de credito consignado e nao pode alegar desconhecimento ou erro. Cite Claudia Lima Marques, Contratos no Codigo de Defesa do Consumidor (obra real) sobre boa-fe objetiva e proibicao do enriquecimento sem causa.'
-      +'\n\nIII.6 - Do Dano Moral In Re Ipsa\nO dano moral e presumido e independe de prova. O requerente, '+(c.prof||'aposentado')+', teve sua renda comprometida por '+m+' meses consecutivos. Descreva o abalo psicologico, a angustia, a restricao de dignidade. Sugira indenizacao entre R$ 8.000,00 e R$ 15.000,00 conforme a gravidade do caso.'
-      +'\n\nIV - DOS PEDIDOS'
-      +'\nAnte o exposto, requer o Requerente:\na) A concessao dos beneficios da GRATUIDADE DA JUSTICA, nos termos dos Arts. 98 e seguintes do CPC;'+(c.doencas?'\nb) O reconhecimento da PRIORIDADE NA TRAMITACAO PROCESSUAL nos termos do Art. 1048 I CPC;':'')
-      +'\nb) A citacao do(s) Reu(s) para responder aos termos da presente no prazo legal;'
-      +'\nc) A DECLARACAO DE NULIDADE do contrato n. '+contrato+';'
-      +'\nd) A condenacao do(s) Reu(s) a DEVOLUCAO EM DOBRO de todos os valores indevidamente descontados, totalizando R$ '+valorDobro+' ('+valorDobro+' reais), nos termos do Art. 42 paragrafo unico CDC;'
-      +'\ne) Alternativamente ao item anterior, ao menos a DEVOLUCAO SIMPLES dos valores descontados totalizando '+totStr+';'
-      +'\nf) A condenacao do(s) Reu(s) ao pagamento de INDENIZACAO POR DANOS MORAIS em valor a ser arbitrado por Vossa Excelencia, sugerindo-se R$ 10.000,00 (dez mil reais);'
-      +'\ng) A determinacao de que o(s) Reu(s) apresente(m) no prazo de 15 dias toda a documentacao referente a contratacao;'
-      +'\nh) A producao de todas as provas em direito admitidas, especialmente juntada de documentos e eventual pericia contabil;'
-      +'\ni) A condenacao do(s) Reu(s) ao pagamento das custas processuais e honorarios advocaticios nos termos do Art. 85 CPC.'
-      +'\n\nV - DO VALOR DA CAUSA'
-      +'\nDa-se a causa o valor de R$ '+valorTotal+' correspondente a soma da repeticao do indebito em dobro (R$ '+valorDobro+') com a indenizacao por danos morais pleiteada (R$ 10.000,00), nos termos do Art. 292 CPC.'
-      +'\n\nTermos em que pede deferimento.'
-      +'\n\n'+cidade+'/'+estado+', '+hoje+'.'
-      +'\n\n_____________________________________________'
-      +'\nARI D ANTRACCOLI NETO'
-      +'\nOAB/SP n. 500.799'
-      +'\n\n_____________________________________________'
-      +'\nAUGUSTO DE ANDRADE GADIANI'
-      +'\nOAB/SP n. 425.910'
-      +'\n\nGadiani & D Antraccoli Advogados'
-      +'\nRua Sao Pedro, n. 760, Centro, Vargem Grande do Sul/SP'
-      +'\nFone: (19) 99412-6931 | gadianiedantraccoli@gmail.com'
-      +'\n\nIMPORTANTE: use os dados reais do caso. Nao repita qualificacoes. Nao use markdown. Texto corrido profissional e tecnicamente impecavel.';
-    g('di-pet-txt').textContent='Gerando peticao...';
-    callAI(prompt,function(err,txt){
-      if(err){g('di-pet-txt').textContent='Erro: '+err.message;return;}
-      g('di-pet-txt').textContent=limparMarkdown(txt);
-      g('di-pet-lbl').textContent='Peticao gerada. Revise antes de protocolar.';
-      g('di-pet-dl').style.display='inline-flex';
+    var prompt=prompts[step]+(docsTxt?' | DOCUMENTOS DO DRIVE: '+docsTxt:'');
+    callAI(prompt,function(err2,txt){
+      if(err2){g('di-pet-txt').textContent='Erro: '+err2.message;g('dibtn'+step).disabled=false;return;}
+      diPetTxts[step]=limparMarkdown(txt);
+      g('di-pet-txt').textContent=diPetTxts[step];
+      g('di-pet-lbl').textContent='Etapa '+(step+1)+' concluida: '+DI_PET_LABELS[step];
+      g('dinum'+step).className='snum done';
+      g('dirow'+step).className='srow done';
+      if(step<3){
+        g('dibtn'+(step+1)).disabled=false;
+        g('dibtn'+(step+1)).className='btn btnp';
+        g('dinum'+(step+1)).className='snum cur';
+        g('dirow'+(step+1)).className='srow cur';
+      }
+      if(step===3)g('di-pet-dl').style.display='inline-flex';
     });
   });
 }
+
+function diGerPet(){
+  var id=g('di-sel-pet').value;if(!id){alert('Selecione um cliente.');return;}
+  diIniPet();
+  diGerEtapa(0);
+}
+
 function diNotPreench(){
   var id=g('di-not-sel').value;if(!id)return;
   var c=diC.find(function(x){return x.id===id;});if(!c)return;
