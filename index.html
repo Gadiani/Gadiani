@@ -272,7 +272,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#1a1a1a}
         <div class="ct" style="margin-bottom:0">Notificacao gerada</div>
         <div style="display:flex;gap:6px">
           <button class="btn" onclick="copiar('di-not-txt')">Copiar</button>
-          <button class="btn btng" id="di-not-dl" style="display:none" onclick="baixar('di-not-txt','notificacao.txt')">Baixar .txt</button>
+          <button class="btn btng" id="di-not-dl" style="display:none" onclick="baixarDocx(g('di-not-txt').textContent,'notificacao.doc')">Baixar .txt</button>
         </div>
       </div>
       <div class="out" id="di-not-txt"></div>
@@ -303,7 +303,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#1a1a1a}
         <div class="out" id="di-pet-txt"></div>
         <div style="display:flex;gap:8px;margin-top:10px">
           <button class="btn" onclick="copiar('di-pet-txt')">Copiar</button>
-          <button class="btn btng" id="di-pet-dl" style="display:none" onclick="baixar('di-pet-txt','peticao_descontos.txt')">Baixar .txt</button>
+          <button class="btn btng" id="di-pet-dl" style="display:none" onclick="baixarDocx(g('di-pet-txt').textContent,'peticao_descontos.doc')">Baixar .txt</button>
         </div>
       </div>
     </div>
@@ -666,7 +666,27 @@ function copiar(id){
   alert('Copiado!');
 }
 function baixar(id,nome){
-  var b=new Blob([g(id).textContent],{type:'text/plain;charset=utf-8'});
+  var txt=g(id).textContent;
+  var ext=nome.split('.').pop();
+  if(ext==='docx'||ext==='doc'){
+    baixarDocx(txt,nome);
+  } else {
+    var b=new Blob([txt],{type:'text/plain;charset=utf-8'});
+    var u=URL.createObjectURL(b);var a=document.createElement('a');
+    a.href=u;a.download=nome;a.click();URL.revokeObjectURL(u);
+  }
+}
+function baixarDocx(txt,nome){
+  var nl='\n';var linhas=txt.split(nl);
+  var html='<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><title>'+nome+'</title><style>body{font-family:Calibri;font-size:12pt;line-height:1.5;margin:2cm} p{margin:6pt 0;text-align:justify}</style></head><body>';
+  linhas.forEach(function(l){
+    var t=l.trim();
+    if(!t){html+='<p>&nbsp;</p>';return;}
+    if(t===t.toUpperCase()&&t.length>5&&t.length<120){html+='<p><b>'+t+'</b></p>';}
+    else{html+='<p>'+t+'</p>';}
+  });
+  html+='</body></html>';
+  var b=new Blob([html],{type:'application/msword'});
   var u=URL.createObjectURL(b);var a=document.createElement('a');
   a.href=u;a.download=nome;a.click();URL.revokeObjectURL(u);
 }
@@ -725,7 +745,13 @@ function tryProxy(id,gid,cb){
 function callAI(prompt,cb){
   fetch(SCRIPT,{method:'POST',redirect:'follow',body:JSON.stringify({action:'ai',prompt:prompt})})
     .then(function(r){return r.text();})
-    .then(function(t){var d=JSON.parse(t);if(!d.ok)throw new Error(d.error||'Erro AI');cb(null,d.text||'');})
+    .then(function(t){
+      var d;
+      try{d=JSON.parse(t);}catch(x){throw new Error('Resposta invalida: '+t.substring(0,100));}
+      if(!d.ok)throw new Error(d.error||'Erro AI');
+      if(!d.text||d.text.length<5)throw new Error('IA retornou resposta vazia. Verifique o Apps Script.');
+      cb(null,d.text);
+    })
     .catch(function(e){cb(e,null);});
 }
 
