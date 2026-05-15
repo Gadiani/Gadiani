@@ -871,15 +871,19 @@ function baixarDocx(txt,nome){
     var isEnum=/^[a-z]\)/.test(t)||/^\([a-z]\)/.test(t)||/^\d+\)/.test(t);
     var isRoman=/^(I{1,3}|IV|V|VI{0,3}|IX|X)\s*[-]\s*.{3,}$/.test(t)&&t===t.toUpperCase();
     var isAllCaps=t===t.toUpperCase()&&t.replace(/[^A-Z]/g,'').length>6&&t.length<120&&t.indexOf(',')<0&&!/\d{4}/.test(t);
-    var isSub=/^[IVX]+\.\d+\s*[-]/.test(t)||/^\d+\.\d+\s*[-]/.test(t);
-    var isCenter=t.indexOf('EXCELENTISSIMO')>=0||t.indexOf('EXMO')>=0
-      ||(/^[A-Z][a-z]+\/(SP|RJ|MG|PR|RS|SC|BA|PE|CE|GO|DF)/.test(t))
-      ||(t.indexOf('OAB/SP')>=0&&t.length<60)
-      ||t.indexOf('Gadiani')>=0||t.indexOf('Rua Sao Pedro')>=0||t.indexOf('Fone:')>=0;
-    if(isRoman||isAllCaps){html+='<p class="tit">'+t+'</p>';}
-    else if(isSub){html+='<p class="sub">'+t+'</p>';}
-    else if(isCenter){html+='<p class="ct">'+t+'</p>';}
-    else if(isEnum){html+='<p class="ni">'+t+'</p>';}
+    var isSub=/^[IVX]+\.\d+\s*[-]/.test(t)||/^\d+\.\d+\s*[-]/.test(t)||(/^[IVX]+\.\d+/.test(t)&&t.length<100);
+    var isEnder=t.indexOf('EXCELENTISSIMO')>=0||t.indexOf('EXMO')>=0;
+    var isAcao=t.indexOf('ACAO ')===0&&t===t.toUpperCase()&&t.length>10;
+    var isCenter=(/^[A-Za-z ]+\/(SP|RJ|MG|PR|RS|SC|BA|PE|CE|GO|DF|MS|MT|PA|AM|AC|RO|RR|AP|TO|MA|PI|RN|PB|SE|AL|ES)/.test(t)&&t.length<80)
+      ||(t.indexOf('OAB/SP')>=0&&t.length<100)
+      ||t.indexOf('Gadiani')>=0||t.indexOf('Rua Sao Pedro')>=0||t.indexOf('Fone:')>=0
+      ||t.indexOf('Termos em que')>=0||t.indexOf('pede deferimento')>=0
+      ||t.indexOf('_____________')>=0;
+    if(isEnder||isAcao){html+='<p style="text-align:center;text-indent:0;font-weight:bold;text-transform:uppercase;margin:14pt 0 6pt 0"><b>'+t+'</b></p>';}
+    else if(isRoman||isAllCaps){html+='<p style="text-align:center;text-indent:0;font-weight:bold;text-transform:uppercase;margin:12pt 0 5pt 0"><b>'+t+'</b></p>';}
+    else if(isSub){html+='<p style="text-align:justify;text-indent:0;font-weight:bold;margin:8pt 0 4pt 0"><b>'+t+'</b></p>';}
+    else if(isCenter){html+='<p style="text-align:center;text-indent:0;font-weight:bold"><b>'+t+'</b></p>';}
+    else if(isEnum){html+='<p style="text-indent:0;text-align:justify">'+t+'</p>';}
     else{html+='<p>'+t+'</p>';}
   });
   html+='<div class="rod">Gadiani & D Antraccoli Advogados | Rua Sao Pedro, 760, Centro, Vargem Grande do Sul/SP | (19) 99412-6931 | gadianiedantraccoli@gmail.com</div>';
@@ -1351,7 +1355,7 @@ function diGerEtapa(step){
     // Etapa 1: Enderecamento, qualificacoes, gratuidade
     regras+' Voce e advogado senior especialista em direito do consumidor. Redija a PRIMEIRA PARTE da peticao inicial contendo:'
     +' (1) ENDERECAMENTO centralizado em maiusculo: EXCELENTISSIMO(A) SENHOR(A) DOUTOR(A) JUIZ(A) DE DIREITO DA '+vara.toUpperCase()+' DA COMARCA DE '+cidade.toUpperCase()+' - ESTADO DE '+estado.toUpperCase()+';'
-    +' (2) QUALIFICACAO DO REQUERENTE: insira uma TABELA com colunas (Dado | Informacao) com: Nome, Nacionalidade, Estado Civil, Profissao, CPF, Nascimento, Endereco, Telefone, Email. Depois o texto formal da qualificacao propondo a acao. '+c.nome+', brasileiro(a), '+c.civil+', '+(c.prof||'aposentado(a)')+', CPF '+c.cpf+', nascido(a) em '+c.nasc+', residente em '+(c.end||c.cidade)+'/'+estado+(c.tel?', tel. '+c.tel:'')+(c.email?', e-mail '+c.email:'')+', vem propor a presente;'
+    +' (2) QUALIFICACAO DO REQUERENTE: insira obrigatoriamente uma tabela markdown com | separando as colunas, exatamente assim: | Dado | Informacao | em seguida | --- | --- | e depois uma linha para cada dado: Nome, Nacionalidade, Estado Civil, Profissao, CPF, Data de Nascimento, Endereco, Telefone, E-mail. Depois o texto formal da qualificacao. '+c.nome+', brasileiro(a), '+c.civil+', '+(c.prof||'aposentado(a)')+', CPF '+c.cpf+', nascido(a) em '+c.nasc+', residente em '+(c.end||c.cidade)+'/'+estado+(c.tel?', tel. '+c.tel:'')+(c.email?', e-mail '+c.email:'')+', vem propor a presente;'
     +' (3) NOME DA ACAO centralizado em maiusculo: ACAO DECLARATORIA DE NULIDADE DE CONTRATO C/C REPETICAO DE INDEBITO E INDENIZACAO POR DANOS MORAIS;'
     +' (4) QUALIFICACAO DOS REUS: '+reusQual+';'
     +' (5) Secao I - DA GRATUIDADE DA JUSTICA E DA HIPERVULNERABILIDADE DO REQUERENTE: desenvolva extensamente. Mencione a renda de '+(c.renda||'beneficio INSS')+'. Liste os documentos juntados que comprovam a hipossuficiencia (extratos, declaracao, contracheque). Fundamente em Art. 5 LXXIV CF/88, Arts. 98 e ss. CPC, Art. 4 I e Art. 6 VIII CDC. Trate da presuncao relativa da declaracao (Art. 99 par. 3 CPC). Desenvolva a hipervulnerabilidade do beneficiario INSS: idoso, com renda fixa comprometida, sem conhecimento tecnico-juridico para identificar as irregularidades.'
