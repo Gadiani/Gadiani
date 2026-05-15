@@ -684,13 +684,21 @@ function limparMarkdown(txt){
     l=l.replace(/^#{1,6}\s*/,'');
     l=l.replace(/\*\*([^*]+)\*\*/g,'$1');
     l=l.replace(/\*([^*]+)\*/g,'$1');
-    l=l.replace(/^[-*]\s+/,'');
-    l=l.replace(/^\d+\.\s+/,'');
+    l=l.replace(/\*\*/g,'');
+    l=l.replace(/\*/g,'');
+    l=l.replace(/^---+$/,'');
+    l=l.replace(/---/g,'');
+    l=l.replace(/^#{1,6}/,'');
+    l=l.replace(/^>\s*/,'');
+    l=l.replace(/^[-]\s+/,'');
     l=l.replace(/_{2,}/g,'');
     l=l.replace(/\x60/g,'');
+    l=l.replace(/#+/g,'');
     res.push(l);
   });
-  return res.join(nl);
+  var joined=res.join(nl);
+  joined=joined.replace(/\n{3,}/g,nl+nl);
+  return joined.trim();
 }
 function baixarDocx(txt,nome){
   txt=limparMarkdown(txt);
@@ -1102,7 +1110,7 @@ function diGerPet(){
   g('di-pet-area').style.display='block';g('di-pet-txt').textContent='Lendo documentos do Drive...';g('di-pet-lbl').textContent='Aguarde - analisando documentos e gerando peticao...';
   lerArquivosDrive(id,function(err,docsTxt){
     var docsInfo=docsTxt?'\n\nDOCUMENTOS DO CLIENTE (extraidos do Drive):\n'+docsTxt:'';
-    var prompt='Atue como advogado senior e redija PETICAO INICIAL completa de DESCONTOS INDEVIDOS. IMPORTANTE: use apenas texto puro sem markdown, sem asteriscos, sem hashtags, sem tracos como bullet. Titulos em MAIUSCULO simples. Paragrafos separados por linha em branco. NAO cite jurisprudencia.\n\nCLIENTE: '+c.nome+' | CPF: '+(c.cpf||'-')+' | Nasc: '+(c.nasc||'-')+' | Prof: '+(c.prof||'aposentado')+' | Cidade: '+(c.cidade||'-')+(c.doencas?' | Doencas: '+c.doencas:'')+'\nBANCO: '+c.banco+' | Desconto: '+c.valor+' | Tipo: '+(c.tipo||'Cartao RMC nao contratado')+'\nCONTRATO: '+contrato+' | Parcela: R$ '+parc+' | Parcelas: '+np+' | Inicio: '+(dt?new Date(dt+'T12:00:00').toLocaleDateString('pt-BR'):'-')+' | Descontado ('+m+' meses): '+totStr+'\nVARA: '+vara+' | CIDADE: '+cidade+' | DATA: '+hoje+docsInfo+'\n\nESTRUTURA: (1) Enderecamento centralizado; (2) Qualificacao do autor; (3) ACAO DE REPETICAO DO INDEBITO C/C INDENIZACAO POR DANOS MORAIS; (4) Qualificacao do reu '+c.banco+'; (5) DA JUSTICA GRATUITA bem fundamentada'+(c.doencas?'; (6) DA PRIORIDADE NA TRAMITACAO':'')+'; (7) DOS FATOS com todos os detalhes usando os documentos fornecidos; (8) DO DIREITO - CDC art 42 dobro inversao onus dano moral in re ipsa; (9) DOS PEDIDOS; (10) VALOR DA CAUSA; (11) '+cidade+', '+hoje+'; (12) Augusto de Andrade Gadiani OAB/SP 425.910 | Ari D Antraccoli Neto OAB/SP 999.999. Sem jurisprudencia.';
+    var prompt='Atue como advogado senior e redija PETICAO INICIAL completa de DESCONTOS INDEVIDOS em texto corrido profissional. ESTRITAMENTE PROIBIDO: asteriscos, hashtags (#), tracos (---), markdown, bullets, negrito com asterisco. Use APENAS texto puro. Titulos das secoes em MAIUSCULO sem simbolos. Paragrafos separados por linha em branco. NAO cite jurisprudencia.\n\nCLIENTE: '+c.nome+' | CPF: '+(c.cpf||'-')+' | Nasc: '+(c.nasc||'-')+' | Prof: '+(c.prof||'aposentado')+' | Cidade: '+(c.cidade||'-')+(c.doencas?' | Doencas: '+c.doencas:'')+'\nBANCO: '+c.banco+' | Desconto: '+c.valor+' | Tipo: '+(c.tipo||'Cartao RMC nao contratado')+'\nCONTRATO: '+contrato+' | Parcela: R$ '+parc+' | Parcelas: '+np+' | Inicio: '+(dt?new Date(dt+'T12:00:00').toLocaleDateString('pt-BR'):'-')+' | Descontado ('+m+' meses): '+totStr+'\nVARA: '+vara+' | CIDADE: '+cidade+' | DATA: '+hoje+docsInfo+'\n\nESTRUTURA: (1) Enderecamento centralizado; (2) Qualificacao do autor; (3) ACAO DE REPETICAO DO INDEBITO C/C INDENIZACAO POR DANOS MORAIS; (4) Qualificacao do reu '+c.banco+'; (5) DA JUSTICA GRATUITA bem fundamentada'+(c.doencas?'; (6) DA PRIORIDADE NA TRAMITACAO':'')+'; (7) DOS FATOS com todos os detalhes usando os documentos fornecidos; (8) DO DIREITO - CDC art 42 dobro inversao onus dano moral in re ipsa; (9) DOS PEDIDOS; (10) VALOR DA CAUSA; (11) '+cidade+', '+hoje+'; (12) Augusto de Andrade Gadiani OAB/SP 425.910 | Ari D Antraccoli Neto OAB/SP 999.999. Sem jurisprudencia.';
     g('di-pet-txt').textContent='Gerando peticao...';
     callAI(prompt,function(err,txt){
       if(err){g('di-pet-txt').textContent='Erro: '+err.message;return;}
@@ -1133,7 +1141,7 @@ function diGerNot(){
   if(docsTxt)infoCliente+=' | DOCUMENTOS ANALISADOS: '+docsTxt;
   g('di-not-area').style.display='block';
   g('di-not-txt').textContent='Gerando notificacao...';
-  var prompt='Redija NOTIFICACAO EXTRAJUDICIAL formal e completa. PROIBIDO usar markdown, asteriscos, hashtags, tracos como bullet points ou qualquer formatacao especial. Use apenas texto puro com paragrafos. Tom serio e assertivo. Sem mencionar advogados ou escritorios. Data: '+new Date().toLocaleDateString('pt-BR')+'.'+
+  var prompt='Redija NOTIFICACAO EXTRAJUDICIAL formal e completa em texto corrido. ESTRITAMENTE PROIBIDO: asteriscos, hashtags (#), tracos (---), markdown, bullets, negrito com asterisco. Use APENAS texto puro. Titulos das secoes em MAIUSCULO sem qualquer simbolo. Tom formal e assertivo. Sem mencionar advogados ou escritorios. Data: '+new Date().toLocaleDateString('pt-BR')+'.'+
     ' REMETENTE: '+c.nome+', CPF '+(c.cpf||'-')+', residente em '+(c.end||c.cidade||'-')+'.'+
     ' DESTINATARIO: '+banco+'.'+
     ' OBJETO: '+tipoTxt+' referente ao(s) contrato(s): '+contrato+'.'+
@@ -1409,11 +1417,11 @@ function seGerEtapa(step){
   var credStr=creds.map(function(cr){return cr.nome+': R$ '+cr.valor+' (forma: '+cr.forma+', parcela R$ '+cr.prest+', sit: '+cr.sit+')';}).join('; ');
   var hoje=new Date().toLocaleDateString('pt-BR');
   var prompts=[
-    'Redija ENDERECAMENTO E QUALIFICACAO para peticao de SUPERENDIVIDAMENTO (Lei 14.181/2021). Calibri 12, justificado, 1,5. Titulos NEGRITO MAIUSCULO. Nome da acao: ACAO DE REPACTUACAO DE DIVIDAS E SUPERENDIVIDAMENTO. Autor: '+c.nome+', CPF: '+c.cpf+', Nasc: '+c.nasc+', '+c.civil+', '+c.prof+', Endereco: '+(c.end||c.cidade||'-')+'. Deixe [QUALIFICACAO DOS REQUERIDOS - PREENCHER MANUALMENTE]. Sem jurisprudencia.',
-    'Redija DA JUSTICA GRATUITA E PRIORIDADE para '+c.nome+'. Renda liquida: R$ '+c.rendaLiquida+'. Dividas: '+c.totalDividas+'. Doencas: '+(c.doencas||'nenhuma')+'. Gastos: aluguel R$ '+(c.aluguel||'-')+', alimentacao R$ '+(c.alimentacao||'-')+'. CF art 5 LXXIV, CPC art 98, CDC arts 2 e 3.'+(c.doencas?' Prioridade tramitacao CPC art 1048.':'')+' Sem jurisprudencia.',
-    'Redija DOS FATOS para peticao superendividamento de '+c.nome+'. Prosa fluida sem enumeracoes. Enquadramento CDC art 54-A. Motivos: '+(c.motivos||'nao informado')+'. Credores: '+(credStr||'a informar')+'. Renda: R$ '+(c.rendaLiquida||'-')+'. Gastos: aluguel R$ '+(c.aluguel||'-')+', alimentacao R$ '+(c.alimentacao||'-')+'. Defenda 70% (R$ '+(rLiq*0.7).toLocaleString('pt-BR',{minimumFractionDigits:2})+') minimo existencial e 30% (R$ '+(rLiq*0.3).toLocaleString('pt-BR',{minimumFractionDigits:2})+') para dividas. Sem jurisprudencia.',
-    'Redija TUTELA DE URGENCIA para '+c.nome+'. CPC art 300. 1) Suspensao integral dos descontos; 2) Subsidiariamente suspensao dos que superem 30% da renda (R$ '+(rLiq*0.3).toLocaleString('pt-BR',{minimumFractionDigits:2})+'). CDC art 104-A, CPC arts 300-301. Sem jurisprudencia.',
-    'Redija PEDIDOS e encerramento da peticao de superendividamento de '+c.nome+'. Inclua: tutela urgencia; citacao dos reus; repactuacao 60 meses (CDC art 104-A) exclusao encargos moratorios juros 1% am; extincao cobrancas; exclusao Serasa 10 dias uteis; pedido subsidiario plano compulsorio (CDC art 104-B); honorarios e custas. EMENTA com 6 palavras-chave. Encerre: '+hoje+', '+(c.cidade||'[cidade]')+', Augusto de Andrade Gadiani OAB/SP 425.910, Ari D Antraccoli Neto OAB/SP 999.999. Sem jurisprudencia.'
+    'Redija em texto puro profissional sem markdown sem asteriscos sem hashtags sem tracos. ENDERECAMENTO E QUALIFICACAO para peticao de SUPERENDIVIDAMENTO (Lei 14.181/2021). Calibri 12, justificado, 1,5. Titulos NEGRITO MAIUSCULO. Nome da acao: ACAO DE REPACTUACAO DE DIVIDAS E SUPERENDIVIDAMENTO. Autor: '+c.nome+', CPF: '+c.cpf+', Nasc: '+c.nasc+', '+c.civil+', '+c.prof+', Endereco: '+(c.end||c.cidade||'-')+'. Deixe [QUALIFICACAO DOS REQUERIDOS - PREENCHER MANUALMENTE]. Sem jurisprudencia.',
+    'Redija em texto puro sem markdown sem asteriscos. DA JUSTICA GRATUITA E PRIORIDADE para '+c.nome+'. Renda liquida: R$ '+c.rendaLiquida+'. Dividas: '+c.totalDividas+'. Doencas: '+(c.doencas||'nenhuma')+'. Gastos: aluguel R$ '+(c.aluguel||'-')+', alimentacao R$ '+(c.alimentacao||'-')+'. CF art 5 LXXIV, CPC art 98, CDC arts 2 e 3.'+(c.doencas?' Prioridade tramitacao CPC art 1048.':'')+' Sem jurisprudencia.',
+    'Redija em texto puro sem markdown sem asteriscos. DOS FATOS para peticao superendividamento de '+c.nome+'. Prosa fluida sem enumeracoes. Enquadramento CDC art 54-A. Motivos: '+(c.motivos||'nao informado')+'. Credores: '+(credStr||'a informar')+'. Renda: R$ '+(c.rendaLiquida||'-')+'. Gastos: aluguel R$ '+(c.aluguel||'-')+', alimentacao R$ '+(c.alimentacao||'-')+'. Defenda 70% (R$ '+(rLiq*0.7).toLocaleString('pt-BR',{minimumFractionDigits:2})+') minimo existencial e 30% (R$ '+(rLiq*0.3).toLocaleString('pt-BR',{minimumFractionDigits:2})+') para dividas. Sem jurisprudencia.',
+    'Redija em texto puro sem markdown sem asteriscos. TUTELA DE URGENCIA para '+c.nome+'. CPC art 300. 1) Suspensao integral dos descontos; 2) Subsidiariamente suspensao dos que superem 30% da renda (R$ '+(rLiq*0.3).toLocaleString('pt-BR',{minimumFractionDigits:2})+'). CDC art 104-A, CPC arts 300-301. Sem jurisprudencia.',
+    'Redija em texto puro sem markdown sem asteriscos. PEDIDOS e encerramento da peticao de superendividamento de '+c.nome+'. Inclua: tutela urgencia; citacao dos reus; repactuacao 60 meses (CDC art 104-A) exclusao encargos moratorios juros 1% am; extincao cobrancas; exclusao Serasa 10 dias uteis; pedido subsidiario plano compulsorio (CDC art 104-B); honorarios e custas. EMENTA com 6 palavras-chave. Encerre: '+hoje+', '+(c.cidade||'[cidade]')+', Augusto de Andrade Gadiani OAB/SP 425.910, Ari D Antraccoli Neto OAB/SP 999.999. Sem jurisprudencia.'
   ];
   if(!driveToken&&step===0){if(!confirm('Drive nao conectado. A peticao sera gerada SEM os documentos do cliente.\nDeseja continuar mesmo assim?'))return;}
   g('se-pet-area').style.display='block';g('se-pet-lbl').textContent='Etapa '+(step+1)+' de 5 - lendo documentos...';g('se-pet-txt').textContent='Aguarde...';g('sbtn'+step).disabled=true;
