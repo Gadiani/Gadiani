@@ -1052,7 +1052,7 @@ function driveBuscarPasta(c){
   fetch('https://www.googleapis.com/drive/v3/files?q='+encodeURIComponent(q)+'&fields=files(id,name)&pageSize=200',{headers:{Authorization:'Bearer '+driveToken}})
     .then(function(r){return r.json();})
     .then(function(d){
-      if(!d.files||!d.files.length){st.textContent='Nenhuma subpasta encontrada.';return;}
+      if(!d.files||!d.files.length){st.textContent='Nenhuma subpasta encontrada. Resposta: '+JSON.stringify(d).substring(0,200);return;}
       var nomeN=c.nome.toLowerCase().replace(/[^a-z0-9 ]/g,'').replace(/  +/g,' ').trim();
       var palavras=nomeN.split(' ').filter(function(p){return p.length>2;});
       var melhor=null,melhorSc=0;
