@@ -106,6 +106,10 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#1a1a1a}
     <div class="logo">GADIANI &amp; D'ANTRACCOLI</div>
     <div class="sub">Sistema Interno</div>
   </div>
+  <div id="drive-bar" style="display:none;background:#c62828;color:#fff;font-size:12px;font-weight:600;padding:8px 16px;border-radius:8px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;gap:12px">
+    <span>&#9888; Drive nao conectado &mdash; a peticao sera gerada SEM os documentos do cliente</span>
+    <button onclick="driveConectar(function(){document.getElementById('drive-bar').style.display='none';setSyncLbl('Drive conectado','#25d366');})" style="background:#fff;color:#c62828;border:none;border-radius:6px;padding:5px 12px;font-weight:700;cursor:pointer;font-size:12px">Conectar Drive</button>
+  </div>
   <div class="hright">
     <span class="sync" id="sync-lbl"></span>
     <select class="us" id="sel-user" onchange="saveUser()">
@@ -956,6 +960,65 @@ function diCheckBlock(){
   if(obFalt.length){bl.style.display='block';bl.textContent='Bloqueado. Faltam: '+obFalt.map(function(d){return d.txt;}).join(', ');}
   else bl.style.display='none';
 }
+function lerArquivosDrive(cid, cb){
+  if(!driveToken){cb(null,'');return;}
+  var nomeN=diC.find(function(x){return x.id===cid;})||seC.find(function(x){return x.id===cid;});
+  if(!nomeN){cb(null,'');return;}
+  var c=nomeN;
+  var pastaId=getE(cid).drivePastaId;
+  if(pastaId){lerArquivosDaPasta(pastaId,cb);return;}
+  var q='"'+DRIVE_FOLDER_DI+'" in parents and mimeType="application/vnd.google-apps.folder" and trashed=false';
+  fetch('https://www.googleapis.com/drive/v3/files?q='+encodeURIComponent(q)+'&fields=files(id,name)&pageSize=200',{headers:{Authorization:'Bearer '+driveToken}})
+    .then(function(r){return r.json();})
+    .then(function(d){
+      if(!d.files||!d.files.length){cb(null,'');return;}
+      var nN=c.nome.toLowerCase().replace(/[^a-z0-9 ]/g,'');
+      var pals=nN.split(' ').filter(function(p){return p.length>2;});
+      var melhor=null,melhorSc=0;
+      d.files.forEach(function(f){var fn=f.name.toLowerCase().replace(/[^a-z0-9 ]/g,'');var sc=0;pals.forEach(function(p){if(fn.indexOf(p)>=0)sc+=10;});if(sc>melhorSc){melhorSc=sc;melhor=f;}});
+      if(!melhor||melhorSc<10){cb(null,'');return;}
+      getE(cid).drivePastaId=melhor.id;saveEst();
+      lerArquivosDaPasta(melhor.id,cb);
+    })
+    .catch(function(){cb(null,'');});
+}
+function lerArquivosDaPasta(pastaId, cb){
+  var q='"'+pastaId+'" in parents and trashed=false';
+  fetch('https://www.googleapis.com/drive/v3/files?q='+encodeURIComponent(q)+'&fields=files(id,name,mimeType)&pageSize=50',{headers:{Authorization:'Bearer '+driveToken}})
+    .then(function(r){return r.json();})
+    .then(function(d){
+      if(!d.files||!d.files.length){cb(null,'');return;}
+      var arquivos=d.files.filter(function(f){
+        var m=f.mimeType;
+        return m==='application/pdf'||m.indexOf('image')>=0;
+      });
+      if(!arquivos.length){cb(null,'');return;}
+      var resultados=[],count=0,total=Math.min(arquivos.length,8);
+      arquivos.slice(0,8).forEach(function(f,i){
+        fetch('https://www.googleapis.com/drive/v3/files/'+f.id+'?alt=media',{headers:{Authorization:'Bearer '+driveToken}})
+          .then(function(r){return r.blob();})
+          .then(function(blob){
+            var reader=new FileReader();
+            reader.onload=function(e){
+              var b64=e.target.result.split(',')[1];
+              var isImg=f.mimeType.indexOf('image')>=0;
+              var prompt='Extraia TODAS as informacoes relevantes deste documento de forma organizada: dados pessoais, valores, datas, contratos, diagnosticos, qualquer informacao util para um processo judicial. Nome do arquivo: '+f.name;
+              var bodyContent=[{type:isImg?'image':'document',source:{type:'base64',media_type:f.mimeType,data:b64}},{type:'text',text:prompt}];
+              fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:600,messages:[{role:'user',content:bodyContent}]})})
+                .then(function(r){return r.json();})
+                .then(function(d){
+                  resultados[i]='['+f.name+'] '+(d.content&&d.content[0]?d.content[0].text:'sem dados');
+                  count++;if(count===total)cb(null,resultados.filter(Boolean).join(' | '));
+                })
+                .catch(function(){resultados[i]='['+f.name+']: erro';count++;if(count===total)cb(null,resultados.filter(Boolean).join(' | '));});
+            };
+            reader.readAsDataURL(blob);
+          })
+          .catch(function(){count++;if(count===total)cb(null,resultados.filter(Boolean).join(' | '));});
+      });
+    })
+    .catch(function(){cb(null,'');});
+}
 function diGerPet(){
   var id=g('di-sel-pet').value;if(!id){alert('Selecione um cliente.');return;}
   var c=diC.find(function(x){return x.id===id;});
@@ -966,11 +1029,16 @@ function diGerPet(){
   var hoje=new Date().toLocaleDateString('pt-BR'),m=0,tot=0;
   if(dt&&parc){m=Math.min(Math.floor((Date.now()-new Date(dt+'T12:00:00'))/(86400000*30.44)),np);tot=m*parc;}
   var totStr='R$ '+tot.toLocaleString('pt-BR',{minimumFractionDigits:2});
-  g('di-pet-area').style.display='block';g('di-pet-txt').textContent='Gerando peticao...';g('di-pet-lbl').textContent='Aguarde (30-60 segundos)...';
-  var prompt='Atue como advogado senior e redija PETICAO INICIAL completa de DESCONTOS INDEVIDOS. Calibri 12, justificado, 1,5. Titulos em NEGRITO MAIUSCULO. NAO cite jurisprudencia.\n\nCLIENTE: '+c.nome+' | CPF: '+(c.cpf||'-')+' | Nasc: '+(c.nasc||'-')+' | Prof: '+(c.prof||'aposentado')+' | Cidade: '+(c.cidade||'-')+(c.doencas?' | Doencas: '+c.doencas:'')+'\nBANCO: '+c.banco+' | Desconto: '+c.valor+' | Tipo: '+(c.tipo||'Cartao RMC nao contratado')+'\nCONTRATO: '+contrato+' | Parcela: R$ '+parc+' | Parcelas: '+np+' | Inicio: '+(dt?new Date(dt+'T12:00:00').toLocaleDateString('pt-BR'):'-')+' | Descontado ('+m+' meses): '+totStr+'\nVARA: '+vara+' | CIDADE: '+cidade+' | DATA: '+hoje+'\n\nESTRUTURA: (1) Enderecamento centralizado; (2) Qualificacao do autor; (3) ACAO DE REPETICAO DO INDEBITO C/C INDENIZACAO POR DANOS MORAIS; (4) Qualificacao do reu '+c.banco+'; (5) DA JUSTICA GRATUITA bem fundamentada'+(c.doencas?'; (6) DA PRIORIDADE NA TRAMITACAO':'')+'; (7) DOS FATOS com todos os detalhes; (8) DO DIREITO - CDC art 42 dobro inversao onus dano moral in re ipsa; (9) DOS PEDIDOS; (10) VALOR DA CAUSA; (11) '+cidade+', '+hoje+'; (12) Augusto de Andrade Gadiani OAB/SP 425.910 | Ari D Antraccoli Neto OAB/SP 999.999. Sem jurisprudencia.';
-  callAI(prompt,function(err,txt){
-    if(err){g('di-pet-txt').textContent='Erro: '+err.message;return;}
-    g('di-pet-txt').textContent=txt;g('di-pet-lbl').textContent='Peticao gerada. Revise antes de protocolar.';g('di-pet-dl').style.display='inline-flex';
+  if(!driveToken){if(!confirm('Drive nao conectado. A peticao sera gerada SEM os documentos do cliente.\nDeseja continuar mesmo assim?'))return;}
+  g('di-pet-area').style.display='block';g('di-pet-txt').textContent='Lendo documentos do Drive...';g('di-pet-lbl').textContent='Aguarde - analisando documentos e gerando peticao...';
+  lerArquivosDrive(id,function(err,docsTxt){
+    var docsInfo=docsTxt?'\n\nDOCUMENTOS DO CLIENTE (extraidos do Drive):\n'+docsTxt:'';
+    var prompt='Atue como advogado senior e redija PETICAO INICIAL completa de DESCONTOS INDEVIDOS. Calibri 12, justificado, 1,5. Titulos em NEGRITO MAIUSCULO. NAO cite jurisprudencia.\n\nCLIENTE: '+c.nome+' | CPF: '+(c.cpf||'-')+' | Nasc: '+(c.nasc||'-')+' | Prof: '+(c.prof||'aposentado')+' | Cidade: '+(c.cidade||'-')+(c.doencas?' | Doencas: '+c.doencas:'')+'\nBANCO: '+c.banco+' | Desconto: '+c.valor+' | Tipo: '+(c.tipo||'Cartao RMC nao contratado')+'\nCONTRATO: '+contrato+' | Parcela: R$ '+parc+' | Parcelas: '+np+' | Inicio: '+(dt?new Date(dt+'T12:00:00').toLocaleDateString('pt-BR'):'-')+' | Descontado ('+m+' meses): '+totStr+'\nVARA: '+vara+' | CIDADE: '+cidade+' | DATA: '+hoje+docsInfo+'\n\nESTRUTURA: (1) Enderecamento centralizado; (2) Qualificacao do autor; (3) ACAO DE REPETICAO DO INDEBITO C/C INDENIZACAO POR DANOS MORAIS; (4) Qualificacao do reu '+c.banco+'; (5) DA JUSTICA GRATUITA bem fundamentada'+(c.doencas?'; (6) DA PRIORIDADE NA TRAMITACAO':'')+'; (7) DOS FATOS com todos os detalhes usando os documentos fornecidos; (8) DO DIREITO - CDC art 42 dobro inversao onus dano moral in re ipsa; (9) DOS PEDIDOS; (10) VALOR DA CAUSA; (11) '+cidade+', '+hoje+'; (12) Augusto de Andrade Gadiani OAB/SP 425.910 | Ari D Antraccoli Neto OAB/SP 999.999. Sem jurisprudencia.';
+    g('di-pet-txt').textContent='Gerando peticao...';
+    callAI(prompt,function(err,txt){
+      if(err){g('di-pet-txt').textContent='Erro: '+err.message;return;}
+      g('di-pet-txt').textContent=txt;g('di-pet-lbl').textContent='Peticao gerada com base nos documentos do Drive. Revise antes de protocolar.';g('di-pet-dl').style.display='inline-flex';
+    });
   });
 }
 function diGerNot(){
@@ -1253,13 +1321,18 @@ function seGerEtapa(step){
     'Redija TUTELA DE URGENCIA para '+c.nome+'. CPC art 300. 1) Suspensao integral dos descontos; 2) Subsidiariamente suspensao dos que superem 30% da renda (R$ '+(rLiq*0.3).toLocaleString('pt-BR',{minimumFractionDigits:2})+'). CDC art 104-A, CPC arts 300-301. Sem jurisprudencia.',
     'Redija PEDIDOS e encerramento da peticao de superendividamento de '+c.nome+'. Inclua: tutela urgencia; citacao dos reus; repactuacao 60 meses (CDC art 104-A) exclusao encargos moratorios juros 1% am; extincao cobrancas; exclusao Serasa 10 dias uteis; pedido subsidiario plano compulsorio (CDC art 104-B); honorarios e custas. EMENTA com 6 palavras-chave. Encerre: '+hoje+', '+(c.cidade||'[cidade]')+', Augusto de Andrade Gadiani OAB/SP 425.910, Ari D Antraccoli Neto OAB/SP 999.999. Sem jurisprudencia.'
   ];
-  g('se-pet-area').style.display='block';g('se-pet-lbl').textContent='Etapa '+(step+1)+' de 5 - gerando...';g('se-pet-txt').textContent='Aguarde...';g('sbtn'+step).disabled=true;
+  if(!driveToken&&step===0){if(!confirm('Drive nao conectado. A peticao sera gerada SEM os documentos do cliente.\nDeseja continuar mesmo assim?'))return;}
+  g('se-pet-area').style.display='block';g('se-pet-lbl').textContent='Etapa '+(step+1)+' de 5 - lendo documentos...';g('se-pet-txt').textContent='Aguarde...';g('sbtn'+step).disabled=true;
+  lerArquivosDrive(c.id,function(err,docsTxt){
+    var docsExtra=docsTxt?'\n\nDOCUMENTOS DO CLIENTE (extraidos do Drive):\n'+docsTxt:'';
+    prompts[step]=prompts[step]+docsExtra;
   callAI(prompts[step],function(err,txt){
     if(err){g('se-pet-txt').textContent='Erro: '+err.message;g('sbtn'+step).disabled=false;return;}
     sePetTxts[step]=txt;g('se-pet-txt').textContent=txt;g('se-pet-lbl').textContent='Etapa '+(step+1)+' concluida: '+SE_LABELS[step];
     g('snum'+step).className='snum done';g('srow'+step).className='step-row done';
     if(step<4){g('sbtn'+(step+1)).disabled=false;g('sbtn'+(step+1)).className='btn btnp';g('snum'+(step+1)).className='snum cur';g('srow'+(step+1)).className='step-row cur';}
     if(step===4)g('se-pet-dl').style.display='inline-flex';
+  });
   });
 }
 function seBaixarPet(){
@@ -1380,6 +1453,13 @@ function checarTokenDrive(){
     if(t){driveToken=t;localStorage.removeItem('drv_token');localStorage.setItem('drv_token',t);history.replaceState(null,'',window.location.pathname);}
   }
   if(!driveToken){var s=localStorage.getItem('drv_token');if(s)driveToken=s;}
+  atualizarStatusDrive();
+}
+function atualizarStatusDrive(){
+  var bar=document.getElementById('drive-bar');
+  if(!bar)return;
+  if(driveToken){bar.style.display='none';}
+  else{bar.style.display='flex';}
 }
 window.addEventListener('load',function(){
   checarTokenDrive();loadUser();loadEst();setTimeout(diLoad,300);
