@@ -236,9 +236,31 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#1a1a1a}
     <div class="card">
       <div class="ct">Notificacao Extrajudicial</div>
       <div class="info-box">Gerada em nome do consumidor. Registrar em Consumidor.gov e Banco Central.</div>
+      <div class="g2" style="margin-bottom:10px">
+        <div><label>Cliente</label><select id="di-not-sel" onchange="diNotPreench()"><option value="">Selecionar...</option></select></div>
+        <div><label>Banco destinatario</label>
+          <select id="di-not-banco">
+            <option value="todos">Todos os bancos (notificacao generica)</option>
+            <option value="principal">Somente banco principal do cadastro</option>
+            <option value="outro">Outro (digitar abaixo)</option>
+          </select>
+        </div>
+      </div>
+      <div class="g2" style="margin-bottom:10px">
+        <div><label>Contrato(s) questionado(s)</label><input id="di-not-contrato" placeholder="Ex: 123456789 ou TODOS os contratos"></div>
+        <div><label>Banco (se escolheu Outro acima)</label><input id="di-not-banco-txt" placeholder="Nome do banco"></div>
+      </div>
+      <div style="margin-bottom:10px">
+        <label>Tipo de irregularidade</label>
+        <select id="di-not-tipo">
+          <option value="cartao">Cartao RMC/RCC nao contratado</option>
+          <option value="consignado">Emprestimo consignado nao autorizado</option>
+          <option value="seguro">Seguro prestamista nao contratado</option>
+          <option value="geral">Cobrancas indevidas em geral</option>
+        </select>
+      </div>
       <div style="display:flex;gap:8px;margin-bottom:12px">
-        <select id="di-not-sel" style="flex:1"><option value="">Selecionar cliente...</option></select>
-        <button class="btn btnp" onclick="diGerNot()">Gerar</button>
+        <button class="btn btnp" style="flex:1;justify-content:center" onclick="diGerNot()">Gerar notificacao</button>
       </div>
       <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap">
         <a href="https://www.consumidor.gov.br/" class="btn" target="_blank">Consumidor.gov</a>
@@ -248,7 +270,10 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#1a1a1a}
     <div id="di-not-area" style="display:none" class="card">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
         <div class="ct" style="margin-bottom:0">Notificacao gerada</div>
-        <button class="btn" onclick="copiar('di-not-txt')">Copiar</button>
+        <div style="display:flex;gap:6px">
+          <button class="btn" onclick="copiar('di-not-txt')">Copiar</button>
+          <button class="btn btng" id="di-not-dl" style="display:none" onclick="baixar('di-not-txt','notificacao.txt')">Baixar .txt</button>
+        </div>
       </div>
       <div class="out" id="di-not-txt"></div>
     </div>
@@ -664,7 +689,7 @@ function saveEst(){
   clearTimeout(saveT);
   setSyncLbl('Salvando...','#ff9800');
   saveT=setTimeout(function(){
-    fetch(SCRIPT,{method:'POST',body:JSON.stringify({action:'setStateAll',state:est}),headers:{'Content-Type':'application/json'},redirect:'follow'})
+    fetch(SCRIPT,{method:'POST',body:JSON.stringify({action:'setStateAll',state:est}),redirect:'follow'})
       .then(function(){setSyncLbl('Sincronizado','#25d366');})
       .catch(function(){setSyncLbl('Offline (local)','#f44336');});
   },1500);
@@ -698,10 +723,9 @@ function tryProxy(id,gid,cb){
     .catch(function(e){cb(e,null);});
 }
 function callAI(prompt,cb){
-  fetch(SCRIPT,{method:'POST',headers:{'Content-Type':'application/json'},redirect:'follow',
-    body:JSON.stringify({action:'ai',prompt:prompt})
-  }).then(function(r){return r.json();})
-    .then(function(d){if(!d.ok)throw new Error(d.error||'Erro AI');cb(null,d.text||'');})
+  fetch(SCRIPT,{method:'POST',redirect:'follow',body:JSON.stringify({action:'ai',prompt:prompt})})
+    .then(function(r){return r.text();})
+    .then(function(t){var d=JSON.parse(t);if(!d.ok)throw new Error(d.error||'Erro AI');cb(null,d.text||'');})
     .catch(function(e){cb(e,null);});
 }
 
@@ -819,9 +843,7 @@ function diUpload(input,id,did){
     if(!isImg&&!isPDF)return;
     var prompt=(DOC_PROMPTS[did]||'Extraia as principais informacoes deste documento.')+' Seja direto e objetivo.';
     var bodyContent=[{type:isImg?'image':'document',source:{type:'base64',media_type:file.type,data:b64}},{type:'text',text:prompt}];
-    fetch(SCRIPT,{method:'POST',headers:{'Content-Type':'application/json'},redirect:'follow',
-        body:JSON.stringify({action:'aiDoc',prompt:prompt,b64:b64,mime:file.type,isImg:isImg})
-      }).then(function(res){return res.json();})
+    fetch(SCRIPT,{method:'POST',redirect:'follow',body:JSON.stringify({action:'aiDoc',prompt:prompt,b64:b64,mime:file.type,isImg:isImg})}).then(function(res){return res.text();}).then(function(t){return JSON.parse(t);})
       .then(function(d){
         var resultado=d.ok?d.text:'Nao foi possivel extrair informacoes.';
         if(!getE(id).analises)getE(id).analises={};
@@ -1041,12 +1063,39 @@ function diGerPet(){
     });
   });
 }
+function diNotPreench(){
+  var id=g('di-not-sel').value;if(!id)return;
+  var c=diC.find(function(x){return x.id===id;});if(!c)return;
+  var bc=g('di-not-banco');
+  bc.innerHTML='<option value="todos">Todos os bancos (notificacao generica)</option><option value="principal">Somente banco principal: '+(c.banco||'-')+'</option><option value="outro">Outro (digitar abaixo)</option>';
+  g('di-not-contrato').placeholder='Ex: contrato '+c.contrato+' ou TODOS os contratos com '+c.banco;
+}
 function diGerNot(){
-  var id=g('di-not-sel').value;if(!id){alert('Selecione.');return;}
+  var id=g('di-not-sel').value;if(!id){alert('Selecione um cliente.');return;}
   var c=diC.find(function(x){return x.id===id;});
-  g('di-not-area').style.display='block';g('di-not-txt').textContent='Gerando notificacao...';
-  var prompt='Producao de notificacao extrajudicial formal em nome do consumidor '+c.nome+', CPF '+(c.cpf||'-')+', residente em '+(c.cidade||'-')+', dirigida ao banco '+c.banco+'. Solicite: copias dos contratos, proposta de adesao, saldo devedor detalhado, planilha de evolucao da divida, opcoes de renegociacao. Prazo de 10 dias, caso contrario o consumidor registrara reclamacao em consumidor.gov e Banco Central. Sem mencionar advogados. Formal. Data: '+new Date().toLocaleDateString('pt-BR');
-  callAI(prompt,function(err,txt){g('di-not-txt').textContent=err?'Erro: '+err.message:txt;});
+  var bancoOpt=g('di-not-banco').value;
+  var bancoTxt=g('di-not-banco-txt').value.trim();
+  var banco=bancoOpt==='todos'?'TODAS AS INSTITUICOES FINANCEIRAS':bancoOpt==='outro'&&bancoTxt?bancoTxt:(c.banco||'banco');
+  var contrato=g('di-not-contrato').value.trim()||'todos os contratos existentes';
+  var tipo=g('di-not-tipo').value;
+  var tipoTxt={cartao:'cartao de credito RMC/RCC inserido sem autorizacao',consignado:'emprestimo consignado contratado sem autorizacao do titular',seguro:'seguro prestamista inserido sem consentimento',geral:'cobrancas e descontos indevidos'}[tipo]||'cobrancas indevidas';
+  var analises=getE(c.id).analises||{};
+  var docsTxt='';
+  Object.keys(analises).forEach(function(did){docsTxt+='['+analises[did].doc+']: '+analises[did].txt+' | ';});
+  var infoCliente='CLIENTE: '+c.nome+' | CPF: '+(c.cpf||'-')+' | Nasc: '+(c.nasc||'-')+' | Cidade: '+(c.cidade||'-')+' | Renda: '+(c.renda||'-')+' | Banco: '+(c.banco||'-')+' | Desconto: '+(c.valor||'-')+' | Tipo: '+(c.tipo||'-')+(c.doencas?' | Doencas: '+c.doencas:'');
+  if(docsTxt)infoCliente+=' | DOCUMENTOS ANALISADOS: '+docsTxt;
+  g('di-not-area').style.display='block';
+  g('di-not-txt').textContent='Gerando notificacao...';
+  var prompt='Redija NOTIFICACAO EXTRAJUDICIAL formal e completa. Tom serio e assertivo. Sem mencionar advogados ou escritorios. Data: '+new Date().toLocaleDateString('pt-BR')+'.'+
+    ' REMETENTE: '+c.nome+', CPF '+(c.cpf||'-')+', residente em '+(c.end||c.cidade||'-')+'.'+
+    ' DESTINATARIO: '+banco+'.'+
+    ' OBJETO: '+tipoTxt+' referente ao(s) contrato(s): '+contrato+'.'+
+    ' DADOS DO CLIENTE: '+infoCliente+'.'+
+    ' CONTEUDO OBRIGATORIO: (1) Identificacao completa do notificante; (2) Descricao detalhada da irregularidade; (3) Fundamentacao no CDC arts 6, 39, 42 e 51; (4) Exigencia de documentos: copia integral dos contratos, proposta de adesao assinada, historico completo de descontos, saldo devedor atualizado, opcoes de renegociacao; (5) Prazo de 10 dias uteis; (6) Aviso de registro em consumidor.gov.br e Banco Central em caso de descumprimento; (7) Local e data. Formato carta formal. Use os dados reais do cliente acima.';
+  callAI(prompt,function(err,txt){
+    g('di-not-txt').textContent=err?'Erro: '+err.message:txt;
+    if(!err)g('di-not-dl').style.display='inline-flex';
+  });
 }
 function diAguard(){
   var e=g('di-aguard');if(!e)return;
