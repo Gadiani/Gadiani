@@ -1377,39 +1377,6 @@ function diGerEtapa(step,cb){
   var regras='REGRAS ABSOLUTAS: texto puro sem markdown, sem asteriscos, sem hashtags, sem tracos decorativos, sem tabelas, sem pipes (|). Paragrafos separados por linha em branco. Titulos de secao em MAIUSCULO centralizado. Subtopicos como I.1, I.2 numerados. Linguagem juridica formal. Use os dados reais do caso. NUNCA corte o texto no meio. Escreva acentos e cedilhas normalmente.';
   var tutela=document.getElementById('tutela-urgencia')&&document.getElementById('tutela-urgencia').checked;
   var reusStr2=reus.map(function(r){return r.nome+(r.cnpj?', pessoa juridica de direito privado, inscrita no CNPJ/MF sob o n. '+r.cnpj:'')+(r.end?', com sede em '+r.end:'');}).join('; ');
-  var instrucoes='INSTRUCOES OBRIGATORIAS: escreva em portugues correto com todos os acentos e cedilhas. Texto juridico formal e tecnicamente preciso. Sem markdown, sem asteriscos, sem tabelas, sem pipes. Paragrafos separados por linha em branco. Titulos em MAIUSCULO. Subtopicos numerados como I.1, I.2, II.1 etc.';
-  var dadosCliente='DADOS DO CASO: Cliente: '+c.nome+' | CPF: '+c.cpf+' | Nascimento: '+c.nasc+' | Estado civil: '+c.civil+' | Profissao: '+(c.prof||'aposentado(a)')+' | Endereco: '+(c.end||c.cidade)+'/'+estado+' | Telefone: '+(c.tel||'-')+' | Email: '+(c.email||'-')+(c.doencas?' | Doencas: '+c.doencas:'')+' | Renda: '+(c.renda||'nao informada')+' | Banco: '+c.banco+' | Tipo desconto: '+(c.tipo||'nao informado')+' | Contrato: '+contrato+' | Parcela: R$ '+parc+' | Parcelas: '+np+' | Inicio: '+(dt?new Date(dt+'T12:00:00').toLocaleDateString('pt-BR'):'-')+' | Meses descontados: '+mes+' | Total descontado: '+totStr+(analisesStr?' | Documentos: '+analisesStr:'');
-  var prompts=[
-    instrucoes+' '+dadosCliente+(docsTxt?' | Drive: '+docsTxt:'')+' Voce e advogado senior especialista em direito do consumidor com 20 anos de experiencia. Redija a PRIMEIRA PARTE da peticao inicial contendo exatamente:'
-    +' (1) ENDERECAMENTO: centralizado, em maiusculo: EXCELENTISSIMO(A) SENHOR(A) DOUTOR(A) JUIZ(A) DE DIREITO DA '+vara.toUpperCase()+' DA COMARCA DE '+cidade.toUpperCase()+' - ESTADO DE '+estado.toUpperCase()
-    +' (2) NOME DA ACAO centralizado em maiusculo: ACAO DECLARATORIA DE NULIDADE DE CONTRATO C/C REPETICAO DE INDEBITO E INDENIZACAO POR DANOS MORAIS'
-    +' (3) QUALIFICACAO DO AUTOR em texto corrido: '+c.nome+', brasileiro(a), '+c.civil+', '+( c.prof||'aposentado(a)')+', portador(a) do CPF n. '+c.cpf+', nascido(a) em '+c.nasc+', residente em '+(c.end||c.cidade)+'/'+estado+(c.tel?', tel. '+c.tel:'')+(c.email?', e-mail '+c.email:'')+', vem propor a presente acao em face de:'
-    +' (4) QUALIFICACAO DO REU: '+reusStr2
-    +' (5) Secao I - DA GRATUIDADE DA JUSTICA E DA HIPERVULNERABILIDADE DO REQUERENTE: desenvolva com profundidade real usando os dados reais. Mencione renda de '+(c.renda||'beneficio INSS')+'. Fundamente em Art. 5 LXXIV CF/88, Arts. 98 e ss. CPC, Art. 4 I e Art. 6 VIII CDC. Use dados dos documentos do drive se disponivel.'
-    +(c.doencas?' (6) Secao II - DA PRIORIDADE NA TRAMITACAO: portador(a) de '+c.doencas+'. Art. 1048 I CPC.':''),
-
-    instrucoes+' '+dadosCliente+(docsTxt?' | Drive: '+docsTxt:'')+' Voce e advogado senior. Redija a SEGUNDA PARTE da peticao: Secao '+(c.doencas?'III':'II')+' - DOS FATOS. Use subtopicos numerados. Narrativa cronologica detalhada usando TODOS os dados reais. Descreva como o desconto surgiu, quando foi descoberto, o contrato '+contrato+' com parcela de R$ '+parc+' por '+mes+' meses totalizando '+totStr+'. Impacto na renda. Abalo emocional. Texto corrido sem bullets.',
-
-    instrucoes+' '+dadosCliente+(docsTxt?' | Drive: '+docsTxt:'')+' Voce e advogado senior especialista em CDC. Redija a TERCEIRA PARTE: Secao '+(c.doencas?'IV':'III')+' - DO DIREITO com subtopicos:'
-    +' '+(c.doencas?'IV':'III')+'.1 Da Relacao de Consumo e Aplicabilidade do CDC (Arts. 2 e 3 CDC, Sumula 297 STJ)'
-    +' '+(c.doencas?'IV':'III')+'.2 Da Nulidade do Contrato por Ausencia de Consentimento (Arts. 104, 166 CC; Art. 39 I, III, IV CDC; Art. 46 CDC) - argumente que o banco nao pode provar consentimento expresso'
-    +' '+(c.doencas?'IV':'III')+'.3 Da Responsabilidade Objetiva do Fornecedor (Art. 14 CDC)'
-    +' '+(c.doencas?'IV':'III')+'.4 Da Inversao do Onus da Prova e Hipossuficiencia Tecnica (Art. 6 VIII CDC) - cite Leonardo Roscoe Bessa, Manual do Direito do Consumidor, RT'
-    +' '+(c.doencas?'IV':'III')+'.5 Da Repeticao do Indebito em Dobro (Art. 42 paragrafo unico CDC) - total '+totStr+', dobro R$ '+(tot*2).toLocaleString('pt-BR',{minimumFractionDigits:2})+' - afaste o engano justificavel'
-    +' '+(c.doencas?'IV':'III')+'.6 Do Dano Moral in re ipsa - renda comprometida por '+mes+' meses, abalo psicologico, restricao a dignidade'
-    +' '+(c.doencas?'IV':'III')+'.7 Da Nulidade das Clausulas Abusivas (Art. 51 CDC)'
-    +(tutela?' '+(c.doencas?'IV':'III')+'.8 DA TUTELA DE URGENCIA (Art. 300 CPC): demonstre o FUMUS BONI IURIS (verossimilhanca do direito - desconto comprovado e nao autorizado) e o PERICULUM IN MORA (dano continuado a renda mensal - cada mes que passa novo desconto indevido prejudica a subsistencia do consumidor). Requeira suspensao dos descontos no beneficio aate julgamentoto.':''),
-
-    instrucoes+' '+dadosCliente+' Voce e advogado senior. Redija a QUARTA E ULTIMA PARTE da peticao:'
-    +' Secao '+(c.doencas?'V':'IV')+' - DOS PEDIDOS: liste com letras a), b), c)... todos os pedidos: gratuidade; '+(tutela?'tutela urgencia para suspensao dos descontos; ':'')+' citacao dos reus; inversao onus prova; declaracao nulidade contrato '+contrato+'; devolucao em dobro de '+totStr+' = R$ '+(tot*2).toLocaleString('pt-BR',{minimumFractionDigits:2})+'; alternativamente devolucao simples; danos morais R$ 10.000,00; exibicao de documentos; producao de provas; condenacao custas e honorarios Art. 85 CPC.'
-    +' Secao '+(c.doencas?'VI':'V')+' - DO VALOR DA CAUSA: R$ '+(tot*2+10000).toLocaleString('pt-BR',{minimumFractionDigits:2})+' (devolucao em dobro + danos morais), nos termos do Art. 292 CPC.'
-    +' ENCERRAMENTO: "Termos em que pede deferimento."'
-    +' DATA E LOCAL: '+cidade+'/'+estado+', '+hoje+'.'
-    +' ASSINATURAS centralizadas:'
-    +' _____________________________________________ | ARI D ANTRACCOLI NETO | OAB/SP n. 500.799'
-    +' _____________________________________________ | AUGUSTO DE ANDRADE GADIANI | OAB/SP n. 425.910'
-    +' Gadiani & D Antraccoli Advogados | Rua Sao Pedro, n. 760, Centro, Vargem Grande do Sul/SP | (19) 99412-6931 | gadianiedantraccoli@gmail.com'
-  ];
 
   g('di-pet-area').style.display='block';
   g('di-pet-lbl').textContent='Etapa '+(step+1)+' de 4 - gerando...';
@@ -1417,8 +1384,39 @@ function diGerEtapa(step,cb){
   g('dibtn'+step).disabled=true;
 
   lerArquivosDrive(id,function(err,docsTxt){
-    var prompt=prompts[step]+(docsTxt?' | DOCUMENTOS DO DRIVE: '+docsTxt:'');
-    callAI(prompt,function(err2,txt){
+    var instrucoes='INSTRUCOES: escreva em portugues correto com todos os acentos e cedilhas. Texto juridico formal. Sem markdown, sem asteriscos, sem tabelas, sem pipes. Paragrafos separados por linha em branco. Titulos em MAIUSCULO. Subtopicos numerados como I.1, I.2 etc.';
+    var dadosCliente='DADOS: Cliente: '+c.nome+' | CPF: '+c.cpf+' | Nascimento: '+c.nasc+' | Estado civil: '+c.civil+' | Profissao: '+(c.prof||'aposentado(a)')+' | Endereco: '+(c.end||c.cidade)+'/'+estado+(c.tel?' | Tel: '+c.tel:'')+(c.email?' | Email: '+c.email:'')+(c.doencas?' | Doencas: '+c.doencas:'')+' | Renda: '+(c.renda||'nao informada')+' | Banco: '+c.banco+' | Tipo: '+(c.tipo||'-')+' | Contrato: '+contrato+' | Parcela: R$ '+parc+' | Parcelas: '+np+' | Inicio: '+(dt?new Date(dt+'T12:00:00').toLocaleDateString('pt-BR'):'-')+' | Meses: '+mes+' | Total: '+totStr+(analisesStr?' | Docs analisados: '+analisesStr:'')+(docsTxt?' | Drive: '+docsTxt:'');
+    var prompts=[
+      instrucoes+' '+dadosCliente+' Voce e advogado senior especialista em direito do consumidor. Redija a PRIMEIRA PARTE da peticao inicial:'
+      +' (1) ENDERECAMENTO centralizado em maiusculo: EXCELENTISSIMO(A) SENHOR(A) DOUTOR(A) JUIZ(A) DE DIREITO DA '+vara.toUpperCase()+' DA COMARCA DE '+cidade.toUpperCase()+' - ESTADO DE '+estado.toUpperCase()
+      +' (2) NOME DA ACAO centralizado em maiusculo: ACAO DECLARATORIA DE NULIDADE DE CONTRATO C/C REPETICAO DE INDEBITO E INDENIZACAO POR DANOS MORAIS'
+      +' (3) QUALIFICACAO DO AUTOR em texto corrido: '+c.nome+', brasileiro(a), '+c.civil+', '+(c.prof||'aposentado(a)')+', portador(a) do CPF n. '+c.cpf+', nascido(a) em '+c.nasc+', residente em '+(c.end||c.cidade)+'/'+estado+(c.tel?', tel. '+c.tel:'')+(c.email?', e-mail '+c.email:'')+', vem propor a presente acao em face de:'
+      +' (4) QUALIFICACAO DO REU: '+reusStr2
+      +' (5) Secao I - DA GRATUIDADE DA JUSTICA E DA HIPERVULNERABILIDADE DO REQUERENTE: desenvolva com profundidade. Mencione renda de '+(c.renda||'beneficio INSS')+'. Fundamente em Art. 5 LXXIV CF/88, Arts. 98 e ss. CPC, Art. 4 I e Art. 6 VIII CDC.'
+      +(c.doencas?' (6) Secao II - DA PRIORIDADE NA TRAMITACAO: portador(a) de '+c.doencas+'. Art. 1048 I CPC.':''),
+
+      instrucoes+' '+dadosCliente+' Voce e advogado senior. Redija APENAS a Secao '+(c.doencas?'III':'II')+' - DOS FATOS com subtopicos numerados. Narrativa cronologica detalhada usando os dados reais. Descreva como o desconto surgiu, o contrato '+contrato+' com parcela R$ '+parc+' por '+mes+' meses totalizando '+totStr+'. Impacto na renda. Abalo emocional e psicologico. Texto corrido sem bullets.',
+
+      instrucoes+' '+dadosCliente+' Voce e advogado senior especialista em CDC. Redija APENAS a Secao '+(c.doencas?'IV':'III')+' - DO DIREITO com os seguintes subtopicos obrigatorios:'
+      +' '+(c.doencas?'IV':'III')+'.1 Da Relacao de Consumo e Aplicabilidade do CDC (Arts. 2 e 3 CDC, Sumula 297 STJ);'
+      +' '+(c.doencas?'IV':'III')+'.2 Da Nulidade do Contrato por Ausencia de Consentimento (Arts. 104 e 166 CC; Art. 39 I, III e IV CDC; Art. 46 CDC);'
+      +' '+(c.doencas?'IV':'III')+'.3 Da Responsabilidade Objetiva do Fornecedor (Art. 14 CDC);'
+      +' '+(c.doencas?'IV':'III')+'.4 Da Inversao do Onus da Prova e Hipossuficiencia Tecnica (Art. 6 VIII CDC, cite Leonardo Roscoe Bessa);'
+      +' '+(c.doencas?'IV':'III')+'.5 Da Repeticao do Indebito em Dobro (Art. 42 paragrafo unico CDC) total '+totStr+' dobro R$ '+(tot*2).toLocaleString('pt-BR',{minimumFractionDigits:2})+';'
+      +' '+(c.doencas?'IV':'III')+'.6 Do Dano Moral in re ipsa;'
+      +' '+(c.doencas?'IV':'III')+'.7 Da Nulidade das Clausulas Abusivas (Art. 51 CDC)'
+      +(tutela?'; '+(c.doencas?'IV':'III')+'.8 DA TUTELA DE URGENCIA (Art. 300 CPC): fumus boni iuris (desconto comprovado e nao autorizado) e periculum in mora (dano continuado a renda - cada mes novo desconto prejudica a subsistencia). Requeira suspensao dos descontos.':''),
+
+      instrucoes+' '+dadosCliente+' Voce e advogado senior. Redija a QUARTA E ULTIMA PARTE da peticao:'
+      +' Secao '+(c.doencas?'V':'IV')+' - DOS PEDIDOS: liste com letras a), b), c)... : gratuidade; '+(tutela?'tutela urgencia para suspensao dos descontos; ':'')+' citacao dos reus; inversao onus prova; declaracao nulidade contrato '+contrato+'; devolucao em dobro de '+totStr+' = R$ '+(tot*2).toLocaleString('pt-BR',{minimumFractionDigits:2})+'; alternativamente devolucao simples; danos morais R$ 10.000,00; exibicao documentos; producao provas; custas e honorarios Art. 85 CPC.'
+      +' Secao '+(c.doencas?'VI':'V')+' - DO VALOR DA CAUSA: R$ '+(tot*2+10000).toLocaleString('pt-BR',{minimumFractionDigits:2})+' nos termos do Art. 292 CPC.'
+      +' Escreva: "Termos em que pede deferimento."'
+      +' '+cidade+'/'+estado+', '+hoje+'.'
+      +' Centralizados: _____________________________________________ | ARI D ANTRACCOLI NETO | OAB/SP n. 500.799'
+      +' _____________________________________________ | AUGUSTO DE ANDRADE GADIANI | OAB/SP n. 425.910'
+      +' Gadiani & D Antraccoli Advogados | Rua Sao Pedro, n. 760, Centro, Vargem Grande do Sul/SP | (19) 99412-6931 | gadianiedantraccoli@gmail.com'
+    ];
+    callAI(prompts[step],function(err2,txt){
       if(err2){g('di-pet-txt').textContent='Erro: '+err2.message;g('dibtn'+step).disabled=false;return;}
       diPetTxts[step]=limparMarkdown(txt);
       g('di-pet-txt').textContent=diPetTxts[step];
