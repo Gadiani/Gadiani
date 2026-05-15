@@ -896,9 +896,7 @@ function docAnalisarEArmazenar(file, b64, isImg, cid, did, c) {
     // Show result
     if (statusEl) { statusEl.textContent = 'Analisado'; statusEl.style.color = '#1b5e20'; }
     // Show popup with extracted info
-    alert('Documento analisado pela IA:
-
-' + resultado.substring(0, 600) + (resultado.length > 600 ? '...' : ''));
+    alert('Documento: ' + docNome + '\n\n' + resultado.substring(0, 500));
     // Save to Drive if token available
     if (DRIVE_TOKEN && c) {
       docSalvarNoDrive(file, b64, c, docNome);
@@ -1771,24 +1769,15 @@ function diVerAnalises(cid) {
   var analises = st.analises || {};
   var keys = Object.keys(analises);
   if (!keys.length) { alert('Nenhum documento analisado ainda para este cliente.'); return; }
-  var txt = 'ANALISES DA IA - ' + new Date().toLocaleDateString('pt-BR') + '
-' + '='.repeat(50) + '
-
-';
+  var nl = '\n';
+  var txt = 'ANALISES DA IA - ' + new Date().toLocaleDateString('pt-BR') + nl + '='.repeat(50) + nl + nl;
   keys.forEach(function(did) {
     var a = analises[did];
-    txt += 'DOCUMENTO: ' + a.doc + '
-';
-    txt += 'Arquivo: ' + a.arquivo + '
-';
-    txt += 'Data: ' + new Date(a.data).toLocaleDateString('pt-BR') + '
-';
-    txt += 'Extraido:
-' + a.txt + '
-';
-    txt += '-'.repeat(40) + '
-
-';
+    txt += 'DOCUMENTO: ' + a.doc + nl;
+    txt += 'Arquivo: ' + a.arquivo + nl;
+    txt += 'Data: ' + new Date(a.data).toLocaleDateString('pt-BR') + nl;
+    txt += 'Extraido:' + nl + a.txt + nl;
+    txt += '-'.repeat(40) + nl + nl;
   });
   // Show in modal-like alert or open new window
   var w = window.open('', '_blank', 'width=700,height=600');
@@ -2542,9 +2531,7 @@ function docAnalisarEArmazenar(file, b64, isImg, cid, did, c) {
     // Show result
     if (statusEl) { statusEl.textContent = 'Analisado'; statusEl.style.color = '#1b5e20'; }
     // Show popup with extracted info
-    alert('Documento analisado pela IA:
-
-' + resultado.substring(0, 600) + (resultado.length > 600 ? '...' : ''));
+    alert('Documento: ' + docNome + '\n\n' + resultado.substring(0, 500));
     // Save to Drive if token available
     if (DRIVE_TOKEN && c) {
       docSalvarNoDrive(file, b64, c, docNome);
@@ -3417,24 +3404,15 @@ function diVerAnalises(cid) {
   var analises = st.analises || {};
   var keys = Object.keys(analises);
   if (!keys.length) { alert('Nenhum documento analisado ainda para este cliente.'); return; }
-  var txt = 'ANALISES DA IA - ' + new Date().toLocaleDateString('pt-BR') + '
-' + '='.repeat(50) + '
-
-';
+  var nl = '\n';
+  var txt = 'ANALISES DA IA - ' + new Date().toLocaleDateString('pt-BR') + nl + '='.repeat(50) + nl + nl;
   keys.forEach(function(did) {
     var a = analises[did];
-    txt += 'DOCUMENTO: ' + a.doc + '
-';
-    txt += 'Arquivo: ' + a.arquivo + '
-';
-    txt += 'Data: ' + new Date(a.data).toLocaleDateString('pt-BR') + '
-';
-    txt += 'Extraido:
-' + a.txt + '
-';
-    txt += '-'.repeat(40) + '
-
-';
+    txt += 'DOCUMENTO: ' + a.doc + nl;
+    txt += 'Arquivo: ' + a.arquivo + nl;
+    txt += 'Data: ' + new Date(a.data).toLocaleDateString('pt-BR') + nl;
+    txt += 'Extraido:' + nl + a.txt + nl;
+    txt += '-'.repeat(40) + nl + nl;
   });
   // Show in modal-like alert or open new window
   var w = window.open('', '_blank', 'width=700,height=600');
