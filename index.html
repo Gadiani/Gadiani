@@ -698,11 +698,10 @@ function tryProxy(id,gid,cb){
     .catch(function(e){cb(e,null);});
 }
 function callAI(prompt,cb){
-  fetch('https://api.anthropic.com/v1/messages',{
-    method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:4000,messages:[{role:'user',content:prompt}]})
+  fetch(SCRIPT,{method:'POST',headers:{'Content-Type':'application/json'},redirect:'follow',
+    body:JSON.stringify({action:'ai',prompt:prompt})
   }).then(function(r){return r.json();})
-    .then(function(d){if(d.error)throw new Error(d.error.message);cb(null,d.content&&d.content[0]?d.content[0].text:'');})
+    .then(function(d){if(!d.ok)throw new Error(d.error||'Erro AI');cb(null,d.text||'');})
     .catch(function(e){cb(e,null);});
 }
 
@@ -820,10 +819,11 @@ function diUpload(input,id,did){
     if(!isImg&&!isPDF)return;
     var prompt=(DOC_PROMPTS[did]||'Extraia as principais informacoes deste documento.')+' Seja direto e objetivo.';
     var bodyContent=[{type:isImg?'image':'document',source:{type:'base64',media_type:file.type,data:b64}},{type:'text',text:prompt}];
-    fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:800,messages:[{role:'user',content:bodyContent}]})})
-      .then(function(res){return res.json();})
+    fetch(SCRIPT,{method:'POST',headers:{'Content-Type':'application/json'},redirect:'follow',
+        body:JSON.stringify({action:'aiDoc',prompt:prompt,b64:b64,mime:file.type,isImg:isImg})
+      }).then(function(res){return res.json();})
       .then(function(d){
-        var resultado=d.content&&d.content[0]?d.content[0].text:'Nao foi possivel extrair informacoes.';
+        var resultado=d.ok?d.text:'Nao foi possivel extrair informacoes.';
         if(!getE(id).analises)getE(id).analises={};
         var allDocs=DC.concat(GV);
         var docDef=allDocs.find(function(dd){return dd.id===did;});
