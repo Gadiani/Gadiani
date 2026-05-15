@@ -815,7 +815,7 @@ function baixarPlanoDocx(){
   html+='<p class="ct">OAB/SP n. 500.799</p>';
   html+='</body></html>';
   // Convert markdown tables in aiLines before output
-  html=html.replace(/((<tr><td>[^<]+<\/td>(<td>[^<]+<\/td>)+<\/tr>\n?)+/g,function(match){return '<table>'+match+'</table>';});
+  // tables already built inline
   var b=new Blob([html],{type:'application/msword'});
   var u=URL.createObjectURL(b);var a=document.createElement('a');
   a.href=u;a.download='plano_pagamento.doc';a.click();URL.revokeObjectURL(u);
@@ -1197,7 +1197,14 @@ function diPend(tipo){
 function diWA(id){
   var c=id?diC.find(function(x){return x.id===id;}):diCur;if(!c||!c.tel){alert('Cliente sem telefone.');return;}
   var r=getDC('di',c.id),falta=DC.concat(GV).filter(function(d){return !r[d.id];}).map(function(d){return d.txt;});
-  var msg='Ola, '+c.nome.split(' ')[0]+'!\n\nPassamos para solicitar os documentos pendentes para seu processo contra o banco '+c.banco+':\n\n'+falta.map(function(d,i){return (i+1)+'. '+d;}).join('\n')+'\n\nAssim que recebermos, daremos andamento imediato.\n\nGadiani Advogados';
+  var n1=c.nome.split(' ')[0];
+  var msg='Ola, '+n1+'! Tudo bem?'
+    +'\n\nSomos o escritorio Gadiani & D Antraccoli Advogados e estamos trabalhando ativamente no seu processo contra o banco '+c.banco+'.'
+    +'\n\nO juiz esta requisitando documentacao complementar para dar andamento ao seu caso. Quanto antes voce nos enviar, mais rapido conseguimos protocolar e garantir seus direitos!'
+    +'\n\nDocumentos necessarios com urgencia:'
+    +'\n\n'+falta.map(function(d,i){return (i+1)+'. '+d;}).join('\n')
+    +'\n\nPor favor, fotografe e nos envie o quanto antes por aqui mesmo. Estamos na torcida por voce!'
+    +'\n\nGadiani & D Antraccoli Advogados';
   window.open('https://wa.me/55'+c.tel.replace(/[^0-9]/g,'')+'?text='+encodeURIComponent(msg),'_blank');
   getE(c.id).ultimoContato=new Date().toISOString();saveEst();
 }
@@ -1700,7 +1707,14 @@ function seRenderDocs(c){
 function seWA(id){
   var c=id?seC.find(function(x){return x.id===id;}):seCur;if(!c||!c.tel){alert('Sem telefone.');return;}
   var r=getDC('se',c.id),falta=SE_DOCS.filter(function(d){return !r[d.id];}).map(function(d){return d.txt;});
-  var msg='Ola, '+c.nome.split(' ')[0]+'!\n\nPara darmos andamento ao seu processo de superendividamento, precisamos:\n\n'+falta.map(function(d,i){return (i+1)+'. '+d;}).join('\n')+'\n\nGadiani Advogados';
+  var n2=c.nome.split(' ')[0];
+  var msg='Ola, '+n2+'! Tudo bem?'
+    +'\n\nSomos o escritorio Gadiani & D Antraccoli Advogados e estamos trabalhando ativamente no seu processo de superendividamento.'
+    +'\n\nO juiz esta requisitando documentacao complementar para dar andamento ao seu caso. Quanto antes voce nos enviar, mais rapido conseguimos protocolar e garantir a suspensao das cobrancas!'
+    +'\n\nDocumentos necessarios com urgencia:'
+    +'\n\n'+falta.map(function(d,i){return (i+1)+'. '+d;}).join('\n')
+    +'\n\nPor favor, fotografe e nos envie o quanto antes por aqui mesmo. Estamos na torcida por voce!'
+    +'\n\nGadiani & D Antraccoli Advogados';
   window.open('https://wa.me/55'+c.tel.replace(/[^0-9]/g,'')+'?text='+encodeURIComponent(msg),'_blank');
   getE(c.id).ultimoContato=new Date().toISOString();saveEst();
 }
