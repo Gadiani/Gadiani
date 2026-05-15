@@ -1163,64 +1163,64 @@ function diGerPet(){
     var docsInfo='';
     if(docsTxt)docsInfo='\n\nDOCUMENTOS ANALISADOS DO DRIVE: '+docsTxt;
     if(analisesStr)docsInfo+='\n\nANALISES DE DOCUMENTOS SUBIDOS: '+analisesStr;
-    var qualAutor=c.nome+', brasileira, '+c.civil+', '+c.prof+', portadora do CPF '+c.cpf+', nascida em '+c.nasc+', residente e domiciliada em '+(c.end||c.cidade)+' - '+estado+(c.email?', e-mail: '+c.email:'')+(c.tel?', telefone: '+c.tel:'')+(c.doencas?', portadora de '+c.doencas:'')+', vem respeitosamente a presenca de Vossa Excelencia, por meio de seus advogados subscritos, propor a presente';
     var n=(c.doencas?1:0);
-    var prompt='Voce e um advogado senior com mais de 20 anos de experiencia em direito do consumidor. Redija PETICAO INICIAL completa e tecnicamente impecavel, como se fosse ser protocolada hoje.'
-      +'\n\nREGRAS ABSOLUTAS DE FORMATACAO: ZERO markdown, ZERO asteriscos, ZERO hashtags, ZERO tracos decorativos, ZERO bullets. Apenas texto puro corrido. Titulos das secoes em MAIUSCULO. Paragrafos com espacamento 1,5. Recuo de 2cm na primeira linha de cada paragrafo.'
-      +'\n\n[INICIO DA PETICAO]'
-      +'\n\nENDERECAMENTO - ESCREVA CENTRALIZADO E EM MAIUSCULO:'
-      +'\nA EXCELENTISSIMA SENHORA DOUTORA JUIZA DE DIREITO DA '+vara.toUpperCase()+' DA COMARCA DE '+cidade.toUpperCase()+' - '+estado.toUpperCase()
-      +'\n\nQUALIFICACAO DA AUTORA:'
-      +'\n'+qualAutor
-      +'\n\nNOME DA ACAO - ESCREVA CENTRALIZADO EM MAIUSCULO:'
-      +'\nACAO DE REPETICAO DE INDEBITO CUMULADA COM INDENIZACAO POR DANOS MORAIS'
-      +'\n\nQUALIFICACAO DOS REUS:'
-      +'\n'+reusStr
-      +'\n\nDADOS DO CASO PARA FUNDAMENTAR A PETICAO (use todos estes dados):'
-      +'\nTipo de irregularidade: '+(c.tipo||'Cartao RMC/RCC nao contratado')
-      +'\nContrato: '+contrato+' | Banco: '+c.banco
-      +'\nDesconto mensal: R$ '+parc+' | Total de parcelas: '+np
-      +'\nInicio: '+(dt?new Date(dt+'T12:00:00').toLocaleDateString('pt-BR'):'-')+' | Meses ja descontados: '+m
-      +'\nTotal ja descontado: '+totStr
-      +'\nRenda do(a) autor(a): '+(c.renda||'nao informada')
-      +(c.doencas?'\nCondicao de saude: '+c.doencas:'')
+    var autorQual=c.nome+', brasileiro(a), '+c.civil+', '+(c.prof||'aposentado(a)')+', portador(a) do CPF n. '+c.cpf+(c.nasc?', nascido(a) em '+c.nasc:'')+', residente e domiciliado(a) em '+(c.end||c.cidade)+'/'+estado+(c.tel?', telefone '+c.tel:'')+(c.email?', e-mail '+c.email:'')+(c.doencas?', portador(a) de '+c.doencas:'');
+    var reusQual=reus.map(function(r){return r.nome+(r.cnpj?', pessoa juridica de direito privado, inscrita no CNPJ/MF sob o n. '+r.cnpj:'')+(r.end?', com sede em '+r.end:'');}).join('; e ');
+    var valorDobro=(tot*2).toLocaleString('pt-BR',{minimumFractionDigits:2});
+    var valorTotal=(tot*2+10000).toLocaleString('pt-BR',{minimumFractionDigits:2});
+    var prompt='Voce e advogado senior especialista em direito do consumidor com mais de 20 anos de experiencia. Redija PETICAO INICIAL completa exatamente como descrito abaixo, para ser protocolada hoje.'
+      +'\n\nREGRAS ABSOLUTAS: ZERO markdown, ZERO asteriscos, ZERO hashtags, ZERO tracos decorativos. Apenas texto puro. Titulos de secoes em MAIUSCULO centralizado. Subtopicos como III.1, III.2 etc. Paragrafos justificados com recuo de 2cm na primeira linha. Espacamento 1,5.'
+      +'\n\nESTRUTURA EXATA A SEGUIR:'
+      +'\n\n[ENDERECAMENTO - centralizado, em maiusculo]'
+      +'\nEXCELENTISSIMO(A) SENHOR(A) DOUTOR(A) JUIZ(A) DE DIREITO DA '+vara.toUpperCase()+' DA COMARCA DE '+cidade.toUpperCase()+' - ESTADO DE '+estado.toUpperCase()
+      +'\n\n[QUALIFICACAO DO REQUERENTE - justificado]'
+      +'\n'+autorQual+', vem respeitosamente a presenca de Vossa Excelencia, por intermedio de seus advogados subscritos, com escritorio na Rua Sao Pedro, n. 760, Centro, Vargem Grande do Sul/SP, propor a presente'
+      +'\n\n[NOME DA ACAO - centralizado, em maiusculo]'
+      +'\nACAO DECLARATORIA DE NULIDADE DE CONTRATO C/C REPETICAO DE INDEBITO E INDENIZACAO POR DANOS MORAIS'
+      +'\n\n[em face de - justificado]'
+      +'\nem face de:'
+      +'\n\n[QUALIFICACAO DOS REUS - justificado]'
+      +'\n'+reusQual
+      +'\n\npelos fatos e fundamentos a seguir expostos.'
+      +'\n\n[DADOS DO CASO para fundamentar - nao imprima esta linha]'
+      +'Tipo: '+(c.tipo||'contrato nao autorizado')+' | Contrato: '+contrato+' | Valor parcela: R$ '+parc+' | Parcelas: '+np+' | Inicio: '+(dt?new Date(dt+'T12:00:00').toLocaleDateString('pt-BR'):'-')+' | Total descontado: '+totStr+' ('+m+' meses) | Renda: '+(c.renda||'nao informada')+(c.doencas?' | Doencas: '+c.doencas:'')
       +docsInfo
-      +'\n\nESTRUTURA OBRIGATORIA - DESENVOLVA CADA TOPICO COM PROFUNDIDADE:'
-      +'\n\n1. DA JUSTICA GRATUITA'
-      +'Desenvolva com base nos dados reais. Mencione: renda de '+(c.renda||'baixa renda')+', hipossuficiencia economica, vulnerabilidade do consumidor '+(c.prof||'aposentado')+'. Se houver documentos no drive (extratos, holerites, declaracao de hipossuficiencia), cite-os. Fundamente em: Art. 5 LXXIV CF/88, Art. 98 e ss. CPC, Lei 1.060/50. Afirme que o autor nao tem condicoes de arcar com custas sem prejuizo do sustento.'
-      +(c.doencas?'\n\n2. DA PRIORIDADE NA TRAMITACAO PROCESSUAL\nPortador(a) de '+c.doencas+'. Fundamente no Art. 1048 CPC. Requeira tratamento prioritario em todas as fases.':'')
-      +'\n\n'+(2+n)+'. DOS FATOS'
-      +'Narrativa cronologica detalhada e fluida. Use TODOS os dados e documentos fornecidos. Descreva: como o desconto indevido apareceu, quando foi detectado, o impacto financeiro na renda de '+(c.renda||'do autor')+', o valor total descontado de '+totStr+' ao longo de '+m+' meses, o prejuizo concreto, o abalo emocional. Texto em paragrafos corridos sem bullets.'
-      +'\n\n'+(3+n)+'. DO DIREITO'
-      +'Desenvolva cada subtopico abaixo como um advogado senior faria, com densidade tecnica e doutrinaria:'
-      +'\n\n'+(3+n)+'.1. DA RELACAO DE CONSUMO E APLICABILIDADE DO CDC'
-      +'Qualifique autor como consumidor (Art. 2 CDC) e reu como fornecedor (Art. 3 CDC). Cite que a relacao bancaria e tipica relacao de consumo conforme Sumula 297 STJ. Explique a aplicacao do CDC ao caso.'
-      +'\n\n'+(3+n)+'.2. DA PRATICA ABUSIVA E CONTRATACAO SEM AUTORIZACAO'
-      +'Fundamente em: Art. 39 CDC (pratica abusiva), especialmente incisos I (venda casada), III (amostra gratis) e IV (aproveitar-se da fraqueza do consumidor). Cite Claudia Lima Marques em Contratos no Codigo de Defesa do Consumidor (obra real) sobre boa-fe objetiva e transparencia. Aborde o dever de informacao clara (Art. 6 III CDC) e a nao-solicitacao de servico (Art. 39 III CDC).'
-      +'\n\n'+(3+n)+'.3. DA RESPONSABILIDADE OBJETIVA DO FORNECEDOR'
-      +'Art. 14 CDC - responsabilidade pelo fato do servico. O fornecedor responde independentemente de culpa pelos danos causados. Cite o risco da atividade empresarial. Aborde a teoria do risco proveito.'
-      +'\n\n'+(3+n)+'.4. DA INVERSAO DO ONUS DA PROVA E HIPOSSUFICIENCIA'
-      +'Art. 6 VIII CDC - inversao do onus da prova quando verossimil a alegacao ou hipossuficiente o consumidor. Demonstre a hipossuficiencia tecnica (o banco tem acesso a todos os dados e contratos), juridica e economica do autor. Cite Leonardo Roscoe Bessa em Manual do Direito do Consumidor (obra real da editora RT) sobre hipossuficiencia.'
-      +'\n\n'+(3+n)+'.5. DA COBRANCA INDEVIDA E REPETICAO DO INDEBITO EM DOBRO'
-      +'Art. 42 paragrafo unico CDC - quem cobrou indevidamente deve restituir em dobro o valor pago em excesso. O total descontado foi '+totStr+', portanto a repeticao em dobro monta em R$ '+(tot*2).toLocaleString('pt-BR',{minimumFractionDigits:2})+'. Afaste a excecao do engano justificavel. Cite que o banco e profissional do setor e nao pode alegar engano.'
-      +'\n\n'+(3+n)+'.6. DO DANO MORAL IN RE IPSA'
-      +'A cobranca indevida reiterada por '+m+' meses gera dano moral presumido, independente de prova do abalo. Cite que o STJ consolida o entendimento de dano moral in re ipsa em casos de cobranca indevida. Descreva o abalo psicologico, a angustia, a reducao da renda disponivel e o impacto na dignidade do consumidor.'
-      +'\n\n'+(3+n)+'.7. DA NULIDADE DAS CLAUSULAS ABUSIVAS'
-      +'Art. 51 CDC - sao nulas de pleno direito as clausulas que impliquem renencia a direitos do consumidor. Declare nula qualquer clausula que autorize o desconto sem consentimento expresso.'
-      +'\n\n'+(4+n)+'. DOS PEDIDOS'
-      +'Requeira expressamente: (a) concessao da justica gratuita; '+(c.doencas?'(b) reconhecimento da prioridade na tramitacao; ':'')+'(b) citacao dos reus para responder no prazo legal; (c) inversao do onus da prova nos termos do Art. 6 VIII CDC; (d) declaracao de nulidade do contrato '+contrato+'; (e) condenacao dos reus a devolucao em dobro de todos os valores indevidamente descontados no total de R$ '+totStr+' x 2 = R$ '+(tot*2).toLocaleString('pt-BR',{minimumFractionDigits:2})+' nos termos do Art. 42 paragrafo unico CDC; (f) condenacao por danos morais no valor de R$ 10.000,00 (dez mil reais); (g) condenacao em honorarios advocaticios nos termos do Art. 85 CPC e custas processuais.'
-      +'\n\n'+(5+n)+'. DO VALOR DA CAUSA'
-      +'O valor atribuido a causa corresponde a soma da devolucao em dobro (R$ '+(tot*2).toLocaleString('pt-BR',{minimumFractionDigits:2})+') com os danos morais pleiteados (R$ 10.000,00), perfazendo o total de R$ '+(tot*2+10000).toLocaleString('pt-BR',{minimumFractionDigits:2})+', nos termos do Art. 292 CPC.'
+      +'\n\nI - DA GRATUIDADE DA JUSTICA E DA HIPERVULNERABILIDADE DO REQUERENTE'
+      +'\nDesenvolva com profundidade: hipossuficiencia economica, tecnica e juridica; vulnerabilidade do beneficiario INSS; documentos do drive que comprovem a situacao financeira precaria; fundamente em Art. 5 LXXIV CF, Arts. 98 e ss. CPC, Art. 4 I e Art. 6 VIII CDC; mencione que a declaracao de hipossuficiencia tem presuncao relativa (Art. 99 par. 3 CPC).'
+      +(c.doencas?'\n\n'+(1+0)+'. DA PRIORIDADE NA TRAMITACAO PROCESSUAL\nPortador(a) de '+c.doencas+'. Fundamente no Art. 1048 I CPC. Requeira prioridade em todas as fases.':'')
+      +'\n\nII - DOS FATOS'
+      +'\nNarrative cronologica detalhada e fluida em paragrafos corridos sem bullets. Use TODOS os dados e documentos fornecidos. Subtopicos numerados como II.1, II.2, II.3 conforme a complexidade dos fatos. Descreva: como o desconto indevido surgiu (datas, valores, contratos); o impacto financeiro na renda de '+(c.renda||'do requerente')+'; o total de '+totStr+' descontado em '+m+' meses; o abalo emocional e financeiro; qualquer tentativa de solucao. Se houver documentos do drive, cite os dados especificos deles (numeros de contrato, datas, valores exatos).'
+      +'\n\nIII - DO DIREITO'
+      +'\nIII.1 - Da Relacao de Consumo e da Aplicabilidade do CDC\nQualifique o requerente como consumidor (Art. 2 CDC) e o banco reu como fornecedor (Art. 3 CDC). Cite que a relacao bancaria e tipica relacao de consumo conforme Sumula 297 STJ. A aplicacao do CDC e cogente e afasta qualquer norma contratual em contrario.'
+      +'\n\nIII.2 - Da Nulidade do Contrato por Ausencia de Consentimento Valido\nO contrato '+contrato+' e nulo de pleno direito. Fundamente em: Arts. 104 e 166 CC (ausencia de manifestacao de vontade livre); Art. 39 incisos I, III e IV CDC (pratica abusiva); Art. 46 CDC (contrato que nao da oportunidade ao consumidor de tomar conhecimento previo). Mencione que o banco nao pode provar o consentimento expresso do consumidor - e este e o ponto central. Aprofunde a questao do onus da prova.'
+      +'\n\nIII.3 - Da Responsabilidade Objetiva do Fornecedor\nArt. 14 CDC - responsabilidade pelo fato do servico independentemente de culpa. O banco responde pelo risco de sua atividade. Aborde a teoria do risco proveito. O fornecedor de servico bancario responde objetivamente pelos danos causados ao consumidor.'
+      +'\n\nIII.4 - Da Inversao do Onus da Prova e da Hipossuficiencia\nArt. 6 VIII CDC. Demonstre a hipossuficiencia tecnica (banco tem acesso exclusivo a todos os sistemas e contratos), juridica e economica do requerente. Cite Leonardo Roscoe Bessa, Manual do Direito do Consumidor, editora RT (obra real) sobre hipossuficiencia tecnica. Requeira a inversao formal do onus.'
+      +'\n\nIII.5 - Da Repeticao do Indebito em Dobro\nArt. 42 paragrafo unico CDC - a cobranca indevida gera direito a repeticao em dobro. Total descontado: '+totStr+'. Valor da repeticao em dobro: R$ '+valorDobro+'. Afaste a excecao do engano justificavel: o banco e profissional habitual de credito consignado e nao pode alegar desconhecimento ou erro. Cite Claudia Lima Marques, Contratos no Codigo de Defesa do Consumidor (obra real) sobre boa-fe objetiva e proibicao do enriquecimento sem causa.'
+      +'\n\nIII.6 - Do Dano Moral In Re Ipsa\nO dano moral e presumido e independe de prova. O requerente, '+(c.prof||'aposentado')+', teve sua renda comprometida por '+m+' meses consecutivos. Descreva o abalo psicologico, a angustia, a restricao de dignidade. Sugira indenizacao entre R$ 8.000,00 e R$ 15.000,00 conforme a gravidade do caso.'
+      +'\n\nIV - DOS PEDIDOS'
+      +'\nAnte o exposto, requer o Requerente:\na) A concessao dos beneficios da GRATUIDADE DA JUSTICA, nos termos dos Arts. 98 e seguintes do CPC;'+(c.doencas?'\nb) O reconhecimento da PRIORIDADE NA TRAMITACAO PROCESSUAL nos termos do Art. 1048 I CPC;':'')
+      +'\nb) A citacao do(s) Reu(s) para responder aos termos da presente no prazo legal;'
+      +'\nc) A DECLARACAO DE NULIDADE do contrato n. '+contrato+';'
+      +'\nd) A condenacao do(s) Reu(s) a DEVOLUCAO EM DOBRO de todos os valores indevidamente descontados, totalizando R$ '+valorDobro+' ('+valorDobro+' reais), nos termos do Art. 42 paragrafo unico CDC;'
+      +'\ne) Alternativamente ao item anterior, ao menos a DEVOLUCAO SIMPLES dos valores descontados totalizando '+totStr+';'
+      +'\nf) A condenacao do(s) Reu(s) ao pagamento de INDENIZACAO POR DANOS MORAIS em valor a ser arbitrado por Vossa Excelencia, sugerindo-se R$ 10.000,00 (dez mil reais);'
+      +'\ng) A determinacao de que o(s) Reu(s) apresente(m) no prazo de 15 dias toda a documentacao referente a contratacao;'
+      +'\nh) A producao de todas as provas em direito admitidas, especialmente juntada de documentos e eventual pericia contabil;'
+      +'\ni) A condenacao do(s) Reu(s) ao pagamento das custas processuais e honorarios advocaticios nos termos do Art. 85 CPC.'
+      +'\n\nV - DO VALOR DA CAUSA'
+      +'\nDa-se a causa o valor de R$ '+valorTotal+' correspondente a soma da repeticao do indebito em dobro (R$ '+valorDobro+') com a indenizacao por danos morais pleiteada (R$ 10.000,00), nos termos do Art. 292 CPC.'
       +'\n\nTermos em que pede deferimento.'
-      +'\n\n'+cidade+' - '+estado+', '+hoje+'.'
-      +'\n\n\nAugusto de Andrade Gadiani'
-      +'\nAdvogado'
-      +'\nOAB/SP 425.910'
-      +'\n\n\nAri D Antraccoli Neto'
-      +'\nAdvogado'
-      +'\nOAB/SP 500.799'
-      +'\n\n[FIM DA PETICAO]'
-      +'\n\nATENCAO: Nao adicione nenhum comentario, explicacao ou texto fora da peticao. Nao use markdown. Entregue APENAS o texto da peticao conforme a estrutura acima.';
+      +'\n\n'+cidade+'/'+estado+', '+hoje+'.'
+      +'\n\n_____________________________________________'
+      +'\nARI D ANTRACCOLI NETO'
+      +'\nOAB/SP n. 500.799'
+      +'\n\n_____________________________________________'
+      +'\nAUGUSTO DE ANDRADE GADIANI'
+      +'\nOAB/SP n. 425.910'
+      +'\n\nGadiani & D Antraccoli Advogados'
+      +'\nRua Sao Pedro, n. 760, Centro, Vargem Grande do Sul/SP'
+      +'\nFone: (19) 99412-6931 | gadianiedantraccoli@gmail.com'
+      +'\n\nIMPORTANTE: use os dados reais do caso. Nao repita qualificacoes. Nao use markdown. Texto corrido profissional e tecnicamente impecavel.';
     g('di-pet-txt').textContent='Gerando peticao...';
     callAI(prompt,function(err,txt){
       if(err){g('di-pet-txt').textContent='Erro: '+err.message;return;}
