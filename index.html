@@ -707,6 +707,9 @@ function limparMarkdown(txt){
   var linhas=txt.split(nl);
   var res=[];
   linhas.forEach(function(l){
+    // Skip markdown table rows entirely
+    if(/^\s*[|]/.test(l)&&/[|]\s*$/.test(l)){return;}
+    if(/^[|\s-]+$/.test(l)&&l.indexOf('|')>=0){return;}
     l=l.replace(/^#{1,6}\s*/,'');
     l=l.replace(/\*\*([^*]+)\*\*/g,'$1');
     l=l.replace(/\*([^*]+)\*/g,'$1');
@@ -720,6 +723,7 @@ function limparMarkdown(txt){
     l=l.replace(/_{2,}/g,'');
     l=l.replace(/\x60/g,'');
     l=l.replace(/#+/g,'');
+    l=l.replace(/[|]/g,'');
     res.push(l);
   });
   var joined=res.join(nl);
@@ -950,16 +954,32 @@ function tryProxy(id,gid,cb){
     .catch(function(e){cb(e,null);});
 }
 function callAI(prompt,cb){
-  fetch(SCRIPT,{method:'POST',redirect:'follow',body:JSON.stringify({action:'ai',prompt:prompt})})
-    .then(function(r){return r.text();})
-    .then(function(t){
-      var d;
-      try{d=JSON.parse(t);}catch(x){throw new Error('Resposta invalida: '+t.substring(0,100));}
-      if(!d.ok)throw new Error(d.error||'Erro AI');
-      if(!d.text||d.text.length<5)throw new Error('IA retornou resposta vazia. Verifique o Apps Script.');
-      cb(null,d.text);
-    })
-    .catch(function(e){cb(e,null);});
+  // Try direct Anthropic API first (works in Claude.ai context)
+  fetch('https://api.anthropic.com/v1/messages',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:8192,messages:[{role:'user',content:prompt}]})
+  })
+  .then(function(r){return r.json();})
+  .then(function(d){
+    if(d.error)throw new Error(d.error.message||'Erro API');
+    var txt=d.content&&d.content[0]?d.content[0].text:'';
+    if(!txt||txt.length<5)throw new Error('Resposta vazia');
+    cb(null,txt);
+  })
+  .catch(function(){
+    // Fallback to GAS proxy
+    fetch(SCRIPT,{method:'POST',redirect:'follow',body:JSON.stringify({action:'ai',prompt:prompt})})
+      .then(function(r){return r.text();})
+      .then(function(t){
+        var d;
+        try{d=JSON.parse(t);}catch(x){throw new Error('Resposta invalida');}
+        if(!d.ok)throw new Error(d.error||'Erro GAS');
+        if(!d.text||d.text.length<5)throw new Error('Resposta vazia do GAS');
+        cb(null,d.text);
+      })
+      .catch(function(e){cb(e,null);});
+  });
 }
 
 function saveUser(){localStorage.setItem('g_user',g('sel-user').value);}
@@ -1354,54 +1374,41 @@ function diGerEtapa(step,cb){
     +' | Meses descontados: '+mes+' | Total descontado: '+totStr
     +' | Renda: '+(c.renda||'nao informada')
     +(analisesStr?' | DOCUMENTOS ANALISADOS: '+analisesStr:'');
-  var regras='REGRAS ABSOLUTAS: texto puro sem markdown, sem asteriscos, sem hashtags, sem tracos decorativos. Paragrafos justificados com recuo de 2cm na primeira linha. Titulos de secao em MAIUSCULO centralizado. Subtopicos como III.1, III.2 numerados. Espacamento 1,5. Linguagem juridica formal e tecnicamente impeccavel. Use os dados reais do caso. NUNCA corte o texto no meio.';
+  var regras='REGRAS ABSOLUTAS: texto puro sem markdown, sem asteriscos, sem hashtags, sem tracos decorativos, sem tabelas, sem pipes (|). Paragrafos separados por linha em branco. Titulos de secao em MAIUSCULO centralizado. Subtopicos como I.1, I.2 numerados. Linguagem juridica formal. Use os dados reais do caso. NUNCA corte o texto no meio. Escreva acentos e cedilhas normalmente.';
+  var tutela=document.getElementById('tutela-urgencia')&&document.getElementById('tutela-urgencia').checked;
+  var reusStr2=reus.map(function(r){return r.nome+(r.cnpj?', pessoa juridica de direito privado, inscrita no CNPJ/MF sob o n. '+r.cnpj:'')+(r.end?', com sede em '+r.end:'');}).join('; ');
+  var instrucoes='INSTRUCOES OBRIGATORIAS: escreva em portugues correto com todos os acentos e cedilhas. Texto juridico formal e tecnicamente preciso. Sem markdown, sem asteriscos, sem tabelas, sem pipes. Paragrafos separados por linha em branco. Titulos em MAIUSCULO. Subtopicos numerados como I.1, I.2, II.1 etc.';
+  var dadosCliente='DADOS DO CASO: Cliente: '+c.nome+' | CPF: '+c.cpf+' | Nascimento: '+c.nasc+' | Estado civil: '+c.civil+' | Profissao: '+(c.prof||'aposentado(a)')+' | Endereco: '+(c.end||c.cidade)+'/'+estado+' | Telefone: '+(c.tel||'-')+' | Email: '+(c.email||'-')+(c.doencas?' | Doencas: '+c.doencas:'')+' | Renda: '+(c.renda||'nao informada')+' | Banco: '+c.banco+' | Tipo desconto: '+(c.tipo||'nao informado')+' | Contrato: '+contrato+' | Parcela: R$ '+parc+' | Parcelas: '+np+' | Inicio: '+(dt?new Date(dt+'T12:00:00').toLocaleDateString('pt-BR'):'-')+' | Meses descontados: '+mes+' | Total descontado: '+totStr+(analisesStr?' | Documentos: '+analisesStr:'');
   var prompts=[
-    // Etapa 1: Enderecamento, qualificacoes, gratuidade
-    regras+' Voce e advogado senior especialista em direito do consumidor. Redija a PRIMEIRA PARTE da peticao inicial contendo:'
-    +' (1) ENDERECAMENTO centralizado em maiusculo: EXCELENTISSIMO(A) SENHOR(A) DOUTOR(A) JUIZ(A) DE DIREITO DA '+vara.toUpperCase()+' DA COMARCA DE '+cidade.toUpperCase()+' - ESTADO DE '+estado.toUpperCase()+';'
-    +' (2) QUALIFICACAO DO REQUERENTE: insira obrigatoriamente uma tabela markdown com | separando as colunas, exatamente assim: | Dado | Informacao | em seguida | --- | --- | e depois uma linha para cada dado: Nome, Nacionalidade, Estado Civil, Profissao, CPF, Data de Nascimento, Endereco, Telefone, E-mail. Depois o texto formal da qualificacao. '+c.nome+', brasileiro(a), '+c.civil+', '+(c.prof||'aposentado(a)')+', CPF '+c.cpf+', nascido(a) em '+c.nasc+', residente em '+(c.end||c.cidade)+'/'+estado+(c.tel?', tel. '+c.tel:'')+(c.email?', e-mail '+c.email:'')+', vem propor a presente;'
-    +' (3) NOME DA ACAO centralizado em maiusculo: ACAO DECLARATORIA DE NULIDADE DE CONTRATO C/C REPETICAO DE INDEBITO E INDENIZACAO POR DANOS MORAIS;'
-    +' (4) QUALIFICACAO DOS REUS: '+reusQual+';'
-    +' (5) Secao I - DA GRATUIDADE DA JUSTICA E DA HIPERVULNERABILIDADE DO REQUERENTE: desenvolva extensamente. Mencione a renda de '+(c.renda||'beneficio INSS')+'. Liste os documentos juntados que comprovam a hipossuficiencia (extratos, declaracao, contracheque). Fundamente em Art. 5 LXXIV CF/88, Arts. 98 e ss. CPC, Art. 4 I e Art. 6 VIII CDC. Trate da presuncao relativa da declaracao (Art. 99 par. 3 CPC). Desenvolva a hipervulnerabilidade do beneficiario INSS: idoso, com renda fixa comprometida, sem conhecimento tecnico-juridico para identificar as irregularidades.'
-    +(c.doencas?' (6) Secao II - DA PRIORIDADE NA TRAMITACAO: portador(a) de '+c.doencas+', com fundamento no Art. 1048 I CPC. Requeira prioridade em todas as fases do processo.':'')
-    +' '+contexto,
+    instrucoes+' '+dadosCliente+(docsTxt?' | Drive: '+docsTxt:'')+' Voce e advogado senior especialista em direito do consumidor com 20 anos de experiencia. Redija a PRIMEIRA PARTE da peticao inicial contendo exatamente:'
+    +' (1) ENDERECAMENTO: centralizado, em maiusculo: EXCELENTISSIMO(A) SENHOR(A) DOUTOR(A) JUIZ(A) DE DIREITO DA '+vara.toUpperCase()+' DA COMARCA DE '+cidade.toUpperCase()+' - ESTADO DE '+estado.toUpperCase()
+    +' (2) NOME DA ACAO centralizado em maiusculo: ACAO DECLARATORIA DE NULIDADE DE CONTRATO C/C REPETICAO DE INDEBITO E INDENIZACAO POR DANOS MORAIS'
+    +' (3) QUALIFICACAO DO AUTOR em texto corrido: '+c.nome+', brasileiro(a), '+c.civil+', '+( c.prof||'aposentado(a)')+', portador(a) do CPF n. '+c.cpf+', nascido(a) em '+c.nasc+', residente em '+(c.end||c.cidade)+'/'+estado+(c.tel?', tel. '+c.tel:'')+(c.email?', e-mail '+c.email:'')+', vem propor a presente acao em face de:'
+    +' (4) QUALIFICACAO DO REU: '+reusStr2
+    +' (5) Secao I - DA GRATUIDADE DA JUSTICA E DA HIPERVULNERABILIDADE DO REQUERENTE: desenvolva com profundidade real usando os dados reais. Mencione renda de '+(c.renda||'beneficio INSS')+'. Fundamente em Art. 5 LXXIV CF/88, Arts. 98 e ss. CPC, Art. 4 I e Art. 6 VIII CDC. Use dados dos documentos do drive se disponivel.'
+    +(c.doencas?' (6) Secao II - DA PRIORIDADE NA TRAMITACAO: portador(a) de '+c.doencas+'. Art. 1048 I CPC.':''),
 
-    // Etapa 2: Dos fatos
-    regras+' Voce e advogado senior. Redija a SEGUNDA PARTE da peticao. Esta parte contem APENAS a secao DOS FATOS.'
-    +' Escreva com titulo: '+(c.doencas?'III':'II')+' - DOS FATOS. Use TABELAS para organizar dados financeiros: insira uma tabela com colunas (Contrato | Valor da Parcela | Nr Parcelas | Data Inicio | Total Descontado). Use enumeracoes com letras a), b), c) ao listar itens. Seja visual e didatico.'
-    +' Desenvolva em subtopicos numerados ('+(c.doencas?'III':'II')+'.1, '+(c.doencas?'III':'II')+'.2 etc) cada aspecto relevante dos fatos:'
-    +' - Como o desconto indevido surgiu, quando foi descoberto pelo cliente'
-    +' - Descricao detalhada de cada contrato e desconto: contrato '+contrato+', parcela R$ '+parc+', inicio '+(dt?new Date(dt+'T12:00:00').toLocaleDateString('pt-BR'):'-')+', total de '+mes+' meses descontados, somando '+totStr
-    +' - O impacto financeiro na renda mensal de '+(c.renda||'do requerente')+': calcule que proporcao representa o desconto'
-    +' - O abalo emocional, psicologico, a angustia, o constrangimento, a restricao a dignidade'
-    +' - Qualquer tentativa de solucao extrajudicial junto ao banco ou orgaos de defesa do consumidor'
-    +' Seja detalhado, cronologico e use todos os dados reais. Paragrafos corridos sem bullets.'
-    +' '+contexto,
+    instrucoes+' '+dadosCliente+(docsTxt?' | Drive: '+docsTxt:'')+' Voce e advogado senior. Redija a SEGUNDA PARTE da peticao: Secao '+(c.doencas?'III':'II')+' - DOS FATOS. Use subtopicos numerados. Narrativa cronologica detalhada usando TODOS os dados reais. Descreva como o desconto surgiu, quando foi descoberto, o contrato '+contrato+' com parcela de R$ '+parc+' por '+mes+' meses totalizando '+totStr+'. Impacto na renda. Abalo emocional. Texto corrido sem bullets.',
 
-    // Etapa 3: Do direito
-    regras+' Voce e advogado senior especialista em CDC. Redija a TERCEIRA PARTE da peticao contendo APENAS a secao DO DIREITO, com a numeracao '+(c.doencas?'IV':'III')+'.'
-    +' Titulo: '+(c.doencas?'IV':'III')+' - DO DIREITO'
-    +' Desenvolva cada subtopico com profundidade e densidade tecnica maxima:'
-    +' '+(c.doencas?'IV':'III')+'.1 - DA RELACAO DE CONSUMO E DA APLICABILIDADE DO CDC: qualifique o requerente como consumidor (Art. 2 CDC) e o banco como fornecedor (Art. 3 CDC). Sumula 297 STJ. A relacao bancaria e tipica relacao de consumo. O CDC e norma de ordem publica e interesse social (Art. 1 CDC).'
-    +' '+(c.doencas?'IV':'III')+'.2 - DA NULIDADE DO CONTRATO POR AUSENCIA DE CONSENTIMENTO VALIDO: Art. 104 e 166 CC (ausencia de manifestacao de vontade livre); Art. 39 I, III e IV CDC (pratica abusiva); Art. 46 CDC (contrato que nao da oportunidade ao consumidor). O banco nao pode provar consentimento expresso. O onus da prova e do fornecedor. Claudia Lima Marques, Contratos no Codigo de Defesa do Consumidor (RT, obra real) sobre boa-fe objetiva e transparencia.'
-    +' '+(c.doencas?'IV':'III')+'.3 - DA RESPONSABILIDADE OBJETIVA DO FORNECEDOR: Art. 14 CDC. O fornecedor responde independentemente de culpa. Teoria do risco proveito. O banco e profissional habitual e responde pelos danos de sua atividade.'
-    +' '+(c.doencas?'IV':'III')+'.4 - DA INVERSAO DO ONUS DA PROVA E DA HIPOSSUFICIENCIA TECNICA: Art. 6 VIII CDC. Hipossuficiencia tecnica (banco tem acesso exclusivo a todos os sistemas), juridica e economica. Leonardo Roscoe Bessa, Manual do Direito do Consumidor, RT (obra real) sobre hipossuficiencia tecnica do consumidor de servicos bancarios. A inversao e imperativa no caso.'
-    +' '+(c.doencas?'IV':'III')+'.5 - DA COBRANCA INDEVIDA E DA REPETICAO DO INDEBITO EM DOBRO: Art. 42 paragrafo unico CDC. Total descontado: '+totStr+'. Valor da repeticao em dobro: '+valorDobro+'. Afaste o engano justificavel: banco profissional nao pode alegar erro. Enriquecimento sem causa (Art. 884 CC). A restituicao em dobro e sancao civil com funcao pedagogica e dissuasoria.'
-    +' '+(c.doencas?'IV':'III')+'.6 - DO DANO MORAL IN RE IPSA: dano presumido, independe de prova. O requerente '+(c.prof||'aposentado')+(c.doencas?', portador de '+c.doencas:'')+', teve renda comprometida por '+mes+' meses. Descreva o abalo psicologico, a angustia da descoberta, a restricao da dignidade, o cerceamento da subsistencia. O dano moral em cobrancas indevidas e in re ipsa. Sugira indenizacao de R$ 10.000,00 considerando a gravidade e a necessidade de carater pedagogico.'
-    +' '+(c.doencas?'IV':'III')+'.7 - DA NULIDADE DAS CLAUSULAS ABUSIVAS: Art. 51 CDC. Declare nulas as clausulas que autorizem contratacao sem consentimento expresso. Nulidade de pleno direito.'
-    +' '+contexto,
+    instrucoes+' '+dadosCliente+(docsTxt?' | Drive: '+docsTxt:'')+' Voce e advogado senior especialista em CDC. Redija a TERCEIRA PARTE: Secao '+(c.doencas?'IV':'III')+' - DO DIREITO com subtopicos:'
+    +' '+(c.doencas?'IV':'III')+'.1 Da Relacao de Consumo e Aplicabilidade do CDC (Arts. 2 e 3 CDC, Sumula 297 STJ)'
+    +' '+(c.doencas?'IV':'III')+'.2 Da Nulidade do Contrato por Ausencia de Consentimento (Arts. 104, 166 CC; Art. 39 I, III, IV CDC; Art. 46 CDC) - argumente que o banco nao pode provar consentimento expresso'
+    +' '+(c.doencas?'IV':'III')+'.3 Da Responsabilidade Objetiva do Fornecedor (Art. 14 CDC)'
+    +' '+(c.doencas?'IV':'III')+'.4 Da Inversao do Onus da Prova e Hipossuficiencia Tecnica (Art. 6 VIII CDC) - cite Leonardo Roscoe Bessa, Manual do Direito do Consumidor, RT'
+    +' '+(c.doencas?'IV':'III')+'.5 Da Repeticao do Indebito em Dobro (Art. 42 paragrafo unico CDC) - total '+totStr+', dobro R$ '+(tot*2).toLocaleString('pt-BR',{minimumFractionDigits:2})+' - afaste o engano justificavel'
+    +' '+(c.doencas?'IV':'III')+'.6 Do Dano Moral in re ipsa - renda comprometida por '+mes+' meses, abalo psicologico, restricao a dignidade'
+    +' '+(c.doencas?'IV':'III')+'.7 Da Nulidade das Clausulas Abusivas (Art. 51 CDC)'
+    +(tutela?' '+(c.doencas?'IV':'III')+'.8 DA TUTELA DE URGENCIA (Art. 300 CPC): demonstre o FUMUS BONI IURIS (verossimilhanca do direito - desconto comprovado e nao autorizado) e o PERICULUM IN MORA (dano continuado a renda mensal - cada mes que passa novo desconto indevido prejudica a subsistencia do consumidor). Requeira suspensao dos descontos no beneficio aate julgamentoto.':''),
 
-    // Etapa 4: Pedidos, valor da causa, encerramento
-    regras+' Voce e advogado senior. Redija a QUARTA E ULTIMA PARTE da peticao contendo:'
-    +' Titulo: '+(c.doencas?'V':'IV')+' - DOS PEDIDOS'
-    +' Desenvolva cada pedido com letra separada (a, b, c...): (a) gratuidade da justica; '+(c.doencas?'(b) prioridade tramitacao; ':'')+'(b) citacao dos reus; (c) inversao do onus da prova (Art. 6 VIII CDC); (d) declaracao de nulidade do contrato n. '+contrato+'; (e) condenacao dos reus a devolucao em dobro '+valorDobro+' (Art. 42 paragrafo unico CDC); (f) alternativamente, ao menos a devolucao simples de '+totStr+'; (g) indenizacao por danos morais de R$ 10.000,00; (h) exibicao de documentos em 15 dias; (i) producao de provas; (j) condenacao em custas e honorarios (Art. 85 CPC).'
-    +' Titulo: '+(c.doencas?'VI':'V')+' - DO VALOR DA CAUSA'
-    +' O valor corresponde a soma da repeticao em dobro ('+valorDobro+') com os danos morais (R$ 10.000,00), totalizando '+valorTotal+', nos termos do Art. 292 CPC.'
-    +' Escreva o encerramento: "Termos em que pede deferimento." seguido de linha em branco.'
-    +' Escreva a data e local: '+cidade+'/'+estado+', '+hoje+'.'
-    +' Escreva as assinaturas centralizadas com linhas: _____________________________________________  ARI D ANTRACCOLI NETO  OAB/SP n. 500.799  e  _____________________________________________  AUGUSTO DE ANDRADE GADIANI  OAB/SP n. 425.910'
-    +' Termine com: Gadiani & D Antraccoli Advogados  Rua Sao Pedro, n. 760, Centro, Vargem Grande do Sul/SP  Fone: (19) 99412-6931 | gadianiedantraccoli@gmail.com'
-    +' '+contexto
+    instrucoes+' '+dadosCliente+' Voce e advogado senior. Redija a QUARTA E ULTIMA PARTE da peticao:'
+    +' Secao '+(c.doencas?'V':'IV')+' - DOS PEDIDOS: liste com letras a), b), c)... todos os pedidos: gratuidade; '+(tutela?'tutela urgencia para suspensao dos descontos; ':'')+' citacao dos reus; inversao onus prova; declaracao nulidade contrato '+contrato+'; devolucao em dobro de '+totStr+' = R$ '+(tot*2).toLocaleString('pt-BR',{minimumFractionDigits:2})+'; alternativamente devolucao simples; danos morais R$ 10.000,00; exibicao de documentos; producao de provas; condenacao custas e honorarios Art. 85 CPC.'
+    +' Secao '+(c.doencas?'VI':'V')+' - DO VALOR DA CAUSA: R$ '+(tot*2+10000).toLocaleString('pt-BR',{minimumFractionDigits:2})+' (devolucao em dobro + danos morais), nos termos do Art. 292 CPC.'
+    +' ENCERRAMENTO: "Termos em que pede deferimento."'
+    +' DATA E LOCAL: '+cidade+'/'+estado+', '+hoje+'.'
+    +' ASSINATURAS centralizadas:'
+    +' _____________________________________________ | ARI D ANTRACCOLI NETO | OAB/SP n. 500.799'
+    +' _____________________________________________ | AUGUSTO DE ANDRADE GADIANI | OAB/SP n. 425.910'
+    +' Gadiani & D Antraccoli Advogados | Rua Sao Pedro, n. 760, Centro, Vargem Grande do Sul/SP | (19) 99412-6931 | gadianiedantraccoli@gmail.com'
   ];
 
   g('di-pet-area').style.display='block';
