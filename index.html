@@ -1034,11 +1034,13 @@ function drivePopSel(){
   var ds=g('drive-status');if(ds){ds.style.display='block';ds.textContent=driveToken?'Drive conectado!':'Clique em "Buscar no Drive" para conectar e buscar.';}
 }
 function driveConectar(cb){
-  var w=window.open('https://accounts.google.com/o/oauth2/v2/auth?client_id='+encodeURIComponent(DRIVE_CLIENT_ID)+'&redirect_uri='+encodeURIComponent('https://gadiani.github.io/Gadiani/')+'&response_type=token&scope='+encodeURIComponent('https://www.googleapis.com/auth/drive.file')+'&prompt=select_account','driveauth','width=520,height=620');
+  localStorage.setItem('drv_cb','1');
+  window.location.href='https://accounts.google.com/o/oauth2/v2/auth?client_id='+encodeURIComponent(DRIVE_CLIENT_ID)+'&redirect_uri='+encodeURIComponent('https://gadiani.github.io/Gadiani/')+'&response_type=token&scope='+encodeURIComponent('https://www.googleapis.com/auth/drive.file')+'&prompt=select_account';
+  if(false){var w=window.open('','_noop');
   var check=setInterval(function(){
     try{if(w.location.hash&&w.location.hash.indexOf('access_token')>=0){var p=new URLSearchParams(w.location.hash.substring(1));driveToken=p.get('access_token');clearInterval(check);w.close();if(cb)cb();}}catch(e){}
     if(w.closed)clearInterval(check);
-  },600);
+  },600);}
 }
 function driveBuscar(){
   var id=g('di-drive-sel').value;if(!id){alert('Selecione um cliente.');return;}
@@ -1314,8 +1316,16 @@ function saveUrg(){
   var st=getE(id);st.urgente=true;st.urgenteMotivo=motivo;st.urgenteData=new Date().toISOString();saveEst();closeModal();diListar();seListar();diStats();seStats();alert('Marcado como urgente!');
 }
 
+function checarTokenDrive(){
+  if(window.location.hash&&window.location.hash.indexOf('access_token')>=0){
+    var p=new URLSearchParams(window.location.hash.substring(1));
+    var t=p.get('access_token');
+    if(t){driveToken=t;localStorage.setItem('drv_token',t);history.replaceState(null,'',window.location.pathname);}
+  }
+  if(!driveToken){var s=localStorage.getItem('drv_token');if(s)driveToken=s;}
+}
 window.addEventListener('load',function(){
-  loadUser();loadEst();setTimeout(diLoad,300);
+  checarTokenDrive();loadUser();loadEst();setTimeout(diLoad,300);
 });
 </script>
 </body>
