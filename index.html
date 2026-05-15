@@ -1080,24 +1080,81 @@ function driveListarArquivos(pasta,c){
       res.style.display='block';
       if(!d.files||!d.files.length){st.textContent='Pasta "'+pasta.name+'" encontrada mas vazia.';lista.innerHTML='<div style="color:#bbb;font-size:13px">Nenhum arquivo.</div>';return;}
       var r=getDC('di',c.id),matched={},autoCount=0;
-      var kws={'d1':['cpf','rg','cnh','identidade'],'d2':['endereco','residencia'],'d3':['ctps','carteira trabalho'],'d4':['holerite','contracheque','salario'],'d5':['extrato bancario','extrato banco'],'d6':['agua','saae'],'d7':['luz','energia','eletrica'],'d8':['aluguel','locacao'],'d9':['farmacia','remedio','medicamento'],'d10':['laudo','medico','atestado'],'d11':['imposto renda','irpf'],'d12':['contrato'],'g1':['consignado','extrato inss'],'g2':['historico inss','cnis'],'g6':['detran','veiculo'],'g7':['cpf receita'],'g8':['registrato','bacen']};
-      d.files.forEach(function(f){var fn=f.name.toLowerCase();var did,ks,j;for(did in kws){if(r[did])continue;ks=kws[did];for(j=0;j<ks.length;j++){if(fn.indexOf(ks[j])>=0){matched[did]=f.name;r[did]=true;autoCount++;break;}}}});
+      var kws={
+        'd1':['cpf','rg.','rg-','rg_',' rg','cnh','identidade','documento com foto','frente','verso'],
+        'd2':['endereco','residencia','comprovante de end'],
+        'd3':['ctps','carteira trabalho','carteira de trabalho'],
+        'd4':['holerite','contracheque','salario','contra cheque'],
+        'd5':['extrato bancario','extrato banco','extrato conta'],
+        'd6':['agua','saae','saneamento'],
+        'd7':['luz','energia','eletrica','cpfl','elektro'],
+        'd8':['aluguel','locacao'],
+        'd9':['farmacia','remedio','medicamento'],
+        'd10':['laudo','atestado medico'],
+        'd11':['imposto renda','irpf','declaracao ir'],
+        'd12':['contrato credito','contrato banco','contrato emprestimo'],
+        'g1':['consignado','extrato_emprestimo','extrato emprestimo','emprestimo consignado'],
+        'g2':['historico inss','cnis','historico pagamento'],
+        'g3':['hipossuficiencia'],
+        'g4':['isencao ir','isencao de ir'],
+        'g5':['restituicao'],
+        'g6':['detran','veiculo'],
+        'g7':['cpf receita','regularidade cpf'],
+        'g8':['registrato','bacen']
+      };
+      d.files.forEach(function(f){
+        var fn=f.name.toLowerCase().replace(/_/g,' ');
+        var did,ks,j;
+        for(did in kws){
+          if(r[did])continue;
+          ks=kws[did];
+          for(j=0;j<ks.length;j++){
+            if(fn.indexOf(ks[j])>=0){matched[did]=f.name;r[did]=true;autoCount++;break;}
+          }
+        }
+      });
       if(autoCount>0){getE(c.id).ultimaAt=new Date().toISOString();saveEst();}
-      st.className='info-box';st.textContent='Pasta: "'+pasta.name+'" | '+d.files.length+' arquivo(s) | '+autoCount+' identificado(s) e marcado(s) automaticamente.';
-      var html='',i,f,icon,isM,dt;
+      st.className='info-box';st.textContent='Pasta: "'+pasta.name+'" | '+d.files.length+' arquivo(s) | '+autoCount+' identificado(s) automaticamente.';
+      var html='',i,f2,icon,isM,dt2;
       for(i=0;i<d.files.length;i++){
-        f=d.files[i];icon=f.mimeType==='application/pdf'?'&#128196;':f.mimeType.indexOf('image')>=0?'&#128247;':'&#128196;';
-        isM=Object.values(matched).indexOf(f.name)>=0;dt=f.modifiedTime?new Date(f.modifiedTime).toLocaleDateString('pt-BR'):'';
+        f2=d.files[i];
+        icon=f2.mimeType==='application/pdf'?'&#128196;':f2.mimeType.indexOf('image')>=0?'&#128247;':'&#128196;';
+        isM=Object.values(matched).indexOf(f2.name)>=0;
+        dt2=f2.modifiedTime?new Date(f2.modifiedTime).toLocaleDateString('pt-BR'):'';
         html+='<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid #f5f4f0">';
-        html+='<span>'+icon+'</span><a href="https://drive.google.com/file/d/'+f.id+'/view" target="_blank" style="flex:1;color:#1565c0;text-decoration:none;font-size:13px">'+f.name+'</a>';
-        html+='<span style="font-size:10px;color:#aaa">'+dt+'</span>';
-        if(isM)html+='<span class="badge bg" style="font-size:10px">Identificado</span>';
+        html+=icon+' <a href="https://drive.google.com/file/d/'+f2.id+'/view" target="_blank" style="flex:1;color:#1565c0;text-decoration:none;font-size:13px">'+f2.name+'</a>';
+        html+='<span style="font-size:10px;color:#aaa">'+dt2+'</span>';
+        if(isM)html+='<span class="badge bg" style="font-size:10px">Auto</span>';
         html+='</div>';
       }
+      html+='<div style="margin-top:16px;border-top:2px solid #e0ddd6;padding-top:14px">';
+      html+='<div class="ct" style="margin-bottom:10px">Marcar documentos presentes no Drive</div>';
+      html+='<div class="info-box" style="margin-bottom:10px">Marque abaixo quais documentos ja estao na pasta do Drive. Isso atualiza o checklist automaticamente.</div>';
+      var allDocs=DC.concat(GV),k,doc,checked;
+      for(k=0;k<allDocs.length;k++){
+        doc=allDocs[k];checked=r[doc.id];
+        html+='<div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid #f5f4f0">';
+        html+='<div class="chk'+(checked?' ok':'')+'" onclick="driveMarcar(this,\''+c.id+'\',\''+doc.id+'\')">'+(checked?'<svg width="10" height="8"><path d="M1 4L3.5 6.5L9 1" stroke="white" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>':'')+'</div>';
+        html+='<div style="font-size:12px;flex:1">'+(doc.ob?'<span class="tag-ob">Obr.</span>':'')+doc.txt+'</div>';
+        html+='<span class="badge '+(checked?'bg':'br')+'">'+(checked?'Presente':'Falta')+'</span>';
+        html+='</div>';
+      }
+      html+='</div>';
       lista.innerHTML=html;
       if(autoCount>0&&c)diRenderDocs(c);
     })
     .catch(function(e){st.textContent='Erro: '+e.message;driveToken=null;});
+}
+function driveMarcar(el,cid,did){
+  var r=getDC('di',cid);
+  r[did]=!r[did];
+  el.className='chk'+(r[did]?' ok':'');
+  el.innerHTML=r[did]?'<svg width="10" height="8"><path d="M1 4L3.5 6.5L9 1" stroke="white" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>':'';
+  el.nextSibling.nextSibling.className='badge '+(r[did]?'bg':'br');
+  el.nextSibling.nextSibling.textContent=r[did]?'Presente':'Falta';
+  getE(cid).ultimaAt=new Date().toISOString();saveEst();
+  var c=diC.find(function(x){return x.id===cid;});
+  if(c)diRenderDocs(c);diStats();
 }
 
 // SE
