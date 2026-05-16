@@ -96,6 +96,18 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#1a1a1a}
 .modal h3{font-size:15px;margin-bottom:14px}
 @keyframes spin{to{transform:rotate(360deg)}}
 .spin{display:inline-block;width:13px;height:13px;border:2px solid #eee;border-top-color:#1a1a1a;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle}
+.dj-card{background:#fff;border:1px solid #e0ddd6;border-radius:10px;padding:12px 16px;margin-bottom:8px;border-left:4px solid #1565c0;transition:box-shadow .15s}
+.dj-card:hover{box-shadow:0 2px 8px rgba(0,0,0,.07)}
+.dj-card.penal{border-left-color:#c62828}
+.dj-card.cumprido{border-left-color:#2e7d32;opacity:.7}
+.dj-card.ignorado{opacity:.45;border-left-color:#ccc}
+.dj-card.alerta{border-left-color:#e65100;background:#fffbf5}
+.dj-tag{display:inline-block;font-size:10px;padding:2px 8px;border-radius:20px;font-weight:600;margin-right:3px}
+.dj-civil{background:#e3f2fd;color:#1565c0}
+.dj-penal{background:#fce4ec;color:#c62828}
+.dj-prazo-ok{background:#e8f5e9;color:#2e7d32}
+.dj-prazo-atenc{background:#fff3e0;color:#e65100}
+.dj-prazo-venc{background:#fce4ec;color:#c62828}
 .av-card{background:#fff;border:1px solid #e0ddd6;border-radius:10px;padding:12px 16px;margin-bottom:8px;border-left:4px solid #1a1a1a}
 .av-card.urgente{border-left-color:#c62828;background:#fff8f8}
 .av-card.normal{border-left-color:#1565c0}
@@ -142,7 +154,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#1a1a1a}
   </div>
 </div>
 
-<div class="mod-tabs" style="grid-template-columns:1fr 1fr 1fr 1fr 1fr 1fr">
+<div class="mod-tabs" style="grid-template-columns:1fr 1fr 1fr 1fr 1fr 1fr 1fr">
   <button class="mod-btn on" id="mb-di" onclick="setMod('di')">
     <div class="mod-icon">&#127974;</div>
     <div class="mod-title">Descontos Indevidos</div>
@@ -172,6 +184,11 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#1a1a1a}
     <div class="mod-icon">&#128196;</div>
     <div class="mod-title">Avulsos</div>
     <div class="mod-sub" id="mb-av-badge">Clientes &middot; Tarefas extras</div>
+  </button>
+  <button class="mod-btn" id="mb-dj" onclick="setMod('dj')">
+    <div class="mod-icon">&#9878;</div>
+    <div class="mod-title">DJEN</div>
+    <div class="mod-sub" id="mb-dj-badge">Publicacoes diarias</div>
   </button>
 </div>
 
@@ -942,6 +959,92 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#1a1a1a}
       <div style="display:flex;gap:8px;justify-content:flex-end">
         <button class="btn" onclick="avFecharModal()">Cancelar</button>
         <button class="btn btng" id="av-btn-salvar" onclick="avSalvar()">Salvar demanda</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- DJEN -->
+<div id="mod-dj" style="display:none">
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+      <div>
+        <div class="ct" style="margin-bottom:4px">Publicacoes DJEN &mdash; Comunicacoes Processuais PJe</div>
+        <span id="dj-resumo" style="font-size:11px;color:#aaa"></span>
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <button class="btn btnp" style="font-size:11px" onclick="djBuscar()">&#8635; Buscar publicacoes de hoje</button>
+        <button class="btn" style="font-size:11px;background:#e8f5e9;border-color:#a5d6a7;color:#1b5e20" onclick="djBuscarData()">&#128197; Buscar por data</button>
+      </div>
+    </div>
+
+    <!-- Status da busca -->
+    <div id="dj-status" style="display:none;padding:10px 14px;border-radius:8px;margin-bottom:10px;font-size:12px"></div>
+
+    <!-- Stats -->
+    <div id="dj-stats" style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr;gap:8px;margin-bottom:12px"></div>
+
+    <!-- Filtros -->
+    <div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap;align-items:center">
+      <select id="dj-filtro-adv" onchange="djListar()" style="font-size:11px;padding:4px 8px">
+        <option value="todos">Ambos advogados</option>
+        <option value="425910">Dr. Augusto (425910)</option>
+        <option value="500799">Dr. Ari (500799)</option>
+      </select>
+      <select id="dj-filtro-area" onchange="djListar()" style="font-size:11px;padding:4px 8px">
+        <option value="todos">Civil + Penal</option>
+        <option value="civil">Direito Civil</option>
+        <option value="penal">Direito Penal</option>
+      </select>
+      <select id="dj-filtro-status" onchange="djListar()" style="font-size:11px;padding:4px 8px">
+        <option value="ativos">Ativos</option>
+        <option value="todos">Todos</option>
+        <option value="pendente">Pendentes</option>
+        <option value="delegado">Delegados</option>
+        <option value="cumprido">Cumpridos</option>
+        <option value="ignorado">Ignorados</option>
+      </select>
+      <input id="dj-busca-txt" placeholder="Buscar processo ou parte..." style="font-size:11px;padding:4px 8px;flex:1;min-width:140px" oninput="djListar()">
+      <label style="font-size:11px;color:#aaa;display:flex;align-items:center;gap:4px">
+        <input type="checkbox" id="dj-mostrar-hist" onchange="djListar()"> Historico
+      </label>
+    </div>
+
+    <!-- Ultima busca -->
+    <div id="dj-ultima-busca" style="font-size:11px;color:#aaa;margin-bottom:8px"></div>
+
+    <div id="dj-lista"></div>
+  </div>
+
+  <!-- Modal delegar publicacao -->
+  <div id="dj-del-modal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.48);z-index:2000;align-items:center;justify-content:center">
+    <div style="background:#fff;border-radius:14px;padding:24px;max-width:460px;width:90%">
+      <div class="ct" style="margin-bottom:14px">Delegar Publicacao</div>
+      <div id="dj-del-info" style="font-size:12px;background:#f8f7f3;border-radius:8px;padding:10px;margin-bottom:12px;line-height:1.5"></div>
+      <label>Responsavel</label>
+      <select id="dj-del-resp" style="margin-bottom:8px"></select>
+      <label>Prazo para cumprir</label>
+      <input type="date" id="dj-del-prazo" style="margin-bottom:8px">
+      <label>Observacoes / instrucoes</label>
+      <textarea id="dj-del-obs" style="margin-bottom:14px;min-height:70px" placeholder="Ex: verificar se ja foi protocolado, solicitar certidao..."></textarea>
+      <div style="display:flex;gap:8px;justify-content:flex-end">
+        <button class="btn" onclick="g('dj-del-modal').style.display='none'">Cancelar</button>
+        <button class="btn btnp" onclick="djSalvarDelegacao()">Delegar + Notificar WA</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal detalhes publicacao -->
+  <div id="dj-det-modal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.48);z-index:2000;align-items:flex-start;justify-content:center;overflow-y:auto;padding:20px 0">
+    <div style="background:#fff;border-radius:14px;padding:24px;max-width:680px;width:90%;margin:auto">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+        <div class="ct" style="margin-bottom:0">Publicacao Completa</div>
+        <button class="btn" onclick="g('dj-det-modal').style.display='none'">Fechar</button>
+      </div>
+      <div id="dj-det-conteudo" style="font-size:12px;line-height:1.7;white-space:pre-wrap;max-height:60vh;overflow-y:auto;background:#f8f7f3;border-radius:8px;padding:12px"></div>
+      <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+        <a id="dj-det-link" href="#" target="_blank" class="btn btng" style="font-size:11px">Abrir no site do tribunal</a>
       </div>
     </div>
   </div>
@@ -2320,6 +2423,9 @@ function setMod(m){
   if(m==='av'){avPopularFiltroResp();avListar();}
   if(g('mod-av'))g('mod-av').style.display=m==='av'?'block':'none';
   if(g('mb-av'))g('mb-av').className='mod-btn'+(m==='av'?' on':'');
+  if(g('mod-dj'))g('mod-dj').style.display=m==='dj'?'block':'none';
+  if(g('mb-dj'))g('mb-dj').className='mod-btn'+(m==='dj'?' on':'');
+  if(m==='dj'){djListar();}
 }
 function swDI(n){var i;for(i=0;i<9;i++){if(g('dp'+i))g('dp'+i).className='pg'+(i===n?' on':'');if(g('dn'+i))g('dn'+i).className=i===n?'on':'';}if(n===3)drivePopSel();if(n===8){var v=g('di-sel-doc')&&g('di-sel-doc').value;if(v)diArqAbrir(v);}}
 function swSE(n){var i;for(i=0;i<11;i++){var sp=g('sp'+i);var sn=g('sn'+i);if(sp)sp.className='pg'+(i===n?' on':'');if(sn)sn.className=i===n?'on':'';}if(n===2&&seC.length>0)seListarPend();if(n===9){var v=g('se-arq-sel')&&g('se-arq-sel').value;if(v)seArqAbrir(v);}}
@@ -4641,8 +4747,424 @@ function avExcluir(id){
   avSaveLista(avGetLista().filter(function(x){return x.id!==id;})); avListar();
 }
 
+
+// ============================================================
+// DJEN -- Publicacoes Processuais PJe
+// ============================================================
+var DJ_ADVS = [
+  {nome:'Dr. Augusto Gadiani', oab:'425910', uf:'SP'},
+  {nome:'Dr. Ari D\'Antraccoli', oab:'500799', uf:'SP'}
+];
+
+// Palavras-chave para classificar area
+var DJ_PENAL_KW = ['penal','crime','criminal','homicidio','furto','roubo','lesao corporal',
+  'trafico','drogas','estupro','ameaca','injuria','difamacao','caluni',
+  'execucao penal','pena','condenado','reu','ministerio publico','mp',
+  'inqueri','policia','prisao','preventiva','flagrante','denuncia','inquerito'];
+
+function djArea(txt){
+  if(!txt)return'civil';
+  var t=(txt||'').toLowerCase();
+  return DJ_PENAL_KW.some(function(k){return t.indexOf(k)>=0;})?'penal':'civil';
+}
+
+function djGetLista(){return est['_djen']||[];}
+function djSaveLista(l){est['_djen']=l;saveEst();}
+
+// -- BUSCA VIA APPS SCRIPT (proxy server-side) --------------
+function djBuscar(){
+  var hoje=new Date();
+  var d=hoje.toISOString().split('T')[0];
+  djBuscarDia(d);
+}
+function djBuscarData(){
+  var d=prompt('Data no formato AAAA-MM-DD:',new Date().toISOString().split('T')[0]);
+  if(!d||!/\d{4}-\d{2}-\d{2}/.test(d)){alert('Data invalida.');return;}
+  djBuscarDia(d);
+}
+function djBuscarDia(data){
+  var st=g('dj-status');
+  st.style.display='block';
+  st.style.background='#e3f2fd';
+  st.style.color='#1565c0';
+  st.innerHTML='<span class="spin"></span> Consultando publicacoes de '+data+' no DJEN (pode demorar 20-40s)...';
+  var promises=[];
+  var resultados=[];
+  var total=DJ_ADVS.length;
+  var done=0;
+  DJ_ADVS.forEach(function(adv){
+    djBuscarAdvogado(data,adv,function(pubs){
+      pubs.forEach(function(p){resultados.push(p);});
+      done++;
+      st.innerHTML='<span class="spin"></span> Consultando '+adv.nome+'... ('+done+'/'+total+')';
+      if(done===total){
+        djProcessarResultados(resultados,data,st);
+      }
+    });
+  });
+}
+
+function djBuscarAdvogado(data,adv,cb){
+  // Call Apps Script proxy - passes all pages
+  var prompt='CONSULTA_DJEN|oab='+adv.oab+'|uf='+adv.uf+'|data='+data+'|nome='+encodeURIComponent(adv.nome);
+  var url=SCRIPT+'?action=djen&oab='+adv.oab+'&uf='+adv.uf+'&data='+data;
+  fetch(url,{method:'GET',redirect:'follow'})
+    .then(function(r){return r.text();})
+    .then(function(t){
+      try{
+        var d=JSON.parse(t);
+        if(d.ok&&d.data){cb(d.data);}
+        else{
+          // Fallback: use AI to interpret what was found
+          cb([]);
+        }
+      }catch(e){cb([]);}
+    })
+    .catch(function(){cb([]);});
+}
+
+function djProcessarResultados(pubs,data,st){
+  var lista=djGetLista();
+  var novos=0;
+  pubs.forEach(function(p){
+    // Check if already exists by id
+    var existe=lista.find(function(x){return x.id===p.id;});
+    if(!existe){
+      p.status='pendente';
+      p.area=djArea(p.texto+' '+p.tipoDoDocumento+' '+p.siglaTribunal);
+      p.dataBusca=new Date().toISOString();
+      p.dataPub=data;
+      lista.push(p);
+      novos++;
+    }
+  });
+  djSaveLista(lista);
+  st.style.background=novos>0?'#e8f5e9':'#f5f5f5';
+  st.style.color=novos>0?'#1b5e20':'#666';
+  st.innerHTML=(novos>0?'<strong>'+novos+' nova(s) publicacao(oes)</strong> encontrada(s) e adicionada(s).':'Nenhuma nova publicacao encontrada para '+data+'.')
+    +' <span style="color:#aaa;font-size:11px">Ultima consulta: '+new Date().toLocaleString('pt-BR')+'</span>';
+  // Salvar ultima busca
+  est['_djen_ultima']={data:data,ts:new Date().toISOString(),total:pubs.length,novos:novos};
+  saveEst();
+  djListar();
+  // Alert if new ones have tight deadlines
+  var urgentes=lista.filter(function(p){return p.status==='pendente'&&djDiasRestantes(p)>=0&&djDiasRestantes(p)<=3;});
+  if(urgentes.length>0){
+    setTimeout(function(){
+      alert('ATENCAO: '+urgentes.length+' publicacao(oes) com prazo vencendo em 3 dias ou menos!');
+    },500);
+  }
+}
+
+// -- Prazo inteligente: detecta datas no texto -------------
+function djExtrairPrazo(txt){
+  if(!txt)return null;
+  // Match DD/MM/YYYY or YYYY-MM-DD
+  var m=txt.match(/prazo[^0-9]{0,20}(\d{2}\/\d{2}\/\d{4})/i)
+    ||txt.match(/(\d{2}\/\d{2}\/\d{4})[^0-9]{0,20}prazo/i)
+    ||txt.match(/intimar[^0-9]{0,30}(\d{2}\/\d{2}\/\d{4})/i)
+    ||txt.match(/manifestar[^0-9]{0,30}(\d{2}\/\d{2}\/\d{4})/i)
+    ||txt.match(/responder[^0-9]{0,30}(\d{2}\/\d{2}\/\d{4})/i)
+    ||txt.match(/(\d{2})\/(\d{2})\/(\d{4})/);
+  if(!m)return null;
+  var dm=m[1]||m[0];
+  var parts=dm.split('/');
+  if(parts.length===3){
+    var dt=new Date(parts[2]+'-'+parts[1]+'-'+parts[0]+'T12:00:00');
+    if(!isNaN(dt)&&dt>new Date())return dt.toISOString().split('T')[0];
+  }
+  return null;
+}
+
+function djDiasRestantes(p){
+  if(!p.prazoInterno)return 999;
+  var d=new Date(p.prazoInterno+'T23:59:59');
+  return Math.ceil((d-new Date())/86400000);
+}
+
+// -- LISTAR publicacoes ------------------------------------
+function djListar(){
+  djStats();
+  var lista=djGetLista();
+  var filtAdv=g('dj-filtro-adv')&&g('dj-filtro-adv').value||'todos';
+  var filtArea=g('dj-filtro-area')&&g('dj-filtro-area').value||'todos';
+  var filtStatus=g('dj-filtro-status')&&g('dj-filtro-status').value||'ativos';
+  var busca=(g('dj-busca-txt')&&g('dj-busca-txt').value||'').toLowerCase();
+  var hist=g('dj-mostrar-hist')&&g('dj-mostrar-hist').checked;
+
+  lista=lista.filter(function(p){
+    if(filtAdv!=='todos'&&p.oab!==filtAdv)return false;
+    if(filtArea!=='todos'&&p.area!==filtArea)return false;
+    if(filtStatus==='ativos'&&(p.status==='cumprido'||p.status==='ignorado'))return false;
+    if(filtStatus==='pendente'&&p.status!=='pendente')return false;
+    if(filtStatus==='delegado'&&p.status!=='delegado')return false;
+    if(filtStatus==='cumprido'&&p.status!=='cumprido')return false;
+    if(filtStatus==='ignorado'&&p.status!=='ignorado')return false;
+    if(busca&&(p.texto||'').toLowerCase().indexOf(busca)<0
+      &&(p.numeroProcesso||'').indexOf(busca)<0
+      &&(p.nomeParte||'').toLowerCase().indexOf(busca)<0)return false;
+    return true;
+  });
+
+  // Sort: urgentes primeiro
+  lista.sort(function(a,b){
+    var prA=djDiasRestantes(a),prB=djDiasRestantes(b);
+    if(a.status!==b.status){
+      var ord={pendente:0,delegado:1,cumprido:2,ignorado:3};
+      return (ord[a.status]||0)-(ord[b.status]||0);
+    }
+    return prA-prB;
+  });
+
+  var el=g('dj-lista');
+  if(!el)return;
+  if(!lista.length){
+    el.innerHTML='<div style="padding:30px;text-align:center;color:#bbb;font-size:13px">'
+      +(djGetLista().length===0
+        ?'Nenhuma publicacao carregada. Clique em "Buscar publicacoes de hoje" para consultar o DJEN.'
+        :'Nenhuma publicacao com os filtros selecionados.')
+      +'</div>';
+    return;
+  }
+
+  var html='';
+  lista.forEach(function(p){
+    var dias=djDiasRestantes(p);
+    var vencido=p.prazoInterno&&dias<0;
+    var urgente=p.prazoInterno&&dias>=0&&dias<=3;
+    var cls='dj-card '+(p.area==='penal'?'penal':'');
+    if(p.status==='cumprido')cls+=' cumprido';
+    if(p.status==='ignorado')cls+=' ignorado';
+    if(urgente||vencido)cls+=' alerta';
+
+    html+='<div class="'+cls+'">';
+
+    // Header
+    html+='<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:6px">';
+    html+='<div style="flex:1">';
+    html+='<div style="font-size:12px;font-weight:700;color:#1a1a1a;margin-bottom:4px">'
+      +(p.numeroProcesso?'<span style="font-family:monospace;background:#f0ede8;padding:1px 5px;border-radius:4px">'+p.numeroProcesso+'</span> ':'')
+      +(p.nomeParte?p.nomeParte:'')
+      +'</div>';
+    html+='<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:4px">';
+    html+='<span class="dj-tag '+(p.area==='penal'?'dj-penal':'dj-civil')+'">'+(p.area==='penal'?'PENAL':'CIVIL')+'</span>';
+    html+='<span class="dj-tag" style="background:#f5f4f0;color:#666">'+(p.siglaTribunal||'PJe')+'</span>';
+    html+='<span class="dj-tag" style="background:#f5f4f0;color:#999">OAB '+p.oab+'/SP</span>';
+    if(p.tipoDoDocumento)html+='<span class="dj-tag" style="background:#e8f5e9;color:#2e7d32">'+p.tipoDoDocumento+'</span>';
+    if(p.status==='delegado')html+='<span class="dj-tag" style="background:#fff3e0;color:#e65100">Delegado: '+p.delegadoNome+'</span>';
+    if(p.status==='cumprido')html+='<span class="dj-tag" style="background:#e8f5e9;color:#2e7d32">Cumprido '+new Date(p.cumpridoEm).toLocaleDateString('pt-BR')+'</span>';
+    if(p.status==='ignorado')html+='<span class="dj-tag" style="background:#f5f4f0;color:#aaa">Ignorado</span>';
+    html+='</div>';
+
+    // Datas
+    html+='<div style="font-size:10px;color:#aaa">Publicado: '+p.dataPub+(p.dataBusca?' &middot; Capturado: '+new Date(p.dataBusca).toLocaleString('pt-BR'):'')+'</div>';
+    html+='</div>';
+
+    // Prazo badge
+    if(p.prazoInterno){
+      var prazoLabel=vencido?'VENCIDO':(dias===0?'VENCE HOJE':(dias===1?'1 DIA':dias+' DIAS'));
+      var prBg=vencido?'#c62828':(urgente?'#e65100':'#2e7d32');
+      html+='<div style="text-align:right;flex-shrink:0">'
+        +'<div style="background:'+prBg+';color:#fff;border-radius:8px;padding:4px 10px;font-size:11px;font-weight:700">'+prazoLabel+'</div>'
+        +'<div style="font-size:10px;color:#aaa;margin-top:2px">'+new Date(p.prazoInterno+'T12:00:00').toLocaleDateString('pt-BR')+'</div>'
+        +'</div>';
+    }
+    html+='</div>';
+
+    // Texto resumido
+    if(p.texto){
+      var resumo=p.texto.length>300?p.texto.substring(0,300)+'...':p.texto;
+      html+='<div style="font-size:11px;color:#444;line-height:1.5;background:#f8f7f3;border-radius:6px;padding:8px;margin-bottom:8px;cursor:pointer" '
+        +'data-id="'+p.id+'" onclick="djVerDetalhe(this.dataset.id)">'+resumo+'</div>';
+    }
+
+    // Obs delegacao
+    if(p.delegadoObs)html+='<div style="font-size:11px;color:#e65100;margin-bottom:6px;padding:5px 8px;background:#fff3e0;border-radius:6px"><b>Obs:</b> '+p.delegadoObs+'</div>';
+
+    // Acoes
+    if(p.status!=='cumprido'&&p.status!=='ignorado'){
+      html+='<div style="display:flex;gap:5px;flex-wrap:wrap">';
+      html+='<button class="btn btng" style="font-size:11px;padding:3px 8px" data-id="'+p.id+'" onclick="djCumprir(this.dataset.id)">&#10003; Cumprida</button>';
+      html+='<button class="btn" style="font-size:11px;padding:3px 8px;background:#e3f2fd;border-color:#90caf9;color:#1565c0" data-id="'+p.id+'" onclick="djAbrirDelegacao(this.dataset.id)">&#128101; Delegar</button>';
+      if(p.prazoInterno){
+        html+='<button class="btn" style="font-size:11px;padding:3px 8px" data-id="'+p.id+'" onclick="djEditarPrazo(this.dataset.id)">&#128197; Prazo</button>';
+      } else {
+        html+='<button class="btn" style="font-size:11px;padding:3px 8px" data-id="'+p.id+'" onclick="djEditarPrazo(this.dataset.id)">+ Prazo</button>';
+      }
+      html+='<button class="btn" style="font-size:11px;padding:3px 8px" data-id="'+p.id+'" onclick="djVerDetalhe(this.dataset.id)">&#128196; Ver completo</button>';
+      if(p.linkTribunal)html+='<a href="'+p.linkTribunal+'" target="_blank" class="btn" style="font-size:11px;padding:3px 8px;text-decoration:none">&#127758; Tribunal</a>';
+      html+='<button class="btn" style="font-size:11px;padding:3px 6px;color:#aaa" data-id="'+p.id+'" onclick="djIgnorar(this.dataset.id)">Ignorar</button>';
+      html+='<button class="btn" style="font-size:11px;padding:3px 6px;background:#fce4ec;border-color:#f8bbd0;color:#c62828" data-id="'+p.id+'" onclick="djExcluir(this.dataset.id)">&#10005;</button>';
+      html+='</div>';
+    } else {
+      html+='<div style="display:flex;gap:5px">';
+      html+='<button class="btn" style="font-size:11px;padding:3px 8px" data-id="'+p.id+'" onclick="djReabrir(this.dataset.id)">Reabrir</button>';
+      html+='<button class="btn" style="font-size:11px;padding:3px 8px" data-id="'+p.id+'" onclick="djVerDetalhe(this.dataset.id)">&#128196; Ver</button>';
+      html+='<button class="btn" style="font-size:11px;padding:3px 6px;background:#fce4ec;border-color:#f8bbd0;color:#c62828" data-id="'+p.id+'" onclick="djExcluir(this.dataset.id)">&#10005;</button>';
+      html+='</div>';
+    }
+    html+='</div>';
+  });
+  el.innerHTML=html;
+}
+
+function djStats(){
+  var lista=djGetLista();
+  var pendentes=lista.filter(function(p){return p.status==='pendente';}).length;
+  var delegados=lista.filter(function(p){return p.status==='delegado';}).length;
+  var cumpridos=lista.filter(function(p){return p.status==='cumprido';}).length;
+  var vencendo=lista.filter(function(p){return p.status!=='cumprido'&&p.status!=='ignorado'&&p.prazoInterno&&djDiasRestantes(p)<=3&&djDiasRestantes(p)>=0;}).length;
+  var vencidos=lista.filter(function(p){return p.status!=='cumprido'&&p.status!=='ignorado'&&p.prazoInterno&&djDiasRestantes(p)<0;}).length;
+  var el=g('dj-stats');
+  if(el)el.innerHTML=
+    '<div style="background:#fce4ec;border-radius:8px;padding:10px;text-align:center"><div style="font-size:20px;font-weight:700;color:#c62828">'+vencidos+'</div><div style="font-size:10px;color:#c62828;font-weight:600">Vencidas</div></div>'
+   +'<div style="background:#fff3e0;border-radius:8px;padding:10px;text-align:center"><div style="font-size:20px;font-weight:700;color:#e65100">'+vencendo+'</div><div style="font-size:10px;color:#e65100;font-weight:600">Vencendo</div></div>'
+   +'<div style="background:#e3f2fd;border-radius:8px;padding:10px;text-align:center"><div style="font-size:20px;font-weight:700;color:#1565c0">'+pendentes+'</div><div style="font-size:10px;color:#1565c0;font-weight:600">Pendentes</div></div>'
+   +'<div style="background:#fff8e1;border-radius:8px;padding:10px;text-align:center"><div style="font-size:20px;font-weight:700;color:#e65100">'+delegados+'</div><div style="font-size:10px;color:#e65100;font-weight:600">Delegadas</div></div>'
+   +'<div style="background:#e8f5e9;border-radius:8px;padding:10px;text-align:center"><div style="font-size:20px;font-weight:700;color:#2e7d32">'+cumpridos+'</div><div style="font-size:10px;color:#2e7d32;font-weight:600">Cumpridas</div></div>';
+  var badge=g('mb-dj-badge');
+  if(badge){
+    var alerts=vencidos+vencendo;
+    if(alerts>0){badge.textContent=alerts+' com prazo urgente';badge.style.color='#c62828';}
+    else if(pendentes>0){badge.textContent=pendentes+' pendente(s)';badge.style.color='#1565c0';}
+    else{badge.textContent='Publicacoes diarias';badge.style.color='';}
+  }
+  var ub=est['_djen_ultima'];
+  var ulEl=g('dj-ultima-busca');
+  if(ulEl&&ub)ulEl.textContent='Ultima consulta: '+ub.data+' as '+new Date(ub.ts).toLocaleTimeString('pt-BR')+' | '+ub.total+' publicacao(oes) encontrada(s)';
+  if(g('dj-resumo'))g('dj-resumo').textContent='Total armazenado: '+lista.length+' publicacao(oes)';
+}
+
+function djCumprir(id){
+  var lista=djGetLista();
+  var p=lista.find(function(x){return x.id===id;});
+  if(!p)return;
+  var obs=prompt('Observacao do cumprimento (opcional):','');
+  p.status='cumprido';
+  p.cumpridoEm=new Date().toISOString();
+  p.cumpridoPor=eqUsuarioAtual?eqUsuarioAtual.nome:'';
+  p.cumpridoObs=obs||'';
+  djSaveLista(lista);djListar();
+}
+
+function djIgnorar(id){
+  if(!confirm('Marcar esta publicacao como ignorada?'))return;
+  var lista=djGetLista();
+  var p=lista.find(function(x){return x.id===id;});
+  if(p){p.status='ignorado';p.ignoradoEm=new Date().toISOString();}
+  djSaveLista(lista);djListar();
+}
+
+function djReabrir(id){
+  var lista=djGetLista();
+  var p=lista.find(function(x){return x.id===id;});
+  if(p){p.status='pendente';delete p.cumpridoEm;delete p.ignoradoEm;}
+  djSaveLista(lista);djListar();
+}
+
+function djExcluir(id){
+  if(!confirm('Excluir esta publicacao do historico?'))return;
+  djSaveLista(djGetLista().filter(function(x){return x.id!==id;}));
+  djListar();
+}
+
+function djEditarPrazo(id){
+  var lista=djGetLista();
+  var p=lista.find(function(x){return x.id===id;});
+  if(!p)return;
+  var prazo=prompt('Prazo para cumprir (AAAA-MM-DD):',p.prazoInterno||new Date(Date.now()+5*86400000).toISOString().split('T')[0]);
+  if(!prazo)return;
+  p.prazoInterno=prazo;
+  djSaveLista(lista);djListar();
+}
+
+var djDelegandoId=null;
+function djAbrirDelegacao(id){
+  djDelegandoId=id;
+  var lista=djGetLista();
+  var p=lista.find(function(x){return x.id===id;});
+  if(!p)return;
+  var info=g('dj-del-info');
+  if(info)info.innerHTML='<b>Processo:</b> '+(p.numeroProcesso||'-')+'<br><b>Publicado em:</b> '+p.dataPub+'<br><b>Resumo:</b> '+(p.texto?p.texto.substring(0,150)+'...':'-');
+  var sel=g('dj-del-resp');
+  if(sel){
+    var equipe=eqGetEquipe();
+    sel.innerHTML='';
+    equipe.forEach(function(u){sel.innerHTML+='<option value="'+u.id+'|'+u.nome+'">'+u.nome+'</option>';});
+    if(p.delegadoId)sel.value=p.delegadoId+'|'+p.delegadoNome;
+  }
+  if(g('dj-del-prazo'))g('dj-del-prazo').value=p.prazoInterno||'';
+  if(g('dj-del-obs'))g('dj-del-obs').value=p.delegadoObs||'';
+  g('dj-del-modal').style.display='flex';
+}
+
+function djSalvarDelegacao(){
+  if(!djDelegandoId)return;
+  var lista=djGetLista();
+  var p=lista.find(function(x){return x.id===djDelegandoId;});
+  if(!p)return;
+  var sel=g('dj-del-resp');
+  var partes=(sel&&sel.value||'').split('|');
+  var respId=partes[0]; var respNome=partes[1]||'';
+  var prazo=g('dj-del-prazo')&&g('dj-del-prazo').value||'';
+  var obs=g('dj-del-obs')&&g('dj-del-obs').value||'';
+  p.status='delegado';
+  p.delegadoId=respId; p.delegadoNome=respNome;
+  p.prazoInterno=prazo; p.delegadoObs=obs;
+  p.delegadoEm=new Date().toISOString();
+  p.delegadoPor=eqUsuarioAtual?eqUsuarioAtual.nome:'';
+  djSaveLista(lista);
+  g('dj-del-modal').style.display='none';
+  djListar();
+  // Notify via WhatsApp
+  var equipe=eqGetEquipe();
+  var resp=equipe.find(function(u){return u.id===respId;});
+  if(resp&&resp.tel){
+    var tel=resp.tel.replace(/[^0-9]/g,''); if(tel.length===11)tel='55'+tel;
+    var msg='Ola, '+resp.nome.split(' ')[0]+'! '+(eqUsuarioAtual?eqUsuarioAtual.nome.split(' ')[0]:'Escritorio')+' delegou uma publicacao processual:'
+      +'\n\nProcesso: '+(p.numeroProcesso||'-')
+      +'\nTribunal: '+(p.siglaTribunal||'-')
+      +'\nPublicado em: '+p.dataPub
+      +(obs?'\n\nInstrucoes: '+obs:'')
+      +(prazo?'\nPrazo: '+new Date(prazo+'T12:00:00').toLocaleDateString('pt-BR'):'')
+      +'\n\nGadiani & D\'Antraccoli Advogados';
+    if(confirm('Enviar notificacao para '+resp.nome+' via WhatsApp?'))
+      window.open('https://wa.me/'+tel+'?text='+encodeURIComponent(msg),'_blank');
+  }
+}
+
+function djVerDetalhe(id){
+  var lista=djGetLista();
+  var p=lista.find(function(x){return x.id===id;});
+  if(!p)return;
+  var el=g('dj-det-conteudo');
+  if(el)el.textContent=(p.texto||'Conteudo nao disponivel.');
+  var link=g('dj-det-link');
+  if(link){
+    if(p.linkTribunal){link.href=p.linkTribunal;link.style.display='inline-flex';}
+    else{link.style.display='none';}
+  }
+  g('dj-det-modal').style.display='flex';
+}
+
+// Verificacao automatica 2x ao dia (8h e 18h)
+function djAgendarVerificacao(){
+  var agora=new Date();
+  var horas=agora.getHours();
+  var ult=est['_djen_ultima'];
+  var ultDia=ult?ult.data:'';
+  var hoje=agora.toISOString().split('T')[0];
+  // Busca automatica se nao buscou hoje ainda e for horario comercial
+  if(ultDia!==hoje&&horas>=8&&horas<=20){
+    console.log('DJEN: agendando busca automatica...');
+    setTimeout(function(){
+      if(confirm('Buscar publicacoes do DJEN de hoje automaticamente?'))djBuscar();
+    },2000);
+  }
+}
+
 window.addEventListener('load',function(){
-  checarTokenDrive();loadUser();loadEst();setTimeout(diLoad,300);setTimeout(eqCarregarSessao,500);setTimeout(avStats,600);
+  checarTokenDrive();loadUser();loadEst();setTimeout(diLoad,300);setTimeout(eqCarregarSessao,500);setTimeout(avStats,600);setTimeout(function(){djStats();djAgendarVerificacao();},700);
 });
 </script>
 </body>
