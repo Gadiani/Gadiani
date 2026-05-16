@@ -498,6 +498,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#1a1a1a}
     <button id="sn6" onclick="swSE(6)">Plano 70/30</button>
     <button id="sn7" onclick="swSE(7)">Protocolo</button>
     <button id="sn8" onclick="swSE(8)">CRM</button>
+    <button id="sn9" onclick="swSE(9)" style="background:#e8f5e9;color:#1b5e20;font-weight:600">&#128230; Arquivos</button>
   </nav>
 
   <div id="sp0" class="pg on">
@@ -683,6 +684,39 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#1a1a1a}
     <div id="se-not-wrap"></div>
   </div>
 </div>
+
+  <div id="sp9" class="pg">
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <div class="ct" style="margin-bottom:0">&#128230; Arquivos do Cliente &mdash; Download em PDF / JPG</div>
+        <div style="display:flex;gap:6px">
+          <select id="se-arq-sel" onchange="seArqAbrir(this.value)" style="font-size:12px;padding:5px 8px"><option value="">Selecionar cliente...</option></select>
+          <label class="btn btnp" style="cursor:pointer;font-size:12px">
+            + Adicionar arquivo
+            <input type="file" id="se-arq-input" multiple accept="image/*,.pdf,.doc,.docx" style="display:none" onchange="seArqUpload(this)">
+          </label>
+        </div>
+      </div>
+      <div class="info-box" style="margin-bottom:10px">Armazene e visualize documentos do cliente. "Puxar do Drive" importa automaticamente os arquivos da pasta do cliente no Drive SE. "Baixar todos PDF" abre janela para imprimir/salvar como PDF unificado para protocolo.</div>
+      <div id="se-arq-drive-bar" style="margin-bottom:10px;padding:8px 12px;border-radius:8px;background:#e8f5e9;border:1px solid #a5d6a7;display:none">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+          <span style="font-size:12px;color:#1b5e20;font-weight:600">&#9989; Drive conectado</span>
+          <button class="btn btng" style="font-size:11px" onclick="seArqPuxarDrive()">&#9660; Puxar arquivos do Drive</button>
+        </div>
+        <div id="se-arq-drive-status" style="font-size:11px;color:#1b5e20;margin-top:4px;display:none"></div>
+      </div>
+      <div id="se-arq-area" style="display:none">
+        <div id="se-arq-stats" style="margin-bottom:10px;font-size:12px;color:#666"></div>
+        <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap">
+          <button class="btn btng" onclick="seArqBaixarTodosPDF()" style="font-weight:700">&#128196; Baixar todos em PDF unico</button>
+          <button class="btn" style="background:#fff3e0;border-color:#ffcc80;color:#e65100" onclick="seArqBaixarTodosJPG()">&#128247; Baixar todos em JPG</button>
+        </div>
+        <div id="se-arq-lista"></div>
+      </div>
+      <div id="se-arq-empty" style="padding:30px;text-align:center;color:#bbb;font-size:13px">Selecione um cliente para ver seus arquivos.</div>
+    </div>
+  </div>
+
 
 <!-- Protocolados -->
 <div id="mod-pt" style="display:none">
@@ -1803,7 +1837,7 @@ function setMod(m){
   if(m==='docs')docsRefresh();
 }
 function swDI(n){var i;for(i=0;i<9;i++){if(g('dp'+i))g('dp'+i).className='pg'+(i===n?' on':'');if(g('dn'+i))g('dn'+i).className=i===n?'on':'';}if(n===3)drivePopSel();if(n===8){var v=g('di-sel-doc')&&g('di-sel-doc').value;if(v)diArqAbrir(v);}}
-function swSE(n){var i;for(i=0;i<10;i++){var sp=g('sp'+i);var sn=g('sn'+i);if(sp)sp.className='pg'+(i===n?' on':'');if(sn)sn.className=i===n?'on':'';}if(n===2&&seC.length>0)seListarPend();}
+function swSE(n){var i;for(i=0;i<11;i++){var sp=g('sp'+i);var sn=g('sn'+i);if(sp)sp.className='pg'+(i===n?' on':'');if(sn)sn.className=i===n?'on':'';}if(n===2&&seC.length>0)seListarPend();if(n===9){var v=g('se-arq-sel')&&g('se-arq-sel').value;if(v)seArqAbrir(v);}}
 
 function diLoad(){
   g('di-lista').innerHTML='<div class="load"><span class="spin"></span> Carregando...</div>';
@@ -3063,8 +3097,297 @@ function seListar(){
   }
   g('se-lista').innerHTML=html;
 }
+// -- ARQUIVOS SE ---------------------------------------------------------------
+var seArqCidAtual = null;
+
+function seArqAbrir(cid) {
+  if (!cid) {
+    if (g('se-arq-area')) g('se-arq-area').style.display = 'none';
+    if (g('se-arq-empty')) g('se-arq-empty').style.display = 'block';
+    return;
+  }
+  seArqCidAtual = cid;
+  if (g('se-arq-empty')) g('se-arq-empty').style.display = 'none';
+  if (g('se-arq-area')) g('se-arq-area').style.display = 'block';
+  if (g('se-arq-input')) g('se-arq-input').setAttribute('data-cid', cid);
+  var sel = g('se-arq-sel'); if (sel) sel.value = cid;
+  seArqRender(cid);
+  seArqAtualizarDriveBar(cid);
+}
+
+function seArqUpload(input) {
+  var cid = input.getAttribute('data-cid') || seArqCidAtual;
+  if (!cid || !input.files || !input.files.length) return;
+  var e = getE(cid);
+  if (!e.seArquivos) e.seArquivos = [];
+  var files = Array.from(input.files);
+  var done = 0;
+  files.forEach(function(file) {
+    var reader = new FileReader();
+    reader.onload = function(ev) {
+      var b64 = ev.target.result.split(',')[1];
+      e.seArquivos.push({
+        id: 'arq_'+Date.now()+'_'+Math.random().toString(36).substr(2,5),
+        nome: file.name,
+        mime: file.type || 'application/octet-stream',
+        b64: b64,
+        data: new Date().toISOString(),
+        tamanho: file.size
+      });
+      done++;
+      if (done === files.length) { saveEst(); seArqRender(cid); }
+    };
+    reader.readAsDataURL(file);
+  });
+  input.value = '';
+}
+
+function seArqRender(cid) {
+  var e = getE(cid);
+  var arqs = e.seArquivos || [];
+  var cl = seC.find(function(x){ return x.id === cid; });
+  var stats = g('se-arq-stats');
+  if (stats) stats.innerHTML = '<strong>'+(cl?cl.nome:'')+'</strong> &mdash; '+arqs.length+' arquivo(s)';
+  var lista = g('se-arq-lista');
+  if (!lista) return;
+  if (!arqs.length) {
+    lista.innerHTML = '<div style="padding:20px;text-align:center;color:#bbb">Nenhum arquivo. Clique em "+ Adicionar arquivo" para enviar ou "Puxar do Drive".</div>';
+    return;
+  }
+  var html = '';
+  arqs.forEach(function(arq, i) {
+    var isImg = arq.mime && arq.mime.indexOf('image') >= 0;
+    var ico = isImg ? '&#128247;' : '&#128196;';
+    var dt = new Date(arq.data).toLocaleDateString('pt-BR');
+    html += '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #f0ede8">';
+    html += '<span style="font-size:18px">'+ico+'</span>';
+    if (isImg) {
+      html += '<img src="data:'+arq.mime+';base64,'+arq.b64+'" style="width:48px;height:48px;object-fit:cover;border-radius:4px;cursor:pointer" '
+            + 'data-idx="'+i+'" data-cid="'+cid+'" onclick="seArqPreview(+this.dataset.idx,this.dataset.cid)">';
+    }
+    html += '<div style="flex:1"><div style="font-size:13px;font-weight:600">'+arq.nome+'</div>';
+    html += '<div style="font-size:11px;color:#aaa">'+dt+(arq.fonte==='drive'?' &middot; Drive':'')+'</div></div>';
+    html += '<div style="display:flex;gap:5px">';
+    if (isImg) {
+      html += '<button class="btn" style="font-size:11px;padding:4px 8px;background:#fff3e0;border-color:#ffcc80;color:#e65100" '
+            + 'data-idx="'+i+'" data-cid="'+cid+'" onclick="seArqBaixarJPG(+this.dataset.idx,this.dataset.cid)">&#128247; JPG</button>';
+    }
+    html += '<button class="btn" style="font-size:11px;padding:4px 8px;background:#e3f2fd;border-color:#90caf9;color:#1565c0" '
+          + 'data-idx="'+i+'" data-cid="'+cid+'" onclick="seArqBaixarPDF(+this.dataset.idx,this.dataset.cid)">&#128196; PDF</button>';
+    html += '<button class="btn" style="font-size:11px;padding:4px 8px" '
+          + 'data-idx="'+i+'" data-cid="'+cid+'" onclick="seArqBaixarOriginal(+this.dataset.idx,this.dataset.cid)">&#11015; Original</button>';
+    html += '<button class="btn" style="font-size:11px;padding:4px 6px;background:#fce4ec;border-color:#f8bbd0;color:#c62828" '
+          + 'data-idx="'+i+'" data-cid="'+cid+'" onclick="seArqExcluir(+this.dataset.idx,this.dataset.cid)">&#10005;</button>';
+    html += '</div></div>';
+  });
+  lista.innerHTML = html;
+}
+
+function seArqAtualizarDriveBar(cid) {
+  var bar = g('se-arq-drive-bar');
+  if (!bar) return;
+  if (driveToken) {
+    bar.style.display = 'block';
+  } else {
+    bar.style.display = 'none';
+  }
+}
+
+function seArqPuxarDrive() {
+  var cid = seArqCidAtual;
+  if (!cid) { alert('Selecione um cliente primeiro.'); return; }
+  if (!driveToken) { driveConectar(function(){ seArqPuxarDrive(); }); return; }
+  var st2 = g('se-arq-drive-status');
+  if (st2) { st2.style.display = 'block'; st2.textContent = 'Buscando pasta no Drive SE...'; }
+  // Ensure folder is found first
+  var pastaId = getE(cid).drivePastaId;
+  function puxarDaPasta(pid) {
+    if (st2) st2.textContent = 'Importando arquivos...';
+    var q = '"'+pid+'" in parents and trashed=false';
+    fetch('https://www.googleapis.com/drive/v3/files?q='+encodeURIComponent(q)+'&fields=files(id,name,mimeType,size)&pageSize=50',
+      {headers:{Authorization:'Bearer '+driveToken}})
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if (!d.files||!d.files.length) { if(st2)st2.textContent='Nenhum arquivo na pasta.'; return; }
+      var media = d.files.filter(function(f){ return f.mimeType.indexOf('image')>=0||f.mimeType==='application/pdf'; });
+      if (!media.length) { if(st2)st2.textContent='Nenhuma imagem ou PDF na pasta.'; return; }
+      var e3 = getE(cid);
+      if (!e3.seArquivos) e3.seArquivos = [];
+      var jaExistem = e3.seArquivos.map(function(a){ return a.nome; });
+      var novos = media.filter(function(f){ return jaExistem.indexOf(f.name) < 0; });
+      if (!novos.length) { if(st2)st2.textContent='Todos os arquivos ja foram importados.'; return; }
+      if(st2)st2.textContent='Importando '+novos.length+' arquivo(s)...';
+      var done = 0;
+      novos.forEach(function(f){
+        fetch('https://www.googleapis.com/drive/v3/files/'+f.id+'?alt=media',
+          {headers:{Authorization:'Bearer '+driveToken}})
+        .then(function(r){ return r.blob(); })
+        .then(function(blob){
+          var reader = new FileReader();
+          reader.onload = function(ev){
+            var b64 = ev.target.result.split(',')[1];
+            e3.seArquivos.push({
+              id:'drv_'+f.id, nome:f.name, mime:f.mimeType,
+              b64:b64, data:new Date().toISOString(), tamanho:blob.size, fonte:'drive'
+            });
+            done++;
+            if(st2)st2.textContent='Importando... '+done+'/'+novos.length;
+            if (done===novos.length) { saveEst(); seArqRender(cid); if(st2)st2.textContent=novos.length+' arquivo(s) importado(s) do Drive!'; }
+          };
+          reader.readAsDataURL(blob);
+        })
+        .catch(function(){ done++; if(done===novos.length){ saveEst(); seArqRender(cid); } });
+      });
+    })
+    .catch(function(e){ if(st2)st2.textContent='Erro: '+e.message; });
+  }
+  if (pastaId) {
+    puxarDaPasta(pastaId);
+  } else {
+    // Need to find folder first -- run SE drive search silently
+    if(st2)st2.textContent='Procurando pasta do cliente no Drive SE...';
+    var cl = seC.find(function(x){ return x.id===cid; });
+    if (!cl) { if(st2)st2.textContent='Cliente nao encontrado.'; return; }
+    var q2='"'+DRIVE_FOLDER_SE+'" in parents and mimeType="application/vnd.google-apps.folder" and trashed=false';
+    fetch('https://www.googleapis.com/drive/v3/files?q='+encodeURIComponent(q2)+'&fields=files(id,name)&pageSize=50',
+      {headers:{Authorization:'Bearer '+driveToken}})
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if(!d.files||!d.files.length){ if(st2)st2.textContent='Nenhuma pasta de mes encontrada.'; return; }
+      // Search all months simultaneously
+      var nN=cl.nome.toLowerCase().replace(/[^a-z0-9 ]/g,' ').trim();
+      var pals=nN.split(/\s+/).filter(function(p){return p.length>2;});
+      var checked=0; var candidatos=[];
+      d.files.forEach(function(mes){
+        var qM='"'+mes.id+'" in parents and mimeType="application/vnd.google-apps.folder" and trashed=false';
+        fetch('https://www.googleapis.com/drive/v3/files?q='+encodeURIComponent(qM)+'&fields=files(id,name)&pageSize=100',
+          {headers:{Authorization:'Bearer '+driveToken}})
+        .then(function(r2){ return r2.json(); })
+        .then(function(d2){
+          if(d2.files)d2.files.forEach(function(f){
+            var fn=f.name.toLowerCase().replace(/[^a-z0-9 ]/g,' ').trim();
+            var matched=pals.filter(function(p){ return (' '+fn+' ').indexOf(' '+p)>=0; });
+            if(matched.length>=2||(matched.length===1&&pals.length===1)) candidatos.push({id:f.id,sc:matched.length});
+          });
+          checked++;
+          if(checked===d.files.length){
+            if(!candidatos.length){ if(st2)st2.textContent='Pasta nao encontrada. Va na aba Drive para localizar.'; return; }
+            candidatos.sort(function(a,b){return b.sc-a.sc;});
+            getE(cid).drivePastaId=candidatos[0].id; saveEst();
+            puxarDaPasta(candidatos[0].id);
+          }
+        })
+        .catch(function(){ checked++; if(checked===d.files.length&&candidatos.length){ getE(cid).drivePastaId=candidatos[0].id;saveEst();puxarDaPasta(candidatos[0].id);} });
+      });
+    })
+    .catch(function(e){ if(st2)st2.textContent='Erro: '+e.message; });
+  }
+}
+
+function seArqPreview(idx, cid) {
+  var arq = (getE(cid).seArquivos||[])[idx];
+  if (!arq) return;
+  var w = window.open('','_blank');
+  if (w) {
+    w.document.write('<html><body style="margin:0;background:#000;display:flex;justify-content:center;align-items:center;min-height:100vh">'
+      +'<img src="data:'+arq.mime+';base64,'+arq.b64+'" style="max-width:100%;max-height:100vh;object-fit:contain">'
+      +'</body></html>');
+  }
+}
+
+function seArqBaixarOriginal(idx, cid) {
+  var arq = (getE(cid).seArquivos||[])[idx];
+  if (!arq) return;
+  var binary = atob(arq.b64), bytes = new Uint8Array(binary.length);
+  for (var i=0;i<binary.length;i++) bytes[i]=binary.charCodeAt(i);
+  var url = URL.createObjectURL(new Blob([bytes],{type:arq.mime}));
+  var a = document.createElement('a'); a.href=url; a.download=arq.nome; a.click(); URL.revokeObjectURL(url);
+}
+
+function seArqBaixarJPG(idx, cid) {
+  var arq = (getE(cid).seArquivos||[])[idx];
+  if (!arq || !arq.mime.indexOf || arq.mime.indexOf('image')<0) { alert('Apenas imagens podem ser convertidas para JPG.'); return; }
+  var img = new Image();
+  img.onload = function() {
+    var canvas = document.createElement('canvas');
+    canvas.width = img.width; canvas.height = img.height;
+    canvas.getContext('2d').drawImage(img,0,0);
+    var a = document.createElement('a');
+    a.href = canvas.toDataURL('image/jpeg',0.92);
+    a.download = arq.nome.replace(/\.[^.]+$/,'')+'.jpg';
+    a.click();
+  };
+  img.src = 'data:'+arq.mime+';base64,'+arq.b64;
+}
+
+function seArqBaixarPDF(idx, cid) {
+  var arq = (getE(cid).seArquivos||[])[idx];
+  if (!arq) return;
+  if (arq.mime==='application/pdf') { seArqBaixarOriginal(idx,cid); return; }
+  if (arq.mime.indexOf('image')<0) { alert('Apenas imagens e PDFs suportados.'); seArqBaixarOriginal(idx,cid); return; }
+  var pdfNome = arq.nome.replace(/\.[^.]+$/,'')+'.pdf';
+  var printWin = window.open('','_blank');
+  if (printWin) {
+    printWin.document.write('<html><head><title>'+pdfNome+'</title>'
+      +'<style>body{margin:0}img{max-width:100%;height:auto}</style>'
+      +'</head><body><img src="data:'+arq.mime+';base64,'+arq.b64+'">'
+      +'<scr'+'ipt>window.onload=function(){window.print();};<'+'/script>'
+      +'</body></html>');
+    printWin.document.close();
+  }
+}
+
+function seArqBaixarTodosPDF() {
+  var cid = seArqCidAtual;
+  var arqs = (getE(cid||'').seArquivos||[]).filter(function(a){ return a.mime&&(a.mime.indexOf('image')>=0||a.mime==='application/pdf'); });
+  if (!arqs.length) { alert('Nenhuma imagem ou PDF para baixar.'); return; }
+  var cl = seC.find(function(x){ return x.id===cid; });
+  var nome = cl ? cl.nome : 'cliente';
+  var html2 = '<html><head><title>Documentos - '+nome+'</title>'
+    +'<style>body{margin:0;font-family:Arial}img{max-width:100%;page-break-after:always;display:block}'
+    +'h3{font-size:12px;color:#666;margin:8px 0 4px;padding:0 8px}'
+    +'@media print{h3{display:none}}</style></head><body>';
+  html2 += '<div style="padding:10px;border-bottom:2px solid #000;margin-bottom:10px"><b>DOCUMENTOS SE: '+nome+'</b> &mdash; '+(cl?cl.cpf||'':'')+' &mdash; '+new Date().toLocaleDateString('pt-BR')+'</div>';
+  arqs.forEach(function(a){
+    if (a.mime.indexOf('image')>=0) html2 += '<h3>'+a.nome+'</h3><img src="data:'+a.mime+';base64,'+a.b64+'">';
+  });
+  html2 += '<scr'+'ipt>window.onload=function(){window.print();};<'+'/script></body></html>';
+  var w2 = window.open('','_blank');
+  if (w2) { w2.document.write(html2); w2.document.close(); }
+}
+
+function seArqBaixarTodosJPG() {
+  var cid = seArqCidAtual;
+  var arqs = (getE(cid||'').seArquivos||[]).filter(function(a){ return a.mime&&a.mime.indexOf('image')>=0; });
+  if (!arqs.length) { alert('Nenhuma imagem para converter.'); return; }
+  arqs.forEach(function(arq, i) {
+    setTimeout(function() {
+      var img = new Image();
+      img.onload = function() {
+        var canvas = document.createElement('canvas');
+        canvas.width = img.width; canvas.height = img.height;
+        canvas.getContext('2d').drawImage(img,0,0);
+        var a = document.createElement('a');
+        a.href = canvas.toDataURL('image/jpeg',0.92);
+        a.download = arq.nome.replace(/\.[^.]+$/,'')+'.jpg';
+        a.click();
+      };
+      img.src = 'data:'+arq.mime+';base64,'+arq.b64;
+    }, i*300);
+  });
+}
+
+function seArqExcluir(idx, cid) {
+  if (!confirm('Excluir este arquivo?')) return;
+  var e = getE(cid);
+  if (!e.seArquivos) return;
+  e.seArquivos.splice(idx,1);
+  saveEst();
+  seArqRender(cid);
+}
+
 function sePopSels(){
-  var sels=['se-sel-doc','se-sel-pet','se-sel-plano','se-p1','se-p2','se-crm-sel','se-not-sel','se-drive-sel'],i,j,s,c;
+  var sels=['se-sel-doc','se-sel-pet','se-sel-plano','se-p1','se-p2','se-crm-sel','se-not-sel','se-drive-sel','se-arq-sel'],i,j,s,c;
   for(i=0;i<sels.length;i++){s=g(sels[i]);if(!s)continue;s.innerHTML='<option value="">Selecionar...</option>';for(j=0;j<seC.length;j++){c=seC[j];s.innerHTML+='<option value="'+c.id+'">'+c.nome+'</option>';}}
 }
 function seIrDocs(id){swSE(1);g('se-sel-doc').value=id;seOpenDocs();}
