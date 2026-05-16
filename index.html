@@ -1055,9 +1055,14 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#1a1a1a}
         <div class="ct" style="margin-bottom:4px">Publicacoes DJEN &mdash; Comunicacoes Processuais PJe</div>
         <span id="dj-resumo" style="font-size:11px;color:#aaa"></span>
       </div>
-      <div style="display:flex;gap:6px;flex-wrap:wrap">
-        <button class="btn btnp" style="font-size:11px" onclick="djBuscar()">&#8635; Buscar publicacoes de hoje</button>
-        <button class="btn" style="font-size:11px;background:#e8f5e9;border-color:#a5d6a7;color:#1b5e20" onclick="djBuscarData()">&#128197; Buscar por data</button>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+        <div style="display:flex;align-items:center;gap:4px;font-size:11px;font-weight:600;color:#666">
+          De: <input type="date" id="dj-ini" style="font-size:11px;padding:4px 6px;border:1px solid #ddd;border-radius:6px">
+          Ate: <input type="date" id="dj-fim" style="font-size:11px;padding:4px 6px;border:1px solid #ddd;border-radius:6px">
+        </div>
+        <button class="btn btnp" style="font-size:11px" onclick="djBuscarData()">&#8635; Buscar</button>
+        <button class="btn" style="font-size:11px" onclick="djBuscarHoje()">Hoje</button>
+        <button class="btn" style="font-size:11px" onclick="djBuscarSemana()">Semana</button>
       </div>
     </div>
 
@@ -2511,7 +2516,11 @@ function setMod(m){
   if(g('mb-av'))g('mb-av').className='mod-btn'+(m==='av'?' on':'');
   if(g('mod-dj'))g('mod-dj').style.display=m==='dj'?'block':'none';
   if(g('mb-dj'))g('mb-dj').className='mod-btn'+(m==='dj'?' on':'');
-  if(m==='dj'){djListar();}
+  if(m==='dj'){
+    djListar();
+    var hoje=new Date().toISOString().split('T')[0];
+    setTimeout(function(){if(g('dj-ini')&&!g('dj-ini').value)g('dj-ini').value=hoje;if(g('dj-fim')&&!g('dj-fim').value)g('dj-fim').value=hoje;},50);
+  }
 }
 function swDI(n){var i;for(i=0;i<9;i++){if(g('dp'+i))g('dp'+i).className='pg'+(i===n?' on':'');if(g('dn'+i))g('dn'+i).className=i===n?'on':'';}if(n===3)drivePopSel();if(n===8){var v=g('di-sel-doc')&&g('di-sel-doc').value;if(v)diArqAbrir(v);}}
 function swSE(n){var i;for(i=0;i<11;i++){var sp=g('sp'+i);var sn=g('sn'+i);if(sp)sp.className='pg'+(i===n?' on':'');if(sn)sn.className=i===n?'on':'';}if(n===2&&seC.length>0)seListarPend();if(n===9){var v=g('se-arq-sel')&&g('se-arq-sel').value;if(v)seArqAbrir(v);}}
@@ -4858,58 +4867,71 @@ function djGetLista(){return est['_djen']||[];}
 function djSaveLista(l){est['_djen']=l;saveEst();}
 
 // -- BUSCA VIA APPS SCRIPT (proxy server-side) --------------
+function djBuscarHoje(){
+  var hoje=new Date().toISOString().split('T')[0];
+  if(g('dj-ini'))g('dj-ini').value=hoje;
+  if(g('dj-fim'))g('dj-fim').value=hoje;
+  djBuscarIntervalo(hoje,hoje);
+}
+function djBuscarSemana(){
+  var fim=new Date().toISOString().split('T')[0];
+  var ini=new Date(Date.now()-6*86400000).toISOString().split('T')[0];
+  if(g('dj-ini'))g('dj-ini').value=ini;
+  if(g('dj-fim'))g('dj-fim').value=fim;
+  djBuscarIntervalo(ini,fim);
+}
 function djBuscar(){
-  var hoje=new Date();
-  var d=hoje.toISOString().split('T')[0];
-  djBuscarDia(d);
+  var hoje=new Date().toISOString().split('T')[0];
+  if(g('dj-ini'))g('dj-ini').value=hoje;
+  if(g('dj-fim'))g('dj-fim').value=hoje;
+  djBuscarIntervalo(hoje,hoje);
 }
 function djBuscarData(){
-  var d=prompt('Data no formato AAAA-MM-DD:',new Date().toISOString().split('T')[0]);
-  if(!d||!/\d{4}-\d{2}-\d{2}/.test(d)){alert('Data invalida.');return;}
-  djBuscarDia(d);
+  var ini=g('dj-ini')&&g('dj-ini').value;
+  var fim=g('dj-fim')&&g('dj-fim').value;
+  if(!ini){alert('Informe a data inicial.');return;}
+  if(!fim) fim=ini;
+  djBuscarIntervalo(ini,fim);
 }
-function djBuscarDia(data){
+function djBuscarIntervalo(ini,fim){
   var st=g('dj-status');
   st.style.display='block';
   st.style.background='#e3f2fd';
   st.style.color='#1565c0';
-  st.innerHTML='<span class="spin"></span> Consultando publicacoes de '+data+' no DJEN (pode demorar 20-40s)...';
-  var promises=[];
+  var label=ini===fim?ini:ini+' ate '+fim;
+  st.innerHTML='<span class="spin"></span> Buscando publicacoes de '+label+' (ambos OABs)...';
   var resultados=[];
-  var total=DJ_ADVS.length;
   var done=0;
+  var total=DJ_ADVS.length;
   DJ_ADVS.forEach(function(adv){
-    djBuscarAdvogado(data,adv,function(pubs){
+    djBuscarAdvogado(ini,fim,adv,function(pubs,err){
       pubs.forEach(function(p){resultados.push(p);});
       done++;
-      st.innerHTML='<span class="spin"></span> Consultando '+adv.nome+'... ('+done+'/'+total+')';
-      if(done===total){
-        djProcessarResultados(resultados,data,st);
+      if(done<total){
+        st.innerHTML='<span class="spin"></span> Consultado '+adv.nome+' ('+done+'/'+total+')...';
+      } else {
+        djProcessarResultados(resultados,ini,fim,st,err);
       }
     });
   });
 }
 
-function djBuscarAdvogado(data,adv,cb){
-  // Call Apps Script proxy - passes all pages
-  var prompt='CONSULTA_DJEN|oab='+adv.oab+'|uf='+adv.uf+'|data='+data+'|nome='+encodeURIComponent(adv.nome);
-  var url=SCRIPT+'?action=djen&oab='+adv.oab+'&uf='+adv.uf+'&data='+data;
+function djBuscarAdvogado(ini,fim,adv,cb){
+  var url=SCRIPT+'?action=djen&oab='+adv.oab+'&uf='+adv.uf+'&ini='+ini+'&fim='+fim;
   fetch(url,{method:'GET',redirect:'follow'})
     .then(function(r){return r.text();})
     .then(function(t){
       try{
         var d=JSON.parse(t);
-        if(d.ok&&d.data){cb(d.data);}
-        else{
-          // Fallback: use AI to interpret what was found
-          cb([]);
-        }
-      }catch(e){cb([]);}
+        if(d.ok&&Array.isArray(d.data)){cb(d.data,null);}
+        else{cb([],d.error||'Sem dados');}
+      }catch(e){cb([],e.message);}
     })
-    .catch(function(){cb([]);});
+    .catch(function(e){cb([],e.message);});
 }
 
-function djProcessarResultados(pubs,data,st){
+function djProcessarResultados(pubs,ini,fim,st,err){
+  var data=ini;
   var lista=djGetLista();
   var novos=0;
   pubs.forEach(function(p){
@@ -4925,10 +4947,13 @@ function djProcessarResultados(pubs,data,st){
     }
   });
   djSaveLista(lista);
-  st.style.background=novos>0?'#e8f5e9':'#f5f5f5';
-  st.style.color=novos>0?'#1b5e20':'#666';
-  st.innerHTML=(novos>0?'<strong>'+novos+' nova(s) publicacao(oes)</strong> encontrada(s) e adicionada(s).':'Nenhuma nova publicacao encontrada para '+data+'.')
-    +' <span style="color:#aaa;font-size:11px">Ultima consulta: '+new Date().toLocaleString('pt-BR')+'</span>';
+  var label=ini===fim?ini:ini+' a '+fim;
+  st.style.background=novos>0?'#e8f5e9':(err?'#fce4ec':'#f5f5f5');
+  st.style.color=novos>0?'#1b5e20':(err?'#c62828':'#666');
+  st.innerHTML=(novos>0?'<strong>'+novos+' nova(s) publicacao(oes)</strong> encontrada(s).'
+    :(err?'<b>Erro ao consultar DJEN:</b> '+err+'<br><span style="font-size:11px">Verifique o Apps Script e tente novamente.</span>'
+    :'Nenhuma publicacao encontrada para '+label+'.'))
+    +(err?'':' <span style="color:#aaa;font-size:11px">Consulta: '+label+' -- '+new Date().toLocaleString('pt-BR')+'</span>');
   // Salvar ultima busca
   est['_djen_ultima']={data:data,ts:new Date().toISOString(),total:pubs.length,novos:novos};
   saveEst();
