@@ -1414,7 +1414,41 @@ function diLoad(){
     if(err){g('di-lista').innerHTML='<div class="err-box">Erro: '+err.message+'. Verifique se a planilha esta publica. <button class="btn" onclick="diLoad()">Tentar novamente</button></div>';return;}
     var rows=parseCSV(csv),i,r;diC=[];
     for(i=1;i<rows.length;i++){r=rows[i];if(!r[1]||!r[1].trim()||r[1]==='Nome Completo')continue;
-      diC.push({id:'di_'+i,data:r[0]||'',nome:r[1]||'',prof:r[2]||'',civil:r[3]||'',cpf:r[4]||'',nasc:r[5]||'',end:r[6]||'',cidade:r[7]||'',tel:r[8]||'',email:r[9]||'',tipo:r[13]||'',banco:r[14]||'',valor:r[15]||'',renda:r[19]||'',doencas:r[21]||'',senhaGov:r[25]||'',contato1:r[27]||'',contato1Tel:r[28]||''});
+      diC.push({id:'di_'+i,
+      data:r[0]?String(r[0]).split('T')[0]:'',
+      nome:(r[1]||'').trim(),
+      prof:r[2]||'',
+      civil:r[3]||'',
+      cpf:r[4]?String(r[4]).replace(/\.0$/,''):'',
+      nasc:r[5]?String(r[5]).split('T')[0]:'',
+      end:r[6]||'',
+      cidade:r[7]||'',
+      tel:r[8]?String(r[8]).replace(/\.0$/,'').replace(/[^0-9]/g,''):'',
+      email:r[9]||'',
+      origem:r[10]||'',
+      dataDesc:r[11]||'',
+      contratou:r[12]||'',
+      tipo:r[13]||'',
+      banco:r[14]||'',
+      valor:r[15]||'',
+      buscouBanco:r[16]||'',
+      comprometeSubs:r[17]||'',
+      detalhes:r[18]||'',
+      renda:r[19]||'',
+      gastos:r[20]||'',
+      doencas:r[21]||'',
+      comprometRenda:r[22]||'',
+      ajudaria:r[23]||'',
+      meuInss:r[24]||'',
+      senhaGov:r[25]||'',
+      extratoInss:r[26]||'',
+      contato1:r[27]||'',
+      contato1Tel:r[28]||'',
+      nac:r[29]||'',
+      cep:r[30]||'',
+      bancoCnpj:r[31]||'',
+      bancoEnd:r[32]||''
+    });
     }
     diPopSels();diListar();diStats();diAguard();
   });
@@ -2297,18 +2331,69 @@ function seLoad(){
     var rows=parseCSV(csv),i,r;seC=[];
     for(i=1;i<rows.length;i++){r=rows[i];if(!r[1]||!r[1].trim()||r[1]==='Nome')continue;
       var sc=function(n){return r[n]||'';};
-      seC.push({id:'se_'+i,data:sc(0),nome:sc(1),nac:sc(2),prof:sc(3),civil:sc(4),cpf:sc(5),end:sc(6),tel:sc(7),email:sc(8),nasc:sc(20),rendaBruta:sc(21),rendaLiquida:sc(22),aluguel:sc(24),alimentacao:sc(28),doencas:sc(32),doencaGrave:sc(35),totalDividas:sc(44),valorMensal:sc(45),serasa:sc(47),motivos:sc(73),
-        c1:{nome:sc(50),valor:sc(51),forma:sc(52),parcelas:sc(53),pagas:sc(54),prest:sc(55),sit:sc(56)},
-        c2:{nome:sc(59),valor:sc(60),forma:sc(61),parcelas:sc(62),pagas:sc(63),prest:sc(64),sit:sc(65)},
-        c3:{nome:sc(68),valor:sc(69),forma:sc(70),parcelas:sc(71),prest:sc(72),sit:sc(74)},
-        c4:{nome:sc(77),valor:sc(78),forma:sc(79),parcelas:sc(80),pagas:sc(81),prest:sc(82),sit:sc(83)},
-        c5:{nome:sc(86),valor:sc(87),forma:sc(88),parcelas:sc(89),pagas:sc(90),prest:sc(91),sit:sc(92)},
-        c6:{nome:sc(95),valor:sc(96),forma:sc(97),parcelas:sc(98),pagas:sc(99),prest:sc(100),sit:sc(101)},
-        c7:{nome:sc(104),valor:sc(105),forma:sc(106),parcelas:sc(107),pagas:sc(108),prest:sc(109),sit:sc(110)},
-        c8:{nome:sc(113),valor:sc(116),forma:sc(116),parcelas:sc(117),pagas:sc(118),prest:sc(119),sit:sc(120)},
-        c9:{nome:sc(123),valor:sc(124),forma:sc(126),parcelas:sc(128),pagas:sc(129),prest:sc(131),sit:sc(132)},
-        c10:{nome:sc(135),valor:sc(136),forma:sc(138),parcelas:sc(139),pagas:sc(140),prest:sc(141),sit:sc(142)}
-      });
+      seC.push({id:'se_'+i,
+      data:r[0]?String(r[0]).split('T')[0]:'',
+      nome:(r[1]||'').trim(),
+      nac:r[2]||'',
+      prof:r[3]||'',
+      civil:r[4]||'',
+      cpf:r[5]?String(r[5]).replace(/\.0$/,''):'',
+      end:r[6]||'',
+      tel:r[7]?String(r[7]).replace(/\.0$/,'').replace(/[^0-9]/g,''):'',
+      email:r[8]||'',
+      melhorHorario:r[9]||'',
+      filhos:r[10]||'',
+      idadeFilhos:r[11]||'',
+      dependentes:r[12]||'',
+      imovelProprio:r[13]||'',
+      valorImovel:r[14]||'',
+      imovelInfo:r[15]||'',
+      veiculos:r[16]||'',
+      veiculoModelo:r[17]||'',
+      financiamento:r[18]||'',
+      parcelaFinanciamento:r[19]||'',
+      nasc:r[20]?String(r[20]).split('T')[0]:'',
+      rendaBruta:r[21]||'',
+      rendaLiquida:r[22]||'',
+      energia:r[23]||'',
+      aluguel:r[24]||'',
+      agua:r[25]||'',
+      condominio:r[26]||'',
+      internet:r[27]||'',
+      alimentacao:r[28]||'',
+      pensao:r[29]||'',
+      educacao:r[30]||'',
+      planoSaude:r[31]||'',
+      doencas:r[32]||'',
+      remedios:r[33]||'',
+      impostos:r[34]||'',
+      doencaGrave:r[35]||'',
+      vestuario:r[36]||'',
+      transporte:r[37]||'',
+      situacaoProfissional:r[38]||'',
+      fonteRenda:r[39]||'',
+      percepcaoDiv:r[40]||'',
+      tiposDividas:r[41]||'',
+      tentativasReneg:r[42]||'',
+      outrosGastos:r[43]||'',
+      totalDividas:r[44]||'',
+      valorMensal:r[45]||'',
+      qtdCredores:r[46]||'',
+      serasa:r[47]||'',
+      senhaGov:r[48]||'',
+      contatoReserva:r[49]||'',
+      motivos:r[73]||'',
+      c1:{nome:r[50]||'',valor:r[51]||'',forma:r[52]||'',parcelas:r[53]||'',pagas:r[54]||'',prest:r[55]||'',sit:r[56]||'',reneg:r[57]||'',contrato:r[58]||''},
+      c2:{nome:r[59]||'',valor:r[60]||'',forma:r[61]||'',parcelas:r[62]||'',pagas:r[63]||'',prest:r[64]||'',sit:r[65]||'',reneg:r[66]||'',contrato:r[67]||''},
+      c3:{nome:r[68]||'',valor:r[69]||'',forma:r[70]||'',parcelas:r[71]||'',prest:r[72]||'',sit:r[74]||'',reneg:r[75]||'',contrato:r[76]||''},
+      c4:{nome:r[77]||'',valor:r[78]||'',forma:r[79]||'',parcelas:r[80]||'',pagas:r[81]||'',prest:r[82]||'',sit:r[83]||'',reneg:r[84]||'',contrato:r[85]||''},
+      c5:{nome:r[86]||'',valor:r[87]||'',forma:r[88]||'',parcelas:r[89]||'',pagas:r[90]||'',prest:r[91]||'',sit:r[92]||'',reneg:r[93]||'',contrato:r[94]||''},
+      c6:{nome:r[95]||'',valor:r[96]||'',forma:r[97]||'',parcelas:r[98]||'',pagas:r[99]||'',prest:r[100]||'',sit:r[101]||'',reneg:r[102]||'',contrato:r[103]||''},
+      c7:{nome:r[104]||'',valor:r[105]||'',forma:r[106]||'',parcelas:r[107]||'',pagas:r[108]||'',prest:r[109]||'',sit:r[110]||'',reneg:r[111]||'',contrato:r[112]||''},
+      c8:{nome:r[113]||'',valor:r[114]||'',modalidade:r[115]||'',forma:r[116]||'',parcelas:r[117]||'',pagas:r[118]||'',prest:r[119]||'',sit:r[120]||'',reneg:r[121]||'',contrato:r[122]||''},
+      c9:{nome:r[123]||'',valor:r[124]||'',modalidade:r[125]||'',forma:r[126]||'',parcelas:r[128]||'',pagas:r[129]||'',prest:r[131]||'',sit:r[132]||'',reneg:r[133]||'',contrato:r[134]||''},
+      c10:{nome:r[135]||'',valor:r[136]||'',modalidade:r[137]||'',forma:r[138]||'',parcelas:r[139]||'',pagas:r[140]||'',prest:r[141]||'',sit:r[142]||'',reneg:r[143]||'',contrato:r[144]||''}
+    });
     }
     sePopSels();seListar();seStats();seAguard();diPopSels();
   });
@@ -2341,11 +2426,42 @@ function seOpenDocs(){
   var id=g('se-sel-doc').value;if(!id){g('se-docs-area').style.display='none';return;}
   var c=seC.find(function(x){return x.id===id;});if(!c)return;seCur=c;
   g('se-docs-area').style.display='block';var rLiq=parseFloat(c.rendaLiquida)||0;
-  g('se-ficha').innerHTML='<div class="ct">Ficha - '+c.nome+'</div><div class="g2" style="gap:8px"><div><div style="font-size:10px;color:#aaa">CPF</div><div>'+c.cpf+'</div></div><div><div style="font-size:10px;color:#aaa">Telefone</div><div style="font-weight:700;color:#25d366">'+(c.tel||'-')+'</div></div><div><div style="font-size:10px;color:#aaa">Renda liquida</div><div style="font-weight:700">R$ '+rLiq.toLocaleString('pt-BR',{minimumFractionDigits:2})+'</div></div><div><div style="font-size:10px;color:#aaa">Total dividas</div><div style="font-weight:700;color:#c62828">'+(c.totalDividas||'-')+'</div></div></div><div class="g2" style="gap:8px;margin-top:8px"><div style="background:#e8f5e9;border-radius:8px;padding:8px 12px"><div style="font-size:10px;color:#1b5e20;font-weight:700">MIN. EXISTENCIAL 70%</div><div style="font-size:14px;font-weight:700;color:#1b5e20">R$ '+(rLiq*0.7).toLocaleString('pt-BR',{minimumFractionDigits:2})+'</div></div><div style="background:#fff8e1;border-radius:8px;padding:8px 12px"><div style="font-size:10px;color:#e65100;font-weight:700">PARA DIVIDAS 30%</div><div style="font-size:14px;font-weight:700;color:#e65100">R$ '+(rLiq*0.3).toLocaleString('pt-BR',{minimumFractionDigits:2})+'</div></div></div>'+(c.doencas?'<div style="margin-top:8px;font-size:11px;background:#fff8e1;padding:6px 10px;border-radius:6px;color:#e65100">'+c.doencas+'</div>':'');
-  seRenderDocs(c);
-  var creds=[c.c1,c.c2,c.c3,c.c4,c.c5,c.c6,c.c7,c.c8,c.c9,c.c10].filter(function(cr){return cr&&cr.nome;});
-  var html='',i,cr;
-  for(i=0;i<creds.length;i++){cr=creds[i];html+='<div style="border:1px solid #e0ddd6;border-radius:8px;padding:10px 14px;margin-bottom:8px;background:#f8f7f3"><div style="font-weight:600;font-size:13px">'+cr.nome+'</div><div style="font-size:11px;color:#888;margin-top:4px">Total: '+(cr.valor||'-')+' &middot; Parcela: R$ '+(cr.prest||'-')+' &middot; '+(cr.pagas||'0')+'/'+(cr.parcelas||'-')+' pagas &middot; '+(cr.sit||'-')+'</div></div>';}
+  g('se-ficha').innerHTML='<div class="ct" style="margin-bottom:10px">Ficha &mdash; '+c.nome+'</div>'
+    +'<div class="g2" style="gap:6px;margin-bottom:8px">'
+    +'<div><div style="font-size:10px;color:#aaa">CPF</div><div>'+c.cpf+'</div></div>'
+    +'<div><div style="font-size:10px;color:#aaa">Nascimento</div><div>'+(c.nasc||'-')+'</div></div>'
+    +'<div><div style="font-size:10px;color:#aaa">Estado Civil</div><div>'+(c.civil||'-')+'</div></div>'
+    +'<div><div style="font-size:10px;color:#aaa">Profissao</div><div>'+(c.prof||'-')+'</div></div>'
+    +'<div><div style="font-size:10px;color:#aaa">Telefone</div><div style="font-weight:700;color:#25d366">'+(c.tel||'-')+'</div></div>'
+    +'<div><div style="font-size:10px;color:#aaa">E-mail</div><div>'+(c.email||'-')+'</div></div>'
+    +'<div><div style="font-size:10px;color:#aaa">Endereco</div><div>'+(c.end||'-')+'</div></div>'
+    +'<div><div style="font-size:10px;color:#aaa">Situacao Prof.</div><div>'+(c.situacaoProfissional||'-')+'</div></div>'
+    +'</div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px;margin-bottom:8px;padding:8px;background:#f9f7f4;border-radius:6px">'
+    +'<div><div style="font-size:10px;color:#aaa">Renda Bruta</div><div style="font-weight:700">R$ '+( parseFloat(c.rendaBruta)||0).toLocaleString('pt-BR',{minimumFractionDigits:2})+'</div></div>'
+    +'<div><div style="font-size:10px;color:#aaa">Renda Liquida</div><div style="font-weight:700;color:#1b5e20">R$ '+rLiq.toLocaleString('pt-BR',{minimumFractionDigits:2})+'</div></div>'
+    +'<div><div style="font-size:10px;color:#aaa">Min. Existencial 70%</div><div style="font-weight:700;color:#1565c0">R$ '+(rLiq*0.7).toLocaleString('pt-BR',{minimumFractionDigits:2})+'</div></div>'
+    +'<div><div style="font-size:10px;color:#aaa">Disponivel Dividas 30%</div><div style="font-weight:700;color:#e65100">R$ '+(rLiq*0.3).toLocaleString('pt-BR',{minimumFractionDigits:2})+'</div></div>'
+    +'<div><div style="font-size:10px;color:#aaa">Total Dividas</div><div style="font-weight:700;color:#c62828">'+(c.totalDividas||'-')+'</div></div>'
+    +'<div><div style="font-size:10px;color:#aaa">Parcela Mensal</div><div style="font-weight:700;color:#c62828">'+(c.valorMensal||'-')+'</div></div>'
+    +'<div><div style="font-size:10px;color:#aaa">Qtd Credores</div><div>'+(c.qtdCredores||'-')+'</div></div>'
+    +'<div><div style="font-size:10px;color:#aaa">Serasa</div><div>'+(c.serasa||'-')+'</div></div>'
+    +'</div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px;margin-bottom:8px;padding:8px;background:#fff8e1;border-radius:6px">'
+    +'<div><div style="font-size:10px;color:#aaa">Aluguel</div><div>R$ '+(c.aluguel||'0')+'</div></div>'
+    +'<div><div style="font-size:10px;color:#aaa">Alimentacao</div><div>R$ '+(c.alimentacao||'0')+'</div></div>'
+    +'<div><div style="font-size:10px;color:#aaa">Energia</div><div>R$ '+(c.energia||'0')+'</div></div>'
+    +'<div><div style="font-size:10px;color:#aaa">Agua</div><div>R$ '+(c.agua||'0')+'</div></div>'
+    +'<div><div style="font-size:10px;color:#aaa">Saude</div><div>R$ '+(c.planoSaude||'0')+'</div></div>'
+    +'<div><div style="font-size:10px;color:#aaa">Transporte</div><div>R$ '+(c.transporte||'0')+'</div></div>'
+    +'<div><div style="font-size:10px;color:#aaa">Educacao</div><div>R$ '+(c.educacao||'0')+'</div></div>'
+    +'<div><div style="font-size:10px;color:#aaa">Outros</div><div>R$ '+(c.outrosGastos||'0')+'</div></div>'
+    +'</div>'
+    +(c.doencas?'<div style="padding:6px 10px;background:#fce4ec;border-radius:6px;font-size:12px;margin-bottom:8px"><b>Enfermidades:</b> '+c.doencas+(c.remedios?' | Remedios: '+c.remedios:'')+'</div>':'')
+    +(c.motivos?'<div style="padding:6px 10px;background:#e8f5e9;border-radius:6px;font-size:12px;margin-bottom:8px"><b>Motivos superendividamento:</b> '+c.motivos+'</div>':'')
+    +'<div class="ct" style="margin-bottom:6px">Credores declarados</div>'
+    +'<div>'+(function(){var html2='';[c.c1,c.c2,c.c3,c.c4,c.c5,c.c6,c.c7,c.c8,c.c9,c.c10].forEach(function(cr,i){if(!cr||!cr.nome)return;html2+='<div style="padding:6px 0;border-bottom:1px solid #f0ede8;font-size:12px"><b>C'+(i+1)+'. '+cr.nome+'</b> &mdash; R$ '+(cr.valor||'?')+' &middot; '+(cr.forma||'-')+' &middot; R$ '+(cr.prest||'?')+'/mes &middot; '+(cr.pagas||'0')+'/'+(cr.parcelas||'-')+' pagas &middot; '+(cr.sit||'-')+'</div>';});return html2||'<div style="color:#aaa;font-size:12px">Nenhum credor informado</div>';})()+
+    '</div>'
   g('se-credores').innerHTML=html||'<div style="font-size:12px;color:#bbb">Nenhum credor informado.</div>';
 }
 function seToggle(id,did){var r=getDC('se',id);r[did]=!r[did];getE(id).ultimaAt=new Date().toISOString();saveEst();seRenderDocs(seC.find(function(x){return x.id===id;}));seStats();}
