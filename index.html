@@ -129,6 +129,28 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#1a1a1a}
 .task-pill{display:inline-flex;align-items:center;gap:4px;background:#f0ede8;border-radius:20px;padding:3px 8px;font-size:11px;cursor:pointer}
 .task-pill:hover{background:#e0ddd6}
 .task-pill.done{background:#e8f5e9;color:#1b5e20;text-decoration:line-through}
+.dash-section{background:#fff;border:1px solid #e0ddd6;border-radius:12px;padding:16px;margin-bottom:12px}
+.dash-section-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#aaa;margin-bottom:12px}
+.dash-task{display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-bottom:1px solid #f0ede8}
+.dash-task:last-child{border-bottom:none}
+.dash-task-done{opacity:.5}
+.dash-prio{width:4px;border-radius:2px;flex-shrink:0;margin-top:3px;align-self:stretch}
+.dash-prio.urgente{background:#c62828}
+.dash-prio.normal{background:#1565c0}
+.dash-prio.baixa{background:#ccc}
+.dash-prio.djen{background:#6a1b9a}
+.dash-chip{display:inline-block;font-size:9px;padding:1px 6px;border-radius:20px;font-weight:700;margin-right:3px}
+.dash-chip-djen{background:#f3e5f5;color:#6a1b9a}
+.dash-chip-delegada{background:#fff3e0;color:#e65100}
+.dash-chip-avulso{background:#e3f2fd;color:#1565c0}
+.dash-chip-eq{background:#e8f5e9;color:#1b5e20}
+.dash-vence{font-size:10px;font-weight:700}
+.dash-vence.ok{color:#2e7d32}
+.dash-vence.atenc{color:#e65100}
+.dash-vence.venc{color:#c62828}
+.dash-tab{padding:7px 14px;font-size:12px;font-weight:600;border:none;background:transparent;cursor:pointer;color:#aaa;border-bottom:2px solid transparent;font-family:inherit;transition:all .15s}
+.dash-tab.on{color:#1a1a1a;border-bottom-color:#1a1a1a}
+.dash-login-wall{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;text-align:center}
 </style>
 </head>
 <body>
@@ -154,8 +176,13 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#1a1a1a}
   </div>
 </div>
 
-<div class="mod-tabs" style="grid-template-columns:1fr 1fr 1fr 1fr 1fr 1fr 1fr">
-  <button class="mod-btn on" id="mb-di" onclick="setMod('di')">
+<div class="mod-tabs" style="grid-template-columns:1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr">
+  <button class="mod-btn on" id="mb-dash" onclick="setMod('dash')">
+    <div class="mod-icon">&#9776;</div>
+    <div class="mod-title">Meu Dia</div>
+    <div class="mod-sub" id="mb-dash-badge">Tarefas &middot; Prazos</div>
+  </button>
+  <button class="mod-btn" id="mb-di" onclick="setMod('di')">
     <div class="mod-icon">&#127974;</div>
     <div class="mod-title">Descontos Indevidos</div>
     <div class="mod-sub">INSS &middot; Checklist &middot; Peticao</div>
@@ -192,6 +219,61 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#1a1a1a}
   </button>
 </div>
 
+<!-- DASHBOARD -->
+<div id="mod-dash">
+  <!-- Login wall: shown when no user selected -->
+  <div id="dash-login-wall" style="display:none" class="dash-section">
+    <div class="dash-login-wall">
+      <div style="font-size:40px;margin-bottom:16px">&#128100;</div>
+      <div style="font-size:18px;font-weight:700;margin-bottom:8px">Quem e voce?</div>
+      <div style="font-size:13px;color:#aaa;margin-bottom:20px">Identifique-se para ver suas tarefas do dia</div>
+      <div id="dash-login-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;width:100%;max-width:600px"></div>
+    </div>
+  </div>
+
+  <!-- Dashboard principal -->
+  <div id="dash-main" style="display:none">
+
+    <!-- Header usuario + saudacao -->
+    <div class="dash-section" style="background:linear-gradient(135deg,#1a1a1a 0%,#333 100%);color:#fff;border-color:#1a1a1a">
+      <div style="display:flex;align-items:center;gap:14px">
+        <div id="dash-avatar-big" style="width:52px;height:52px;border-radius:50%;background:#fff;color:#1a1a1a;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;flex-shrink:0"></div>
+        <div style="flex:1">
+          <div style="font-size:18px;font-weight:700" id="dash-saudacao">Bom dia!</div>
+          <div style="font-size:12px;opacity:.7" id="dash-subtitulo"></div>
+        </div>
+        <div style="text-align:right">
+          <div id="dash-badge-urgente" style="display:none;background:#c62828;color:#fff;border-radius:8px;padding:4px 12px;font-size:12px;font-weight:700;margin-bottom:4px"></div>
+          <div id="dash-data" style="font-size:11px;opacity:.6"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabs: Hoje / Mes / Ano -->
+    <div style="display:flex;border-bottom:2px solid #e0ddd6;margin-bottom:12px;background:#fff;border-radius:10px 10px 0 0;padding:0 8px">
+      <button class="dash-tab on" id="dtab-hoje" onclick="dashTab('hoje')">&#128197; Hoje</button>
+      <button class="dash-tab" id="dtab-semana" onclick="dashTab('semana')">Esta semana</button>
+      <button class="dash-tab" id="dtab-mes" onclick="dashTab('mes')">Este mes</button>
+      <button class="dash-tab" id="dtab-ano" onclick="dashTab('ano')">Este ano</button>
+      <button class="dash-tab" id="dtab-todas" onclick="dashTab('todas')">Todas</button>
+      <div style="flex:1"></div>
+      <button class="btn" style="font-size:11px;padding:4px 8px;margin:5px 0" onclick="dashAtualizar()">&#8635;</button>
+    </div>
+
+    <!-- Stats rapidos -->
+    <div id="dash-stats" style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;margin-bottom:12px"></div>
+
+    <!-- Lista de tarefas unificada -->
+    <div id="dash-lista"></div>
+
+    <!-- Botao nova tarefa pessoal -->
+    <div style="text-align:center;margin-top:12px">
+      <button class="btn btng" onclick="dashNovaTarefa()" style="font-size:12px">+ Nova tarefa pessoal</button>
+    </div>
+  </div>
+</div>
+
+
 <!-- DOCS -->
 <div id="mod-docs" style="display:none">
   <div class="card" style="margin-bottom:10px">
@@ -223,7 +305,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#1a1a1a}
 </div>
 
 <!-- DI -->
-<div id="mod-di">
+<div id="mod-di" style="display:none">
   <nav class="tabs">
     <button class="on" id="dn0" onclick="swDI(0)">Fila</button>
     <button id="dn1" onclick="swDI(1)">Documentos</button>
@@ -2206,6 +2288,7 @@ function eqFazerLogin(uid){
   g('user-nome').textContent = u.nome.split(' ')[0];
   eqRenderEquipe();
   eqRenderMinhasTarefas();
+  setTimeout(dashAtualizarBadge, 200);
 }
 
 function eqCarregarSessao(){
@@ -2406,6 +2489,9 @@ function eqRemover(uid){
 }
 
 function setMod(m){
+  if(g('mod-dash'))g('mod-dash').style.display=m==='dash'?'block':'none';
+  if(g('mb-dash'))g('mb-dash').className='mod-btn'+(m==='dash'?' on':'');
+  if(m==='dash'){dashInicializar();return;}
   g('mod-di').style.display=m==='di'?'block':'none';
   g('mod-se').style.display=m==='se'?'block':'none';
   g('mod-pt').style.display=m==='pt'?'block':'none';
@@ -5163,8 +5249,359 @@ function djAgendarVerificacao(){
   }
 }
 
+
+// ============================================================
+// DASHBOARD -- Meu Dia
+// ============================================================
+var dashPeriodo = 'hoje';
+
+function dashInicializar() {
+  if (!eqUsuarioAtual) {
+    g('dash-login-wall').style.display = 'block';
+    g('dash-main').style.display = 'none';
+    dashRenderLogin();
+  } else {
+    g('dash-login-wall').style.display = 'none';
+    g('dash-main').style.display = 'block';
+    dashRenderHeader();
+    dashAtualizar();
+  }
+}
+
+function dashRenderLogin() {
+  var equipe = eqGetEquipe();
+  var html = '';
+  equipe.forEach(function(u) {
+    html += '<button onclick="eqFazerLogin(\''+u.id+'\');dashInicializar()" '
+      +'style="display:flex;align-items:center;gap:10px;padding:12px 16px;border:1.5px solid #e0ddd6;border-radius:10px;background:#fff;cursor:pointer;font-family:inherit;text-align:left;transition:all .15s" '
+      +'onmouseover="this.style.borderColor=\''+u.cor+'\'" onmouseout="this.style.borderColor=\'#e0ddd6\'">'
+      +'<div style="width:40px;height:40px;border-radius:50%;background:'+u.cor+';color:#fff;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;flex-shrink:0">'+eqIniciais(u.nome)+'</div>'
+      +'<div><div style="font-size:13px;font-weight:700">'+u.nome+'</div>'
+      +'<div style="font-size:11px;color:#aaa">'+EQ_CARGO_LABEL[u.cargo]+'</div></div>'
+      +'</button>';
+  });
+  if (g('dash-login-grid')) g('dash-login-grid').innerHTML = html;
+}
+
+function dashRenderHeader() {
+  if (!eqUsuarioAtual) return;
+  var u = eqUsuarioAtual;
+  var hora = new Date().getHours();
+  var saud = hora < 12 ? 'Bom dia' : hora < 18 ? 'Boa tarde' : 'Boa noite';
+  if (g('dash-saudacao')) g('dash-saudacao').textContent = saud + ', ' + u.nome.split(' ')[0] + '!';
+  if (g('dash-subtitulo')) g('dash-subtitulo').textContent = EQ_CARGO_LABEL[u.cargo] + ' \u2022 ' + new Date().toLocaleDateString('pt-BR', {weekday:'long',day:'numeric',month:'long'});
+  if (g('dash-data')) g('dash-data').textContent = new Date().toLocaleDateString('pt-BR');
+  if (g('dash-avatar-big')) {
+    g('dash-avatar-big').textContent = eqIniciais(u.nome);
+    g('dash-avatar-big').style.background = '#fff';
+    g('dash-avatar-big').style.color = u.cor;
+    g('dash-avatar-big').style.border = '3px solid ' + u.cor;
+  }
+}
+
+function dashTab(periodo) {
+  dashPeriodo = periodo;
+  ['hoje','semana','mes','ano','todas'].forEach(function(t){
+    var el = g('dtab-'+t);
+    if (el) el.className = 'dash-tab' + (t===periodo?' on':'');
+  });
+  dashAtualizar();
+}
+
+function dashAtualizar() {
+  if (!eqUsuarioAtual) { dashInicializar(); return; }
+  var tarefas = dashColetarTarefas();
+  dashRenderStats(tarefas);
+  dashRenderLista(tarefas);
+  dashAtualizarBadge();
+}
+
+// Coleta tarefas de TODAS as fontes para o usuario logado
+function dashColetarTarefas() {
+  var uid = eqUsuarioAtual.id;
+  var agora = new Date();
+  var tarefas = [];
+
+  // -- 1. Tarefas da equipe (delegadas para este usuario) ----
+  var eqTarefas = eqGetTarefas(uid);
+  eqTarefas.forEach(function(t, i) {
+    tarefas.push({
+      id: 'eq_'+uid+'_'+i,
+      tipo: 'delegada',
+      titulo: t.desc,
+      origem: t.de ? 'De: '+t.de : 'Equipe',
+      prazo: t.prazo || '',
+      prioridade: 'normal',
+      done: !!t.done,
+      ts: t.ts || '',
+      _idx: i,
+      _fonte: 'eq'
+    });
+  });
+
+  // -- 2. Publicacoes DJEN delegadas para este usuario -------
+  var djLista = djGetLista();
+  djLista.forEach(function(p) {
+    if (p.delegadoId === uid && p.status !== 'cumprido' && p.status !== 'ignorado') {
+      tarefas.push({
+        id: 'dj_'+p.id,
+        tipo: 'djen',
+        titulo: (p.numeroProcesso ? p.numeroProcesso+' \u2014 ' : '') + (p.siglaTribunal||'PJe') + (p.nomeParte ? ': '+p.nomeParte.substring(0,40) : ''),
+        descricao: p.delegadoObs || p.texto ? p.texto.substring(0,100)+'...' : '',
+        origem: 'DJEN \u2022 ' + p.dataPub,
+        prazo: p.prazoInterno || '',
+        prioridade: djDiasRestantes(p) <= 3 ? 'urgente' : 'normal',
+        done: false,
+        area: p.area,
+        _djenId: p.id,
+        _fonte: 'dj'
+      });
+    }
+  });
+
+  // -- 3. Demandas avulsas delegadas para este usuario -------
+  var avLista = avGetLista();
+  avLista.forEach(function(a) {
+    if (a.respId === uid && !a.concluido) {
+      tarefas.push({
+        id: 'av_'+a.id,
+        tipo: 'avulso',
+        titulo: (a.cliente ? a.cliente+' \u2014 ' : '') + (AV_TIPOS[a.tipo]||a.tipo||'Demanda'),
+        descricao: a.desc ? a.desc.substring(0,100) : '',
+        origem: a.criadoPor ? 'Delegado por: '+a.criadoPor : 'Avulso',
+        prazo: a.prazo || '',
+        prioridade: a.prioridade || 'normal',
+        done: false,
+        _avId: a.id,
+        _fonte: 'av'
+      });
+    }
+  });
+
+  // -- 4. Publicacoes DJEN pendentes (se for admin ou socio) -
+  if (eqUsuarioAtual.nivel === 'admin' || eqUsuarioAtual.cargo === 'socio') {
+    djLista.forEach(function(p) {
+      if (p.status === 'pendente' && !p.delegadoId) {
+        tarefas.push({
+          id: 'djp_'+p.id,
+          tipo: 'djen',
+          titulo: (p.numeroProcesso ? p.numeroProcesso+' \u2014 ' : '') + (p.siglaTribunal||'PJe') + (p.nomeParte ? ': '+p.nomeParte.substring(0,40) : ''),
+          descricao: p.texto ? p.texto.substring(0,100)+'...' : '',
+          origem: 'DJEN \u2022 '+p.dataPub+' (sem responsavel)',
+          prazo: p.prazoInterno || '',
+          prioridade: djDiasRestantes(p) <= 3 ? 'urgente' : 'normal',
+          done: false,
+          area: p.area,
+          _djenId: p.id,
+          _fonte: 'dj'
+        });
+      }
+    });
+  }
+
+  // -- Filtrar por periodo -----------------------------------
+  return dashFiltrarPeriodo(tarefas);
+}
+
+function dashFiltrarPeriodo(tarefas) {
+  if (dashPeriodo === 'todas') return tarefas;
+  var agora = new Date();
+  var hoje = new Date(agora.getFullYear(), agora.getMonth(), agora.getDate());
+  return tarefas.filter(function(t) {
+    if (t.done) return dashPeriodo === 'todas';
+    if (!t.prazo) {
+      // Sem prazo: aparece sempre em "todas" e "hoje"
+      return dashPeriodo === 'hoje' || dashPeriodo === 'semana';
+    }
+    var dt = new Date(t.prazo + 'T23:59:59');
+    var diff = Math.ceil((dt - hoje) / 86400000);
+    if (dashPeriodo === 'hoje') return diff <= 0 || diff === 0 || diff === 1;
+    if (dashPeriodo === 'semana') return diff <= 7;
+    if (dashPeriodo === 'mes') return diff <= 31;
+    if (dashPeriodo === 'ano') return diff <= 365;
+    return true;
+  });
+}
+
+function dashDiasLabel(prazo) {
+  if (!prazo) return null;
+  var hoje = new Date(); hoje.setHours(0,0,0,0);
+  var dt = new Date(prazo + 'T23:59:59');
+  var diff = Math.ceil((dt - hoje) / 86400000);
+  if (diff < 0) return { txt: 'VENCIDA', cls: 'venc' };
+  if (diff === 0) return { txt: 'Vence hoje', cls: 'atenc' };
+  if (diff === 1) return { txt: 'Amanha', cls: 'atenc' };
+  if (diff <= 3) return { txt: diff+'d restantes', cls: 'atenc' };
+  return { txt: diff+'d restantes', cls: 'ok' };
+}
+
+function dashRenderStats(tarefas) {
+  var urgentes = tarefas.filter(function(t){return !t.done && t.prioridade==='urgente';}).length;
+  var vencidas = tarefas.filter(function(t){
+    if(t.done||!t.prazo)return false;
+    return new Date(t.prazo+'T23:59:59')<new Date();
+  }).length;
+  var pendentes = tarefas.filter(function(t){return !t.done;}).length;
+  var concluidas = tarefas.filter(function(t){return !!t.done;}).length;
+
+  var el = g('dash-stats');
+  if (el) el.innerHTML =
+    '<div style="background:#fce4ec;border-radius:8px;padding:10px;text-align:center"><div style="font-size:22px;font-weight:700;color:#c62828">'+urgentes+'</div><div style="font-size:10px;color:#c62828;font-weight:600">Urgentes</div></div>'
+   +'<div style="background:#fff3e0;border-radius:8px;padding:10px;text-align:center"><div style="font-size:22px;font-weight:700;color:#e65100">'+vencidas+'</div><div style="font-size:10px;color:#e65100;font-weight:600">Vencidas</div></div>'
+   +'<div style="background:#e3f2fd;border-radius:8px;padding:10px;text-align:center"><div style="font-size:22px;font-weight:700;color:#1565c0">'+pendentes+'</div><div style="font-size:10px;color:#1565c0;font-weight:600">Pendentes</div></div>'
+   +'<div style="background:#e8f5e9;border-radius:8px;padding:10px;text-align:center"><div style="font-size:22px;font-weight:700;color:#2e7d32">'+concluidas+'</div><div style="font-size:10px;color:#2e7d32;font-weight:600">Concluidas</div></div>';
+
+  // Alerta de urgentes no header
+  var badgeEl = g('dash-badge-urgente');
+  if (badgeEl) {
+    if (urgentes > 0) { badgeEl.style.display='block'; badgeEl.textContent = urgentes+' urgente(s)'; }
+    else badgeEl.style.display='none';
+  }
+}
+
+function dashRenderLista(tarefas) {
+  var el = g('dash-lista');
+  if (!el) return;
+
+  // Sort: urgentes primeiro, depois vencidas, depois por prazo
+  tarefas.sort(function(a,b) {
+    if (a.done && !b.done) return 1;
+    if (!a.done && b.done) return -1;
+    var prOrd = {urgente:0, normal:1, baixa:2};
+    var pa = prOrd[a.prioridade]||1, pb = prOrd[b.prioridade]||1;
+    if (pa !== pb) return pa - pb;
+    if (a.prazo && b.prazo) return new Date(a.prazo) - new Date(b.prazo);
+    if (a.prazo) return -1;
+    if (b.prazo) return 1;
+    return 0;
+  });
+
+  if (!tarefas.length) {
+    el.innerHTML = '<div style="padding:40px;text-align:center;color:#bbb;font-size:14px">'
+      +'<div style="font-size:36px;margin-bottom:12px">&#127881;</div>'
+      +'Nenhuma tarefa para este periodo.<br><span style="font-size:12px">Aproveite para adiantar algo!</span>'
+      +'</div>';
+    return;
+  }
+
+  // Group: DJEN / Delegadas / Avulsas / Pessoais
+  var grupos = {
+    djen:     { titulo:'&#9878; Publicacoes DJEN', items:[] },
+    delegada: { titulo:'&#128101; Delegadas para mim', items:[] },
+    avulso:   { titulo:'&#128196; Demandas avulsas', items:[] },
+    pessoal:  { titulo:'&#128203; Tarefas pessoais', items:[] }
+  };
+  tarefas.forEach(function(t) {
+    var g2 = grupos[t.tipo] || grupos.pessoal;
+    g2.items.push(t);
+  });
+
+  var html = '';
+  Object.keys(grupos).forEach(function(key) {
+    var grp = grupos[key];
+    if (!grp.items.length) return;
+    html += '<div class="dash-section">';
+    html += '<div class="dash-section-title">'+grp.titulo+' <span style="font-weight:400;color:#ccc">('+grp.items.length+')</span></div>';
+    grp.items.forEach(function(t) {
+      var diasInfo = dashDiasLabel(t.prazo);
+      var prioClass = t.prioridade === 'urgente' ? 'urgente' : (t.tipo === 'djen' ? 'djen' : t.prioridade || 'normal');
+      html += '<div class="dash-task' + (t.done ? ' dash-task-done' : '') + '">';
+      html += '<div class="dash-prio '+prioClass+'"></div>';
+      // Checkbox
+      if (t._fonte === 'eq') {
+        html += '<div class="chk'+(t.done?' ok':'')+'" style="flex-shrink:0;margin-top:2px" data-idx="'+t._idx+'" onclick="dashToggleEq(+this.dataset.idx)">'+(t.done?'<svg width="10" height="8"><path d="M1 4L3.5 6.5L9 1" stroke="white" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>':'')+'</div>';
+      } else if (t._fonte === 'dj') {
+        html += '<div class="chk'+(t.done?' ok':'')+'" style="flex-shrink:0;margin-top:2px" data-id="'+t._djenId+'" onclick="dashCumprirDjen(this.dataset.id)">'+(t.done?'<svg width="10" height="8"><path d="M1 4L3.5 6.5L9 1" stroke="white" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>':'')+'</div>';
+      } else if (t._fonte === 'av') {
+        html += '<div class="chk'+(t.done?' ok':'')+'" style="flex-shrink:0;margin-top:2px" data-id="'+t._avId+'" onclick="dashCumprirAv(this.dataset.id)">'+(t.done?'<svg width="10" height="8"><path d="M1 4L3.5 6.5L9 1" stroke="white" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>':'')+'</div>';
+      } else {
+        html += '<div style="width:18px;flex-shrink:0"></div>';
+      }
+      // Content
+      html += '<div style="flex:1">';
+      html += '<div style="font-size:13px;font-weight:600;margin-bottom:3px;'+(t.done?'text-decoration:line-through;color:#bbb;':'')+'">'+t.titulo+'</div>';
+      if (t.descricao) html += '<div style="font-size:11px;color:#888;margin-bottom:3px">'+t.descricao+'</div>';
+      html += '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">';
+      html += '<span style="font-size:10px;color:#aaa">'+t.origem+'</span>';
+      if (t.area) html += '<span class="dash-chip '+(t.area==='penal'?'dash-chip-djen':'dash-chip-delegada')+'">'+(t.area==='penal'?'PENAL':'CIVIL')+'</span>';
+      if (diasInfo && !t.done) html += '<span class="dash-vence '+diasInfo.cls+'">'+diasInfo.txt+'</span>';
+      if (t.prazo && !t.done) html += '<span style="font-size:10px;color:#aaa">'+new Date(t.prazo+'T12:00:00').toLocaleDateString('pt-BR')+'</span>';
+      html += '</div></div>';
+      // Actions
+      html += '<div style="display:flex;gap:5px;flex-shrink:0;align-items:center">';
+      if (t._fonte === 'dj' && t._djenId) {
+        html += '<button class="btn" style="font-size:10px;padding:2px 7px;background:#f3e5f5;border-color:#ce93d8;color:#6a1b9a" data-id="'+t._djenId+'" onclick="setMod(\'dj\');setTimeout(function(){djListar();},100)">Ver</button>';
+      }
+      if (t._fonte === 'av' && t._avId) {
+        html += '<button class="btn" style="font-size:10px;padding:2px 7px" data-id="'+t._avId+'" onclick="setMod(\'av\');setTimeout(function(){avListar();},100)">Ver</button>';
+      }
+      html += '</div>';
+      html += '</div>';
+    });
+    html += '</div>';
+  });
+  el.innerHTML = html;
+}
+
+function dashToggleEq(idx) {
+  if (!eqUsuarioAtual) return;
+  var tarefas = eqGetTarefas(eqUsuarioAtual.id);
+  if (tarefas[idx]) {
+    tarefas[idx].done = !tarefas[idx].done;
+    tarefas[idx].concluidoEm = new Date().toISOString();
+    eqSaveTarefas(eqUsuarioAtual.id, tarefas);
+    dashAtualizar();
+  }
+}
+
+function dashCumprirDjen(id) {
+  var lista = djGetLista();
+  var p = lista.find(function(x){return x.id===id;});
+  if (!p) return;
+  p.status = 'cumprido';
+  p.cumpridoEm = new Date().toISOString();
+  p.cumpridoPor = eqUsuarioAtual ? eqUsuarioAtual.nome : '';
+  djSaveLista(lista);
+  dashAtualizar();
+}
+
+function dashCumprirAv(id) {
+  var lista = avGetLista();
+  var a = lista.find(function(x){return x.id===id;});
+  if (!a) return;
+  a.concluido = true;
+  a.concluidoEm = new Date().toISOString();
+  avSaveLista(lista);
+  dashAtualizar();
+}
+
+function dashNovaTarefa() {
+  if (!eqUsuarioAtual) { alert('Identifique-se primeiro.'); return; }
+  var desc = prompt('Descricao da tarefa:');
+  if (!desc || !desc.trim()) return;
+  var prazo = prompt('Prazo (AAAA-MM-DD, ou deixe vazio):');
+  var tarefas = eqGetTarefas(eqUsuarioAtual.id);
+  tarefas.push({desc:desc.trim(), prazo:prazo||'', done:false, de:eqUsuarioAtual.nome, ts:new Date().toISOString()});
+  eqSaveTarefas(eqUsuarioAtual.id, tarefas);
+  dashAtualizar();
+}
+
+function dashAtualizarBadge() {
+  // Atualiza badge do botao Meu Dia no menu
+  var uid = eqUsuarioAtual ? eqUsuarioAtual.id : null;
+  if (!uid) return;
+  var tarefas = dashColetarTarefas();
+  var urg = tarefas.filter(function(t){return !t.done && t.prioridade==='urgente';}).length;
+  var pend = tarefas.filter(function(t){return !t.done;}).length;
+  var badge = g('mb-dash-badge');
+  if (!badge) return;
+  if (urg > 0) { badge.textContent = urg+' urgente(s)'; badge.style.color = '#c62828'; }
+  else if (pend > 0) { badge.textContent = pend+' pendente(s)'; badge.style.color = '#1565c0'; }
+  else { badge.textContent = 'Tudo em dia!'; badge.style.color = '#2e7d32'; }
+}
+
 window.addEventListener('load',function(){
-  checarTokenDrive();loadUser();loadEst();setTimeout(diLoad,300);setTimeout(eqCarregarSessao,500);setTimeout(avStats,600);setTimeout(function(){djStats();djAgendarVerificacao();},700);
+  checarTokenDrive();loadUser();loadEst();setTimeout(diLoad,300);setTimeout(function(){eqCarregarSessao();setTimeout(function(){dashInicializar();dashAtualizarBadge();},300);},500);setTimeout(avStats,600);setTimeout(function(){djStats();djAgendarVerificacao();},700);
 });
 </script>
 </body>
