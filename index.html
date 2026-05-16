@@ -96,6 +96,27 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#1a1a1a}
 .modal h3{font-size:15px;margin-bottom:14px}
 @keyframes spin{to{transform:rotate(360deg)}}
 .spin{display:inline-block;width:13px;height:13px;border:2px solid #eee;border-top-color:#1a1a1a;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle}
+.av-card{background:#fff;border:1px solid #e0ddd6;border-radius:10px;padding:12px 16px;margin-bottom:8px;border-left:4px solid #1a1a1a}
+.av-card.urgente{border-left-color:#c62828;background:#fff8f8}
+.av-card.normal{border-left-color:#1565c0}
+.av-card.baixa{border-left-color:#aaa}
+.av-card.concluido{border-left-color:#2e7d32;background:#f1fff4;opacity:.75}
+.av-tag{display:inline-block;font-size:10px;padding:2px 8px;border-radius:20px;font-weight:600;margin-right:3px}
+.av-tag-urgente{background:#fce4ec;color:#c62828}
+.av-tag-normal{background:#e3f2fd;color:#1565c0}
+.av-tag-baixa{background:#f5f4f0;color:#999}
+.av-tag-concluido{background:#e8f5e9;color:#2e7d32}
+.eq-card{background:#fff;border:1px solid #e0ddd6;border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:8px;position:relative}
+.eq-avatar{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:#fff;flex-shrink:0}
+.eq-badge{display:inline-block;font-size:10px;padding:2px 8px;border-radius:20px;font-weight:700}
+.eq-admin{background:#1a1a1a;color:#fff}
+.eq-socio{background:#1565c0;color:#fff}
+.eq-estagiario{background:#e8f5e9;color:#1b5e20}
+.eq-closer{background:#fff3e0;color:#e65100}
+.eq-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-top:10px}
+.task-pill{display:inline-flex;align-items:center;gap:4px;background:#f0ede8;border-radius:20px;padding:3px 8px;font-size:11px;cursor:pointer}
+.task-pill:hover{background:#e0ddd6}
+.task-pill.done{background:#e8f5e9;color:#1b5e20;text-decoration:line-through}
 </style>
 </head>
 <body>
@@ -112,20 +133,16 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#1a1a1a}
   </div>
   <div class="hright">
     <span class="sync" id="sync-lbl"></span>
-    <select class="us" id="sel-user" onchange="saveUser()">
-      <option value="">Quem sou eu?</option>
-      <option>Dr. Augusto</option>
-      <option>Dr. Ari</option>
-      <option>Closer</option>
-      <option>Estagiario 1</option>
-      <option>Estagiario 2</option>
-      <option>Estagiario 3</option>
-    </select>
+    <div id="user-pill" onclick="eqLoginClick()" style="display:flex;align-items:center;gap:8px;background:#f8f7f3;border:1px solid #ddd;border-radius:20px;padding:5px 12px;cursor:pointer;font-size:12px;font-weight:600;min-width:130px">
+      <span id="user-avatar" style="width:24px;height:24px;border-radius:50%;background:#1a1a1a;color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">?</span>
+      <span id="user-nome">Quem sou eu?</span>
+    </div>
+    <button class="btn" style="font-size:11px;padding:5px 10px" onclick="setMod('equipe')">&#128101; Equipe</button>
     <button class="btn-urg" onclick="openUrg()">Urgente</button>
   </div>
 </div>
 
-<div class="mod-tabs" style="grid-template-columns:1fr 1fr 1fr 1fr">
+<div class="mod-tabs" style="grid-template-columns:1fr 1fr 1fr 1fr 1fr 1fr">
   <button class="mod-btn on" id="mb-di" onclick="setMod('di')">
     <div class="mod-icon">&#127974;</div>
     <div class="mod-title">Descontos Indevidos</div>
@@ -145,6 +162,16 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#1a1a1a}
     <div class="mod-icon">&#9989;</div>
     <div class="mod-title">Protocolados</div>
     <div class="mod-sub">DI e SE protocolados</div>
+  </button>
+  <button class="mod-btn" id="mb-equipe" onclick="setMod('equipe')">
+    <div class="mod-icon">&#128101;</div>
+    <div class="mod-title">Equipe</div>
+    <div class="mod-sub">Usuarios &middot; Tarefas</div>
+  </button>
+  <button class="mod-btn" id="mb-av" onclick="setMod('av')">
+    <div class="mod-icon">&#128196;</div>
+    <div class="mod-title">Avulsos</div>
+    <div class="mod-sub" id="mb-av-badge">Clientes &middot; Tarefas extras</div>
   </button>
 </div>
 
@@ -731,6 +758,195 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#1a1a1a}
     <div id="pt-lista"></div>
   </div>
 </div>
+
+<!-- Equipe -->
+<div id="mod-equipe" style="display:none">
+  <div class="card" style="margin-bottom:10px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <div>
+        <div class="ct" style="margin-bottom:4px">Equipe &mdash; Gadiani &amp; D'Antraccoli</div>
+        <span id="eq-resumo" style="font-size:12px;color:#aaa"></span>
+      </div>
+      <div style="display:flex;gap:8px" id="eq-admin-btns" style="display:none">
+        <button class="btn btnp" style="font-size:11px" onclick="eqNovoUsuario()">+ Adicionar membro</button>
+      </div>
+    </div>
+
+    <!-- Login modal interno -->
+    <div id="eq-login-box" style="display:none;background:#f8f7f3;border-radius:10px;padding:16px;margin-bottom:14px;border:1px solid #e0ddd6">
+      <div class="ct" style="margin-bottom:10px">Identificar-se</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px" id="eq-login-lista"></div>
+      <div style="font-size:11px;color:#aaa">Clique no seu nome para entrar</div>
+    </div>
+
+    <!-- Tarefas do usuario logado -->
+    <div id="eq-minhas-tarefas" style="display:none;margin-bottom:14px;background:#fff8e1;border:1px solid #ffcc80;border-radius:10px;padding:12px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <div class="ct" style="margin-bottom:0">&#128203; Minhas Tarefas</div>
+        <button class="btn" style="font-size:11px;padding:3px 8px" onclick="eqAddTarefa()">+ Nova tarefa</button>
+      </div>
+      <div id="eq-tarefas-lista"></div>
+    </div>
+
+    <!-- Grade da equipe -->
+    <div class="eq-grid" id="eq-grid"></div>
+  </div>
+
+  <!-- Modal novo membro -->
+  <div id="eq-modal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.45);z-index:2000;align-items:center;justify-content:center">
+    <div style="background:#fff;border-radius:14px;padding:24px;max-width:420px;width:90%">
+      <div class="ct" style="margin-bottom:14px" id="eq-modal-titulo">Novo membro</div>
+      <label>Nome completo</label>
+      <input id="eq-m-nome" placeholder="Ex: Joao Silva" style="margin-bottom:8px">
+      <label>Cargo / Funcao</label>
+      <select id="eq-m-cargo" style="margin-bottom:8px">
+        <option value="socio">Advogado Socio</option>
+        <option value="advogado">Advogado</option>
+        <option value="gerente">Gerente Geral</option>
+        <option value="estagiario">Estagiario(a)</option>
+        <option value="closer">Closer</option>
+        <option value="outro">Outro</option>
+      </select>
+      <label>Telefone (WhatsApp)</label>
+      <input id="eq-m-tel" placeholder="Ex: 19999999999" style="margin-bottom:8px">
+      <label>Nivel de acesso</label>
+      <select id="eq-m-nivel" style="margin-bottom:14px">
+        <option value="admin">Admin (pode tudo)</option>
+        <option value="normal">Normal (acesso padrao)</option>
+        <option value="limitado">Limitado (somente visualizar)</option>
+      </select>
+      <div style="display:flex;gap:8px;justify-content:flex-end">
+        <button class="btn" onclick="eqFecharModal()">Cancelar</button>
+        <button class="btn btnp" onclick="eqSalvarMembro()">Salvar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal delegar tarefa -->
+  <div id="eq-task-modal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.45);z-index:2000;align-items:center;justify-content:center">
+    <div style="background:#fff;border-radius:14px;padding:24px;max-width:420px;width:90%">
+      <div class="ct" style="margin-bottom:14px">Delegar Tarefa</div>
+      <label>Para quem</label>
+      <select id="eq-task-dest" style="margin-bottom:8px"></select>
+      <label>Descricao da tarefa</label>
+      <textarea id="eq-task-desc" style="margin-bottom:8px;min-height:80px" placeholder="Ex: Ligar para cliente X, verificar documentos Y..."></textarea>
+      <label>Prazo</label>
+      <input type="date" id="eq-task-prazo" style="margin-bottom:14px">
+      <div style="display:flex;gap:8px;justify-content:flex-end">
+        <button class="btn" onclick="g('eq-task-modal').style.display='none'">Cancelar</button>
+        <button class="btn btnp" onclick="eqSalvarTarefa()">Delegar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- Avulsos -->
+<div id="mod-av" style="display:none">
+  <div class="card">
+    <!-- Header + filtros -->
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+      <div>
+        <div class="ct" style="margin-bottom:4px">Demandas Avulsas</div>
+        <span id="av-resumo" style="font-size:11px;color:#aaa"></span>
+      </div>
+      <button class="btn btnp" style="font-size:12px" onclick="avNovo()">+ Nova demanda</button>
+    </div>
+
+    <!-- Stats rapidos -->
+    <div id="av-stats" style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;margin-bottom:12px"></div>
+
+    <!-- Filtros -->
+    <div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap">
+      <select id="av-filtro-prioridade" onchange="avListar()" style="font-size:11px;padding:4px 8px">
+        <option value="todos">Todas as prioridades</option>
+        <option value="urgente">Urgente</option>
+        <option value="normal">Normal</option>
+        <option value="baixa">Baixa</option>
+      </select>
+      <select id="av-filtro-status" onchange="avListar()" style="font-size:11px;padding:4px 8px">
+        <option value="aberto">Em aberto</option>
+        <option value="todos">Todos</option>
+        <option value="concluido">Concluidos</option>
+      </select>
+      <select id="av-filtro-resp" onchange="avListar()" style="font-size:11px;padding:4px 8px">
+        <option value="todos">Todos responsaveis</option>
+      </select>
+      <input id="av-busca" placeholder="Buscar cliente ou descricao..." style="font-size:11px;padding:4px 8px;flex:1;min-width:150px" oninput="avListar()">
+      <button class="btn" style="font-size:11px" onclick="avListar()">&#8635;</button>
+    </div>
+
+    <div id="av-lista"></div>
+  </div>
+
+  <!-- Modal nova/editar demanda -->
+  <div id="av-modal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.48);z-index:2000;align-items:flex-start;justify-content:center;overflow-y:auto;padding:20px 0">
+    <div style="background:#fff;border-radius:14px;padding:24px;max-width:500px;width:90%;margin:auto">
+      <div class="ct" id="av-modal-titulo" style="margin-bottom:14px">Nova Demanda Avulsa</div>
+
+      <label>Cliente / Parte envolvida</label>
+      <input id="av-cliente" placeholder="Nome do cliente ou empresa" style="margin-bottom:8px">
+
+      <label>Tipo de demanda</label>
+      <select id="av-tipo" style="margin-bottom:8px">
+        <option value="consulta">Consulta juridica avulsa</option>
+        <option value="contrato">Elaboracao / revisao de contrato</option>
+        <option value="trabalhista">Trabalhista</option>
+        <option value="familia">Familia e sucessoes</option>
+        <option value="criminal">Criminal</option>
+        <option value="tributario">Tributario / fiscal</option>
+        <option value="empresarial">Empresarial</option>
+        <option value="imobiliario">Imobiliario</option>
+        <option value="administrativo">Administrativo</option>
+        <option value="notificacao">Notificacao / carta</option>
+        <option value="diligencia">Diligencia / protocolo</option>
+        <option value="outro">Outro</option>
+      </select>
+
+      <label>Descricao / Observacoes</label>
+      <textarea id="av-desc" style="margin-bottom:8px;min-height:90px" placeholder="Descreva a demanda, o que precisa ser feito, contexto relevante..."></textarea>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+        <div>
+          <label>Prioridade</label>
+          <select id="av-prioridade">
+            <option value="normal">Normal</option>
+            <option value="urgente">Urgente</option>
+            <option value="baixa">Baixa</option>
+          </select>
+        </div>
+        <div>
+          <label>Prazo (opcional)</label>
+          <input type="date" id="av-prazo">
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+        <div>
+          <label>Responsavel</label>
+          <select id="av-resp"></select>
+        </div>
+        <div>
+          <label>Telefone do cliente</label>
+          <input id="av-tel-cli" placeholder="Ex: 19999999999">
+        </div>
+      </div>
+
+      <label>Valor honorarios (opcional)</label>
+      <input id="av-honorarios" placeholder="Ex: R$ 500,00" style="margin-bottom:14px">
+
+      <div id="av-notif-bar" style="background:#e8f5e9;border:1px solid #a5d6a7;border-radius:8px;padding:8px 12px;font-size:11px;color:#1b5e20;margin-bottom:14px;display:none">
+        &#9989; Notificacao por WhatsApp sera enviada ao responsavel ao salvar.
+      </div>
+
+      <div style="display:flex;gap:8px;justify-content:flex-end">
+        <button class="btn" onclick="avFecharModal()">Cancelar</button>
+        <button class="btn btng" id="av-btn-salvar" onclick="avSalvar()">Salvar demanda</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 
 <!-- Modal urgente -->
 <div class="modal-bg" id="modal-urg">
@@ -1820,21 +2036,290 @@ function diArqExcluir(idx, cid) {
   diArqRender(cid);
 }
 
-function saveUser(){localStorage.setItem('g_user',g('sel-user').value);}
-function loadUser(){var u=localStorage.getItem('g_user');if(u)g('sel-user').value=u;}
+function saveUser(){}
+function loadUser(){}
+
+// -- EQUIPE --------------------------------------------------------------------
+var EQ_DEFAULTS = [
+  {id:'u1', nome:'Augusto Gadiani', cargo:'socio', tel:'5519999276352', nivel:'admin', cor:'#1a1a1a'},
+  {id:'u2', nome:'Ari D\'Antraccoli', cargo:'socio', tel:'', nivel:'admin', cor:'#1565c0'},
+  {id:'u3', nome:'Rafaela', cargo:'gerente', tel:'', nivel:'admin', cor:'#6a1b9a'},
+  {id:'u4', nome:'Joao', cargo:'estagiario', tel:'', nivel:'normal', cor:'#2e7d32'},
+  {id:'u5', nome:'Laiane', cargo:'estagiario', tel:'', nivel:'normal', cor:'#00838f'},
+  {id:'u6', nome:'Alef', cargo:'closer', tel:'', nivel:'normal', cor:'#e65100'}
+];
+var EQ_CARGO_LABEL = {socio:'Advogado Socio', advogado:'Advogado', gerente:'Gerente Geral', estagiario:'Estagiario(a)', closer:'Closer', outro:'Outro'};
+var EQ_CARGO_BADGE = {socio:'eq-socio', advogado:'eq-socio', gerente:'eq-admin', estagiario:'eq-estagiario', closer:'eq-closer', outro:'eq-estagiario'};
+var EQ_CORES = ['#1a1a1a','#1565c0','#6a1b9a','#2e7d32','#00838f','#e65100','#c62828','#00695c','#4527a0','#283593'];
+var eqUsuarioAtual = null;
+
+function eqGetEquipe(){
+  var saved = est['_equipe'];
+  if (saved && saved.length) return saved;
+  return JSON.parse(JSON.stringify(EQ_DEFAULTS));
+}
+function eqSaveEquipe(lista){ est['_equipe']=lista; saveEst(); }
+
+function eqGetTarefas(uid){
+  if (!est['_tarefas']) est['_tarefas']={};
+  if (!est['_tarefas'][uid]) est['_tarefas'][uid]=[];
+  return est['_tarefas'][uid];
+}
+function eqSaveTarefas(uid,lista){ if(!est['_tarefas'])est['_tarefas']={};est['_tarefas'][uid]=lista;saveEst(); }
+
+function eqIniciais(nome){ var p=nome.split(' '); return p.length>=2?(p[0][0]+p[p.length-1][0]).toUpperCase():nome.substring(0,2).toUpperCase(); }
+
+function eqLoginClick(){
+  // If already logged in, go to equipe module
+  if(eqUsuarioAtual){ setMod('equipe'); return; }
+  setMod('equipe');
+  g('eq-login-box').style.display='block';
+  eqRenderLogin();
+}
+
+function eqRenderLogin(){
+  var equipe = eqGetEquipe();
+  var html = '';
+  equipe.forEach(function(u){
+    html += '<button onclick="eqFazerLogin(\''+u.id+'\')" style="display:flex;align-items:center;gap:8px;padding:8px 12px;border:1.5px solid #e0ddd6;border-radius:8px;background:#fff;cursor:pointer;font-family:inherit;text-align:left">'
+      +'<span style="width:32px;height:32px;border-radius:50%;background:'+u.cor+';color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0">'+eqIniciais(u.nome)+'</span>'
+      +'<div><div style="font-size:13px;font-weight:600">'+u.nome+'</div>'
+      +'<div style="font-size:10px;color:#aaa">'+EQ_CARGO_LABEL[u.cargo]+'</div></div>'
+      +'</button>';
+  });
+  g('eq-login-lista').innerHTML = html;
+}
+
+function eqFazerLogin(uid){
+  var equipe = eqGetEquipe();
+  var u = equipe.find(function(x){return x.id===uid;});
+  if (!u) return;
+  eqUsuarioAtual = u;
+  localStorage.setItem('g_uid', uid);
+  g('eq-login-box').style.display='none';
+  // Update header pill
+  g('user-avatar').textContent = eqIniciais(u.nome);
+  g('user-avatar').style.background = u.cor;
+  g('user-nome').textContent = u.nome.split(' ')[0];
+  eqRenderEquipe();
+  eqRenderMinhasTarefas();
+}
+
+function eqCarregarSessao(){
+  var uid = localStorage.getItem('g_uid');
+  if (!uid) return;
+  var equipe = eqGetEquipe();
+  var u = equipe.find(function(x){return x.id===uid;});
+  if (u) eqFazerLogin(u.id);
+}
+
+function eqRenderEquipe(){
+  var equipe = eqGetEquipe();
+  var isAdmin = eqUsuarioAtual && eqUsuarioAtual.nivel==='admin';
+  // Show/hide admin buttons
+  var adminBtns = g('eq-admin-btns');
+  if (adminBtns) adminBtns.style.display = isAdmin ? 'flex' : 'none';
+  // Summary
+  var admins = equipe.filter(function(u){return u.nivel==='admin';}).length;
+  if(g('eq-resumo')) g('eq-resumo').textContent = equipe.length+' membro(s) &middot; '+admins+' admin(s)';
+  // Grid
+  var html = '';
+  equipe.forEach(function(u){
+    var tarefas = eqGetTarefas(u.id);
+    var pendentes = tarefas.filter(function(t){return !t.done;}).length;
+    var badgeClass = EQ_CARGO_BADGE[u.cargo]||'eq-estagiario';
+    html += '<div class="eq-card">';
+    // Top row: avatar + nome
+    html += '<div style="display:flex;align-items:center;gap:10px">'
+      +'<div class="eq-avatar" style="background:'+u.cor+'">'+eqIniciais(u.nome)+'</div>'
+      +'<div style="flex:1">'
+      +'<div style="font-size:13px;font-weight:700">'+u.nome+'</div>'
+      +'<span class="eq-badge '+badgeClass+'">'+EQ_CARGO_LABEL[u.cargo]+'</span>'
+      +(u.nivel==='admin'?' <span class="eq-badge eq-admin" style="font-size:9px">ADMIN</span>':'')
+      +'</div>'
+      +'</div>';
+    // Tel + WA
+    if (u.tel) {
+      var telFmt = u.tel.replace(/[^0-9]/g,'');
+      if (telFmt.length===11) telFmt='55'+telFmt;
+      html += '<a href="https://wa.me/'+telFmt+'" target="_blank" class="btn btnw" style="font-size:11px;padding:4px 10px;text-decoration:none;display:inline-flex;align-items:center;gap:4px">&#128172; WhatsApp</a>';
+    } else if (isAdmin) {
+      html += '<button class="btn" style="font-size:11px;padding:3px 8px;color:#aaa" data-uid="'+u.id+'" onclick="eqEditarTel(this.dataset.uid)">+ Tel WhatsApp</button>';
+    }
+    // Tarefas badge
+    html += '<div style="font-size:11px;color:'+(pendentes>0?'#e65100':'#aaa')+'">&#128203; '+(pendentes>0?pendentes+' tarefa(s) pendente(s)':'Sem tarefas')+'</div>';
+    // Buttons
+    html += '<div style="display:flex;gap:5px;flex-wrap:wrap">';
+    if (isAdmin) {
+      html += '<button class="btn" style="font-size:10px;padding:3px 7px" data-uid="'+u.id+'" onclick="eqDelegarPara(this.dataset.uid)">&#128203; Delegar</button>';
+      html += '<button class="btn" style="font-size:10px;padding:3px 7px" data-uid="'+u.id+'" onclick="eqEditarMembro(this.dataset.uid)">&#9998; Editar</button>';
+      html += '<button class="btn" style="font-size:10px;padding:3px 7px;background:#fce4ec;border-color:#f8bbd0;color:#c62828" data-uid="'+u.id+'" onclick="eqRemover(this.dataset.uid)">Remover</button>';
+    }
+    if (eqUsuarioAtual && eqUsuarioAtual.id===u.id) {
+      html += '<button class="btn" style="font-size:10px;padding:3px 7px;background:#e3f2fd;border-color:#90caf9;color:#1565c0" data-uid="'+u.id+'" onclick="eqVerTarefas(this.dataset.uid)">Ver tarefas</button>';
+    }
+    html += '</div></div>';
+  });
+  g('eq-grid').innerHTML = html;
+}
+
+function eqRenderMinhasTarefas(){
+  if (!eqUsuarioAtual) return;
+  var tarefas = eqGetTarefas(eqUsuarioAtual.id);
+  var box = g('eq-minhas-tarefas');
+  if (box) box.style.display = 'block';
+  var lista = g('eq-tarefas-lista');
+  if (!lista) return;
+  if (!tarefas.length) { lista.innerHTML='<div style="font-size:12px;color:#aaa;padding:6px 0">Nenhuma tarefa atribuida.</div>'; return; }
+  var html = '';
+  tarefas.forEach(function(t, i){
+    var vencida = t.prazo && new Date(t.prazo)<new Date() && !t.done;
+    html += '<div style="display:flex;align-items:flex-start;gap:8px;padding:7px 0;border-bottom:1px solid #f5f4f0">'
+      +'<div class="chk'+(t.done?' ok':'')+'" data-idx="'+i+'" onclick="eqToggleTarefa(+this.dataset.idx)">'+(t.done?'<svg width="10" height="8"><path d="M1 4L3.5 6.5L9 1" stroke="white" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>':'')+'</div>'
+      +'<div style="flex:1">'
+      +'<div style="font-size:12px;'+(t.done?'text-decoration:line-through;color:#bbb;':vencida?'color:#c62828;font-weight:600;':'')+'">'+t.desc+'</div>'
+      +(t.prazo?'<div style="font-size:10px;color:'+(vencida?'#c62828':'#aaa')+'">Prazo: '+new Date(t.prazo+'T12:00:00').toLocaleDateString('pt-BR')+(vencida?' (!) VENCIDA':'')+'</div>':'')
+      +(t.de?'<div style="font-size:10px;color:#aaa">Delegada por: '+t.de+'</div>':'')
+      +'</div>'
+      +'<button style="background:none;border:none;cursor:pointer;color:#c62828;font-size:12px" data-idx="'+i+'" onclick="eqExcluirTarefa(+this.dataset.idx)">&#10005;</button>'
+      +'</div>';
+  });
+  lista.innerHTML = html;
+}
+
+function eqToggleTarefa(idx){
+  if (!eqUsuarioAtual) return;
+  var tarefas = eqGetTarefas(eqUsuarioAtual.id);
+  if (tarefas[idx]) { tarefas[idx].done=!tarefas[idx].done; eqSaveTarefas(eqUsuarioAtual.id,tarefas); eqRenderMinhasTarefas(); }
+}
+function eqExcluirTarefa(idx){
+  if (!eqUsuarioAtual) return;
+  var tarefas = eqGetTarefas(eqUsuarioAtual.id);
+  tarefas.splice(idx,1); eqSaveTarefas(eqUsuarioAtual.id,tarefas); eqRenderMinhasTarefas();
+}
+
+function eqAddTarefa(){
+  if (!eqUsuarioAtual) return;
+  var desc = prompt('Descricao da tarefa:');
+  if (!desc||!desc.trim()) return;
+  var prazo = prompt('Prazo (deixe em branco para sem prazo, formato AAAA-MM-DD):');
+  var tarefas = eqGetTarefas(eqUsuarioAtual.id);
+  tarefas.push({desc:desc.trim(), prazo:prazo||'', done:false, de:eqUsuarioAtual.nome, ts:new Date().toISOString()});
+  eqSaveTarefas(eqUsuarioAtual.id,tarefas);
+  eqRenderMinhasTarefas();
+}
+
+function eqDelegarPara(uid){
+  if (!eqUsuarioAtual || eqUsuarioAtual.nivel!=='admin') return;
+  var equipe = eqGetEquipe();
+  var destEl = g('eq-task-dest');
+  destEl.innerHTML = '';
+  equipe.forEach(function(u){ destEl.innerHTML+='<option value="'+u.id+'">'+u.nome+'</option>'; });
+  destEl.value = uid;
+  g('eq-task-prazo').value='';
+  g('eq-task-desc').value='';
+  g('eq-task-modal').style.display='flex';
+}
+function eqSalvarTarefa(){
+  var uid = g('eq-task-dest').value;
+  var desc = g('eq-task-desc').value.trim();
+  var prazo = g('eq-task-prazo').value;
+  if (!desc) { alert('Informe a descricao.'); return; }
+  var tarefas = eqGetTarefas(uid);
+  tarefas.push({desc:desc, prazo:prazo, done:false, de:eqUsuarioAtual?eqUsuarioAtual.nome:'', ts:new Date().toISOString()});
+  eqSaveTarefas(uid,tarefas);
+  g('eq-task-modal').style.display='none';
+  // If delegating to self, refresh
+  if (eqUsuarioAtual && eqUsuarioAtual.id===uid) eqRenderMinhasTarefas();
+  // Send WA if delegate has tel
+  var equipe = eqGetEquipe();
+  var dest = equipe.find(function(u){return u.id===uid;});
+  if (dest && dest.tel) {
+    var tel = dest.tel.replace(/[^0-9]/g,'');
+    if(tel.length===11)tel='55'+tel;
+    var msg = 'Ola, '+dest.nome.split(' ')[0]+'! Uma nova tarefa foi delegada para voce:\n\n'+desc+(prazo?'\n\nPrazo: '+new Date(prazo+'T12:00:00').toLocaleDateString('pt-BR'):'')+'\n\nGadiani & D\'Antraccoli';
+    if(confirm('Enviar notificacao por WhatsApp para '+dest.nome+'?'))
+      window.open('https://wa.me/'+tel+'?text='+encodeURIComponent(msg),'_blank');
+  }
+  eqRenderEquipe();
+}
+
+function eqVerTarefas(uid){
+  if (eqUsuarioAtual && eqUsuarioAtual.id!==uid && eqUsuarioAtual.nivel!=='admin') return;
+  eqRenderMinhasTarefas();
+  g('eq-minhas-tarefas').scrollIntoView({behavior:'smooth'});
+}
+
+var eqEditandoId = null;
+function eqNovoUsuario(){
+  eqEditandoId = null;
+  g('eq-modal-titulo').textContent='Novo membro';
+  g('eq-m-nome').value=''; g('eq-m-tel').value=''; g('eq-m-cargo').value='estagiario'; g('eq-m-nivel').value='normal';
+  g('eq-modal').style.display='flex';
+}
+function eqEditarMembro(uid){
+  var equipe = eqGetEquipe();
+  var u = equipe.find(function(x){return x.id===uid;});
+  if (!u) return;
+  eqEditandoId = uid;
+  g('eq-modal-titulo').textContent='Editar membro';
+  g('eq-m-nome').value=u.nome; g('eq-m-tel').value=u.tel||''; g('eq-m-cargo').value=u.cargo; g('eq-m-nivel').value=u.nivel;
+  g('eq-modal').style.display='flex';
+}
+function eqEditarTel(uid){
+  var equipe = eqGetEquipe();
+  var u = equipe.find(function(x){return x.id===uid;});
+  if (!u) return;
+  var tel = prompt('Telefone WhatsApp (com DDD, sem +55):', u.tel||'');
+  if (tel===null) return;
+  u.tel = tel.replace(/[^0-9]/g,'');
+  eqSaveEquipe(equipe); eqRenderEquipe();
+}
+function eqSalvarMembro(){
+  var nome = g('eq-m-nome').value.trim();
+  if (!nome) { alert('Informe o nome.'); return; }
+  var equipe = eqGetEquipe();
+  if (eqEditandoId) {
+    var u = equipe.find(function(x){return x.id===eqEditandoId;});
+    if (u) { u.nome=nome; u.cargo=g('eq-m-cargo').value; u.tel=g('eq-m-tel').value.replace(/[^0-9]/g,''); u.nivel=g('eq-m-nivel').value; }
+  } else {
+    var newId = 'u'+Date.now();
+    var cor = EQ_CORES[equipe.length % EQ_CORES.length];
+    equipe.push({id:newId, nome:nome, cargo:g('eq-m-cargo').value, tel:g('eq-m-tel').value.replace(/[^0-9]/g,''), nivel:g('eq-m-nivel').value, cor:cor});
+  }
+  eqSaveEquipe(equipe);
+  g('eq-modal').style.display='none';
+  eqRenderEquipe();
+}
+function eqFecharModal(){ g('eq-modal').style.display='none'; }
+function eqRemover(uid){
+  var equipe = eqGetEquipe();
+  var u = equipe.find(function(x){return x.id===uid;});
+  if (!u) return;
+  if (u.nivel==='admin' && equipe.filter(function(x){return x.nivel==='admin';}).length<=1) { alert('Nao e possivel remover o unico administrador.'); return; }
+  if (!confirm('Remover '+u.nome+' da equipe?')) return;
+  eqSaveEquipe(equipe.filter(function(x){return x.id!==uid;}));
+  eqRenderEquipe();
+}
 
 function setMod(m){
   g('mod-di').style.display=m==='di'?'block':'none';
   g('mod-se').style.display=m==='se'?'block':'none';
   g('mod-pt').style.display=m==='pt'?'block':'none';
   g('mod-docs').style.display=m==='docs'?'block':'none';
+  if(g('mod-equipe'))g('mod-equipe').style.display=m==='equipe'?'block':'none';
   g('mb-di').className='mod-btn'+(m==='di'?' on':'');
   g('mb-se').className='mod-btn'+(m==='se'?' on':'');
   g('mb-pt').className='mod-btn'+(m==='pt'?' on':'');
   if(g('mb-docs'))g('mb-docs').className='mod-btn'+(m==='docs'?' on':'');
+  if(g('mb-equipe'))g('mb-equipe').className='mod-btn'+(m==='equipe'?' on':'');
   if(m==='se'&&seC.length===0)seLoad();
   if(m==='pt')ptListar();
   if(m==='docs')docsRefresh();
+  if(m==='equipe')eqRenderEquipe();
+  if(m==='av'){avPopularFiltroResp();avListar();}
+  if(g('mod-av'))g('mod-av').style.display=m==='av'?'block':'none';
+  if(g('mb-av'))g('mb-av').className='mod-btn'+(m==='av'?' on':'');
 }
 function swDI(n){var i;for(i=0;i<9;i++){if(g('dp'+i))g('dp'+i).className='pg'+(i===n?' on':'');if(g('dn'+i))g('dn'+i).className=i===n?'on':'';}if(n===3)drivePopSel();if(n===8){var v=g('di-sel-doc')&&g('di-sel-doc').value;if(v)diArqAbrir(v);}}
 function swSE(n){var i;for(i=0;i<11;i++){var sp=g('sp'+i);var sn=g('sn'+i);if(sp)sp.className='pg'+(i===n?' on':'');if(sn)sn.className=i===n?'on':'';}if(n===2&&seC.length>0)seListarPend();if(n===9){var v=g('se-arq-sel')&&g('se-arq-sel').value;if(v)seArqAbrir(v);}}
@@ -3893,8 +4378,271 @@ function atualizarStatusDrive(){
     bar.innerHTML='<span>&#9888; Drive nao conectado &mdash; a peticao sera gerada SEM os documentos do cliente</span><button onclick="driveConectar(function(){})" style="background:#fff;color:#c62828;border:none;border-radius:6px;padding:5px 12px;font-weight:700;cursor:pointer;font-size:12px">Conectar Drive</button>';
   }
 }
+
+// -- AVULSOS -------------------------------------------------------------------
+var AV_TIPOS = {
+  consulta:'Consulta juridica', contrato:'Contrato', trabalhista:'Trabalhista',
+  familia:'Familia/Sucessoes', criminal:'Criminal', tributario:'Tributario',
+  empresarial:'Empresarial', imobiliario:'Imobiliario', administrativo:'Administrativo',
+  notificacao:'Notificacao/Carta', diligencia:'Diligencia', outro:'Outro'
+};
+var avEditandoId = null;
+
+function avGetLista(){ return est['_avulsos']||[]; }
+function avSaveLista(lista){ est['_avulsos']=lista; saveEst(); }
+function avNextId(){ return 'av_'+Date.now()+'_'+Math.random().toString(36).substr(2,4); }
+
+function avStats(){
+  var lista = avGetLista();
+  var total = lista.length;
+  var urgentes = lista.filter(function(a){return a.prioridade==='urgente'&&!a.concluido;}).length;
+  var abertos = lista.filter(function(a){return !a.concluido;}).length;
+  var concluidos = lista.filter(function(a){return a.concluido;}).length;
+  var vencidos = lista.filter(function(a){return !a.concluido&&a.prazo&&new Date(a.prazo+'T23:59:59')<new Date();}).length;
+  var statsEl = g('av-stats');
+  if (statsEl) statsEl.innerHTML =
+    '<div style="background:#fce4ec;border-radius:8px;padding:10px;text-align:center"><div style="font-size:22px;font-weight:700;color:#c62828">'+urgentes+'</div><div style="font-size:11px;color:#c62828;font-weight:600">Urgentes</div></div>'
+   +'<div style="background:#fff8e1;border-radius:8px;padding:10px;text-align:center"><div style="font-size:22px;font-weight:700;color:#e65100">'+vencidos+'</div><div style="font-size:11px;color:#e65100;font-weight:600">Vencidas</div></div>'
+   +'<div style="background:#e3f2fd;border-radius:8px;padding:10px;text-align:center"><div style="font-size:22px;font-weight:700;color:#1565c0">'+abertos+'</div><div style="font-size:11px;color:#1565c0;font-weight:600">Em aberto</div></div>'
+   +'<div style="background:#e8f5e9;border-radius:8px;padding:10px;text-align:center"><div style="font-size:22px;font-weight:700;color:#2e7d32">'+concluidos+'</div><div style="font-size:11px;color:#2e7d32;font-weight:600">Concluidos</div></div>';
+  var badge = g('mb-av-badge');
+  if (badge) {
+    if (urgentes>0) { badge.textContent=urgentes+' urgente(s)'; badge.style.color='#c62828'; }
+    else if (abertos>0) { badge.textContent=abertos+' em aberto'; badge.style.color='#1565c0'; }
+    else { badge.textContent='Clientes - Tarefas extras'; badge.style.color=''; }
+  }
+  if (g('av-resumo')) g('av-resumo').textContent = total+' demanda(s) cadastrada(s)';
+}
+
+function avListar(){
+  avStats();
+  var lista = avGetLista();
+  var filtP = g('av-filtro-prioridade')&&g('av-filtro-prioridade').value||'todos';
+  var filtS = g('av-filtro-status')&&g('av-filtro-status').value||'aberto';
+  var filtR = g('av-filtro-resp')&&g('av-filtro-resp').value||'todos';
+  var busca = (g('av-busca')&&g('av-busca').value||'').toLowerCase();
+
+  lista = lista.filter(function(a){
+    if (filtP!=='todos' && a.prioridade!==filtP) return false;
+    if (filtS==='aberto' && a.concluido) return false;
+    if (filtS==='concluido' && !a.concluido) return false;
+    if (filtR!=='todos' && a.respId!==filtR) return false;
+    if (busca && (a.cliente||'').toLowerCase().indexOf(busca)<0 && (a.desc||'').toLowerCase().indexOf(busca)<0) return false;
+    return true;
+  });
+
+  // Sort: urgentes primeiro, depois por prazo
+  lista.sort(function(a,b){
+    if (a.concluido && !b.concluido) return 1;
+    if (!a.concluido && b.concluido) return -1;
+    var prOrd = {urgente:0,normal:1,baixa:2};
+    if ((prOrd[a.prioridade]||1) !== (prOrd[b.prioridade]||1)) return (prOrd[a.prioridade]||1)-(prOrd[b.prioridade]||1);
+    if (a.prazo && b.prazo) return new Date(a.prazo)-new Date(b.prazo);
+    if (a.prazo) return -1; if (b.prazo) return 1;
+    return new Date(b.criadoEm)-new Date(a.criadoEm);
+  });
+
+  var el = g('av-lista');
+  if (!el) return;
+  if (!lista.length) {
+    el.innerHTML='<div style="padding:30px;text-align:center;color:#bbb;font-size:13px">Nenhuma demanda encontrada. Clique em "+ Nova demanda" para comecar.</div>';
+    return;
+  }
+
+  var html='';
+  lista.forEach(function(a){
+    var vencido = !a.concluido && a.prazo && new Date(a.prazo+'T23:59:59')<new Date();
+    var hoje = new Date(); hoje.setHours(0,0,0,0);
+    var hojeStr = hoje.toISOString().split('T')[0];
+    var venceHoje = !a.concluido && a.prazo===hojeStr;
+    var cardCls = a.concluido?'concluido':(a.prioridade||'normal');
+
+    html += '<div class="av-card '+cardCls+'">';
+
+    // Row 1: cliente + badges + data
+    html += '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:6px">';
+    html += '<div style="flex:1">';
+    html += '<div style="font-size:14px;font-weight:700;margin-bottom:3px">'+(a.cliente||'(sem cliente)')+'</div>';
+    html += '<span class="av-tag av-tag-'+(a.prioridade||'normal')+'">'+(a.prioridade==='urgente'?'(!!) URGENTE':a.prioridade==='baixa'?'Baixa':'Normal')+'</span>';
+    html += '<span class="av-tag" style="background:#f5f4f0;color:#666">'+(AV_TIPOS[a.tipo]||a.tipo||'Outro')+'</span>';
+    if (a.concluido) html += '<span class="av-tag av-tag-concluido">Concluido</span>';
+    if (vencido) html += '<span class="av-tag" style="background:#fce4ec;color:#c62828">(!) Vencida</span>';
+    if (venceHoje) html += '<span class="av-tag" style="background:#fff3e0;color:#e65100">Vence hoje</span>';
+    html += '</div>';
+    html += '<div style="text-align:right;flex-shrink:0">';
+    html += '<div style="font-size:10px;color:#aaa">'+new Date(a.criadoEm).toLocaleDateString('pt-BR')+'</div>';
+    if (a.honorarios) html += '<div style="font-size:11px;font-weight:700;color:#1b5e20">'+a.honorarios+'</div>';
+    html += '</div></div>';
+
+    // Row 2: descricao
+    if (a.desc) html += '<div style="font-size:12px;color:#444;margin-bottom:8px;line-height:1.5;border-left:3px solid #e0ddd6;padding-left:8px">'+a.desc+'</div>';
+
+    // Row 3: responsavel + prazo
+    html += '<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap">';
+    if (a.respNome) html += '<span style="font-size:11px;background:#f5f4f0;padding:2px 8px;border-radius:20px">&#128100; '+a.respNome+'</span>';
+    if (a.prazo) html += '<span style="font-size:11px;color:'+(vencido?'#c62828':venceHoje?'#e65100':'#666')+'">&#128197; Prazo: '+new Date(a.prazo+'T12:00:00').toLocaleDateString('pt-BR')+'</span>';
+    if (a.telCli) {
+      var telF=a.telCli.replace(/[^0-9]/g,''); if(telF.length===11)telF='55'+telF;
+      html += '<a href="https://wa.me/'+telF+'?text='+encodeURIComponent('Ola! Sou do escritorio Gadiani & DAntraccoli. Entramos em contato referente: '+a.desc)
+             +'" target="_blank" class="btn btnw" style="font-size:11px;padding:3px 8px;text-decoration:none">&#128172; Cliente</a>';
+    }
+    html += '</div>';
+
+    // Row 4: acoes
+    html += '<div style="display:flex;gap:6px;flex-wrap:wrap">';
+    if (!a.concluido) {
+      html += '<button class="btn btng" style="font-size:11px;padding:3px 8px" data-id="'+a.id+'" onclick="avConcluir(this.dataset.id)">&#10003; Concluir</button>';
+      html += '<button class="btn" style="font-size:11px;padding:3px 8px" data-id="'+a.id+'" onclick="avEditar(this.dataset.id)">&#9998; Editar</button>';
+      html += '<button class="btn" style="font-size:11px;padding:3px 8px;background:#e3f2fd;border-color:#90caf9;color:#1565c0" data-id="'+a.id+'" onclick="avDelegar(this.dataset.id)">&#128101; Redelegar</button>';
+    } else {
+      html += '<button class="btn" style="font-size:11px;padding:3px 8px" data-id="'+a.id+'" onclick="avReabrir(this.dataset.id)">Reabrir</button>';
+    }
+    if (a.respNome && a.respId) {
+      var equipe=eqGetEquipe(); var resp=equipe.find(function(u){return u.id===a.respId;}); 
+      if (resp&&resp.tel) {
+        var telR=resp.tel.replace(/[^0-9]/g,''); if(telR.length===11)telR='55'+telR;
+        var msg='Ola, '+resp.nome.split(' ')[0]+'! Sobre: '+a.desc+(a.prazo?'\nPrazo: '+new Date(a.prazo+'T12:00:00').toLocaleDateString('pt-BR'):'');
+        html += '<a href="https://wa.me/'+telR+'?text='+encodeURIComponent(msg)+'" target="_blank" class="btn" style="font-size:11px;padding:3px 8px;background:#e8f5e9;border-color:#a5d6a7;color:#1b5e20;text-decoration:none">&#128172; Notif. responsavel</a>';
+      }
+    }
+    html += '<button class="btn" style="font-size:11px;padding:3px 6px;background:#fce4ec;border-color:#f8bbd0;color:#c62828" data-id="'+a.id+'" onclick="avExcluir(this.dataset.id)">&#10005;</button>';
+    html += '</div></div>';
+  });
+  el.innerHTML = html;
+}
+
+function avPopularFiltroResp(){
+  var equipe = eqGetEquipe();
+  var sel = g('av-filtro-resp');
+  if (!sel) return;
+  var cur = sel.value;
+  sel.innerHTML = '<option value="todos">Todos responsaveis</option>';
+  equipe.forEach(function(u){ sel.innerHTML+='<option value="'+u.id+'">'+u.nome+'</option>'; });
+  if (cur) sel.value=cur;
+}
+
+function avPreencherSelectResp(selId, valorAtual){
+  var equipe = eqGetEquipe();
+  var sel = g(selId);
+  if (!sel) return;
+  sel.innerHTML='<option value="">-- Sem responsavel --</option>';
+  equipe.forEach(function(u){ sel.innerHTML+='<option value="'+u.id+'">'+u.nome+' ('+EQ_CARGO_LABEL[u.cargo]+')</option>'; });
+  if (valorAtual) sel.value=valorAtual;
+  // Show WA notification bar if resp has phone
+  sel.onchange=function(){ avAtualizarNotifBar(); };
+}
+
+function avAtualizarNotifBar(){
+  var respId = g('av-resp')&&g('av-resp').value;
+  var bar = g('av-notif-bar');
+  if (!bar) return;
+  if (!respId){ bar.style.display='none'; return; }
+  var equipe=eqGetEquipe(); var resp=equipe.find(function(u){return u.id===respId;});
+  bar.style.display = (resp&&resp.tel) ? 'block' : 'none';
+}
+
+function avNovo(){
+  avEditandoId=null;
+  if(g('av-modal-titulo'))g('av-modal-titulo').textContent='Nova Demanda Avulsa';
+  if(g('av-cliente'))g('av-cliente').value='';
+  if(g('av-tipo'))g('av-tipo').value='consulta';
+  if(g('av-desc'))g('av-desc').value='';
+  if(g('av-prioridade'))g('av-prioridade').value='normal';
+  if(g('av-prazo'))g('av-prazo').value='';
+  if(g('av-tel-cli'))g('av-tel-cli').value='';
+  if(g('av-honorarios'))g('av-honorarios').value='';
+  avPreencherSelectResp('av-resp', eqUsuarioAtual?eqUsuarioAtual.id:'');
+  avAtualizarNotifBar();
+  if(g('av-modal'))g('av-modal').style.display='flex';
+}
+
+function avEditar(id){
+  var lista=avGetLista(); var a=lista.find(function(x){return x.id===id;});
+  if(!a)return;
+  avEditandoId=id;
+  if(g('av-modal-titulo'))g('av-modal-titulo').textContent='Editar Demanda';
+  if(g('av-cliente'))g('av-cliente').value=a.cliente||'';
+  if(g('av-tipo'))g('av-tipo').value=a.tipo||'outro';
+  if(g('av-desc'))g('av-desc').value=a.desc||'';
+  if(g('av-prioridade'))g('av-prioridade').value=a.prioridade||'normal';
+  if(g('av-prazo'))g('av-prazo').value=a.prazo||'';
+  if(g('av-tel-cli'))g('av-tel-cli').value=a.telCli||'';
+  if(g('av-honorarios'))g('av-honorarios').value=a.honorarios||'';
+  avPreencherSelectResp('av-resp',a.respId||'');
+  avAtualizarNotifBar();
+  if(g('av-modal'))g('av-modal').style.display='flex';
+}
+
+function avDelegar(id){
+  var lista=avGetLista(); var a=lista.find(function(x){return x.id===id;});
+  if(!a)return;
+  avEditar(id);
+  // Scroll to resp selector
+  setTimeout(function(){ if(g('av-resp'))g('av-resp').focus(); },200);
+}
+
+function avSalvar(){
+  var cliente=(g('av-cliente')&&g('av-cliente').value||'').trim();
+  var desc=(g('av-desc')&&g('av-desc').value||'').trim();
+  if(!cliente&&!desc){alert('Informe o cliente ou a descricao da demanda.');return;}
+  var respId=g('av-resp')&&g('av-resp').value||'';
+  var equipe=eqGetEquipe();
+  var resp=equipe.find(function(u){return u.id===respId;})||null;
+  var lista=avGetLista();
+
+  if(avEditandoId){
+    var a=lista.find(function(x){return x.id===avEditandoId;});
+    if(a){
+      a.cliente=cliente; a.tipo=g('av-tipo').value; a.desc=desc;
+      a.prioridade=g('av-prioridade').value; a.prazo=g('av-prazo')&&g('av-prazo').value||'';
+      a.telCli=(g('av-tel-cli')&&g('av-tel-cli').value||'').replace(/[^0-9]/g,'');
+      a.honorarios=g('av-honorarios')&&g('av-honorarios').value||'';
+      a.respId=respId; a.respNome=resp?resp.nome:'';
+      a.atualizadoEm=new Date().toISOString();
+    }
+  } else {
+    lista.push({
+      id:avNextId(), cliente:cliente, tipo:g('av-tipo').value, desc:desc,
+      prioridade:g('av-prioridade').value, prazo:g('av-prazo')&&g('av-prazo').value||'',
+      telCli:(g('av-tel-cli')&&g('av-tel-cli').value||'').replace(/[^0-9]/g,''),
+      honorarios:g('av-honorarios')&&g('av-honorarios').value||'',
+      respId:respId, respNome:resp?resp.nome:'',
+      concluido:false, criadoEm:new Date().toISOString(),
+      criadoPor:eqUsuarioAtual?eqUsuarioAtual.nome:''
+    });
+  }
+  avSaveLista(lista);
+  avFecharModal();
+  avListar();
+
+  // Notify by WhatsApp
+  if(resp&&resp.tel&&respId){
+    var telR=resp.tel.replace(/[^0-9]/g,''); if(telR.length===11)telR='55'+telR;
+    var quemCriou=eqUsuarioAtual?eqUsuarioAtual.nome.split(' ')[0]:'Escritorio';
+    var msgR='Ola, '+resp.nome.split(' ')[0]+'! '+quemCriou+' atribuiu demanda:'+' '+cliente+' - '+desc+(g('av-prazo')&&g('av-prazo').value?' - Prazo: '+new Date(g('av-prazo').value+'T12:00:00').toLocaleDateString('pt-BR'):'')+' - Gadiani Advogados';
+    if(confirm('Enviar notificacao por WhatsApp para '+resp.nome+'?'))
+      window.open('https://wa.me/'+telR+'?text='+encodeURIComponent(msgR),'_blank');
+  }
+}
+
+function avFecharModal(){ if(g('av-modal'))g('av-modal').style.display='none'; }
+function avConcluir(id){
+  var lista=avGetLista(); var a=lista.find(function(x){return x.id===id;});
+  if(a){a.concluido=true;a.concluidoEm=new Date().toISOString();}
+  avSaveLista(lista); avListar();
+}
+function avReabrir(id){
+  var lista=avGetLista(); var a=lista.find(function(x){return x.id===id;});
+  if(a){a.concluido=false;delete a.concluidoEm;}
+  avSaveLista(lista); avListar();
+}
+function avExcluir(id){
+  if(!confirm('Excluir esta demanda?'))return;
+  avSaveLista(avGetLista().filter(function(x){return x.id!==id;})); avListar();
+}
+
 window.addEventListener('load',function(){
-  checarTokenDrive();loadUser();loadEst();setTimeout(diLoad,300);
+  checarTokenDrive();loadUser();loadEst();setTimeout(diLoad,300);setTimeout(eqCarregarSessao,500);setTimeout(avStats,600);
 });
 </script>
 </body>
