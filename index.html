@@ -1112,6 +1112,17 @@ function tryProxy(id,gid,cb){
     .then(function(t){cb(null,t);})
     .catch(function(e){cb(e,null);});
 }
+function callAIPost(prompt,cb){
+  fetch(SCRIPT,{method:'POST',redirect:'follow',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'ai',prompt:prompt})})
+    .then(function(r){return r.text();})
+    .then(function(t){
+      var d;try{d=JSON.parse(t);}catch(x){throw new Error('Resposta invalida');}
+      if(!d.ok)throw new Error(d.error||'Erro servidor');
+      if(!d.text||d.text.length<5)throw new Error('Resposta vazia. Tente novamente.');
+      cb(null,d.text);
+    })
+    .catch(function(e){cb(e,null);});
+}
 function callAI(prompt,cb){
   var url=SCRIPT+'?action=ai&prompt='+encodeURIComponent(prompt);
   fetch(url,{method:'GET',redirect:'follow'})
@@ -2350,8 +2361,7 @@ function diGerPeticaoCompleta(){
     +'\nFone: (19) 99412-6931 | gadianiedantraccoli@gmail.com'
     +'\n\nINSTRUCOES ABSOLUTAS: escreva em portugues com todos os acentos e cedilhas. ZERO markdown, ZERO asteriscos, ZERO hashtags. Paragrafos separados por linha em branco. Texto juridico formal. Use os dados reais fornecidos.';
 
-  var url=SCRIPT+'?action=ai&prompt='+encodeURIComponent(prompt);
-  fetch(url,{method:'GET',redirect:'follow'})
+  fetch(SCRIPT,{method:'POST',redirect:'follow',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'ai',prompt:prompt})})
   .then(function(r){return r.text();})
   .then(function(t){
     var d;
@@ -2375,8 +2385,7 @@ function diGerPeticaoCompleta(){
       g('di-pet-lbl').textContent='Completando pedidos e encerramento...';
       var promptCont='Continue a peticao abaixo exatamente de onde parou. Escreva APENAS a continuacao, sem repetir o que ja foi escrito. Complete os PEDIDOS (com letras a), b), c)...), o VALOR DA CAUSA e o ENCERRAMENTO com data '+hoje+', assinaturas de Ari D Antraccoli Neto OAB/SP 500.799 e Augusto de Andrade Gadiani OAB/SP 425.910 e dados do escritorio. Escreva em portugues com acentos. ZERO markdown.'
         +'\n\nTEXTO JA GERADO (continue a partir daqui):\n'+txt;
-      var urlCont=SCRIPT+'?action=ai&prompt='+encodeURIComponent(promptCont);
-      fetch(urlCont,{method:'GET',redirect:'follow'})
+      fetch(SCRIPT,{method:'POST',redirect:'follow',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'ai',prompt:promptCont})})
         .then(function(r2){return r2.text();})
         .then(function(t2){
           var d2;
@@ -3321,8 +3330,7 @@ function seGerPeticaoCompleta(){
         return;
       }
       g('se-pet-lbl').textContent='Gerando parte '+(i+1)+' de '+P.length+'...';
-      var url=SCRIPT+'?action=ai&prompt='+encodeURIComponent(P[i]);
-      fetch(url,{method:'GET',redirect:'follow'})
+      fetch(SCRIPT,{method:'POST',redirect:'follow',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'ai',prompt:P[i]})})
       .then(function(r){return r.text();})
       .then(function(t){
         var d;try{d=JSON.parse(t);}catch(x){throw new Error('Invalido');}
