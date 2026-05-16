@@ -399,7 +399,6 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#1a1a1a}
     <button id="sn4" onclick="swSE(4)">Protocolo</button>
     <button id="sn5" onclick="swSE(5)">CRM</button>
     <button id="sn6" onclick="swSE(6)">Notificacoes</button>
-    <button id="sn7" onclick="swSE(7)">Drive</button>
   </nav>
 
   <div id="sp0" class="pg on">
@@ -441,16 +440,26 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#1a1a1a}
 
   <div id="sp2" class="pg">
     <div class="card">
-      <div class="ct">Peticao &mdash; Superendividamento (5 etapas)</div>
-      <div class="info-box">Cada etapa e gerada e revisada antes de avancar.</div>
-      <select id="se-sel-pet-old" style="margin-bottom:14px" onchange="seIniciarPet()"><option value="">Selecionar cliente...</option></select>
-      <div id="se-steps"></div>
+      <div class="ct">Peticao Inicial &mdash; Repactuacao de Dividas (Superendividamento)</div>
+      <select id="se-sel-pet" style="margin-bottom:12px"><option value="">Selecionar cliente...</option></select>
+      <div class="g2">
+        <div><label>Vara</label><input id="se-vara-pet" value="Vara Civel da Comarca de Vargem Grande do Sul - SP"></div>
+        <div><label>Cidade/Estado</label><input id="se-cidade-pet" value="Vargem Grande do Sul/SP"></div>
+      </div>
+      <div id="se-drive-bar-pet" style="margin-top:10px;padding:10px;border-radius:8px;display:flex;align-items:center;justify-content:space-between;gap:10px;background:#fce4ec;border:1px solid #f8bbd0">
+        <span style="font-size:12px;color:#c62828;font-weight:600">&#9888; Drive nao conectado</span>
+        <button class="btn" style="font-size:11px;padding:4px 10px" onclick="driveConectar(function(){seAtualizaDrivePet();})">Conectar Drive</button>
+      </div>
+      <div style="margin-top:8px;padding:8px 12px;background:#e8f5e9;border:1px solid #a5d6a7;border-radius:8px;font-size:11px;color:#1b5e20;font-weight:600">
+        &#9654; Tutela de Urgencia obrigatoria - suspensao de todas as dividas ate audiencia
+      </div>
+      <button class="btn btnp" style="width:100%;justify-content:center;margin-top:12px;padding:12px;font-size:14px" onclick="seGerPet()">&#9654; Gerar peticao completa</button>
       <div id="se-pet-area" style="display:none;margin-top:14px">
-        <div class="ct" id="se-pet-lbl"></div>
-        <div class="out" id="se-pet-txt" style="min-height:120px"></div>
+        <div style="font-size:12px;font-weight:600;color:#1b5e20;margin-bottom:6px" id="se-pet-lbl"></div>
+        <div class="out" id="se-pet-txt" style="min-height:100px"></div>
         <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
-          <button class="btn" onclick="copiar('se-pet-txt')">Copiar etapa</button>
-          <button class="btn btng" id="se-pet-dl" style="display:none" onclick="seBaixarPet()">Baixar peticao .doc</button>
+          <button class="btn" onclick="copiar('se-pet-txt')">Copiar texto</button>
+          <button class="btn btng" id="se-pet-dl" style="display:none" onclick="seDownloadPet2()">Baixar .doc</button>
         </div>
       </div>
     </div>
@@ -458,34 +467,22 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#1a1a1a}
 
   <div id="sp3" class="pg">
     <div class="card">
-      <div class="ct">Peticao Inicial - Repactuacao de Dividas (Superendividamento)</div>
-      <div class="warn-box">Preencha os dados, conecte o Drive para usar documentos do cliente, e clique em Gerar.</div>
-      <select id="se-sel-pet" style="margin-bottom:12px" onchange="sePetPreench()"><option value="">Selecionar cliente...</option></select>
-      <div class="g2">
-        <div><label>Tratamento do(a) Juiz(a)</label><input id="se-vara-trat" value="Ao Juizo da"></div>
-        <div><label>Vara</label><input id="se-vara" value="Vara Civel da Comarca de Vargem Grande do Sul - SP"></div>
+      <div class="ct">Plano de Pagamento &mdash; Art. 104-A CDC</div>
+      <div class="info-box">70% minimo existencial + 30% proporcional entre credores. 60 meses.</div>
+      <div style="display:flex;gap:8px;margin-bottom:12px">
+        <select id="se-sel-plano" style="flex:1"><option value="">Selecionar cliente...</option></select>
+        <button class="btn btnp" onclick="seGerPlano()">Calcular plano</button>
       </div>
-      <div class="g2">
-        <div><label>Cidade</label><input id="se-cidade-pet" value="Vargem Grande do Sul"></div>
-        <div><label>Estado</label><input id="se-estado-pet" value="Sao Paulo"></div>
-      </div>
-      <div id="se-pet-drive-bar" style="margin-top:10px;padding:10px;border-radius:8px;display:flex;align-items:center;justify-content:space-between;gap:10px;background:#fce4ec;border:1px solid #f8bbd0">
-        <span style="font-size:12px;color:#c62828;font-weight:600">&#9888; Drive nao conectado - documentos NAO serao usados na peticao</span>
-        <button class="btn" style="font-size:11px;padding:4px 10px;background:#fff;border-color:#f8bbd0;color:#c62828" onclick="driveConectar(function(){atualizarStatusDriveSE();})">Conectar Drive</button>
-      </div>
-      <div style="margin-top:8px;padding:10px;background:#e8f5e9;border:1px solid #a5d6a7;border-radius:8px">
-        <div style="font-size:12px;font-weight:700;color:#1b5e20;margin-bottom:4px">Tutela de Urgencia obrigatoria nesta acao</div>
-        <div style="font-size:11px;color:#2e7d32">Suspensao de todas as dividas ate audiencia de conciliacao + limitacao dos descontos ao minimo existencial</div>
-      </div>
-      <button class="btn btnp" style="width:100%;justify-content:center;margin-top:14px;padding:12px;font-size:14px" onclick="seGerPeticaoComDrive()">&#9654; Gerar peticao completa</button>
-      <div id="se-pet-area" style="display:none;margin-top:14px">
-        <div style="font-size:12px;font-weight:600;color:#1b5e20;margin-bottom:6px" id="se-pet-lbl"></div>
-        <div class="out" id="se-pet-txt" style="min-height:100px"></div>
-        <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
-          <button class="btn" onclick="copiar('se-pet-txt')">Copiar texto</button>
-          <button class="btn btng" id="se-pet-dl2" style="display:none" onclick="seDownloadPet()">Baixar .doc</button>
+    </div>
+    <div id="se-plano-area" style="display:none" class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <div class="ct" style="margin-bottom:0">Plano gerado</div>
+        <div style="display:flex;gap:6px">
+          <button class="btn" onclick="copiar('se-plano-txt')">Copiar</button>
+          <button class="btn btng" id="se-plano-dl" style="display:none" onclick="baixarPlanoDocx()">Baixar Plano .doc</button>
         </div>
       </div>
+      <div class="out" id="se-plano-txt"></div>
     </div>
   </div>
 
@@ -565,23 +562,6 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#1a1a1a}
       <button class="btn" onclick="closeModal()">Cancelar</button>
       <button class="btn btnp" onclick="saveUrg()">Marcar urgente</button>
     </div>
-  <div id="sp7" class="pg">
-    <div class="card">
-      <div class="ct">Drive do cliente - Superendividamento</div>
-      <div id="se-drive-status" class="warn-box">Selecione um cliente e clique em Buscar no Drive.</div>
-      <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
-        <select id="se-drive-sel" style="flex:1" onchange="seDriveAtualizar()"><option value="">Selecionar cliente...</option></select>
-        <button class="btn btnp" onclick="seDriveBuscar()">Buscar no Drive</button>
-      </div>
-      <div id="se-drive-lista"></div>
-    </div>
-    <div id="se-drive-docs-card" style="display:none" class="card">
-      <div class="ct" style="margin-bottom:10px">Documentos encontrados</div>
-      <div class="info-box" style="margin-bottom:10px">Marque os documentos presentes. Isso atualiza o checklist automaticamente.</div>
-      <div id="se-drive-docs"></div>
-    </div>
-  </div>
-
   </div>
 </div>
 
@@ -592,7 +572,6 @@ var DI_GID = '600954692';
 var SE_ID = '1vPyX8IP8ukhpID0eWfZR5ckbYUj-xldKyVTgQIkpBVs';
 var DRIVE_CLIENT_ID = '764530109135-jr7395s7cqhpioe2ng9mr59g73ukpojc.apps.googleusercontent.com';
 var DRIVE_FOLDER_DI = '1eT8ZckAtgcfdJ0MAhc--svyMVINzfV7b';
-var DRIVE_FOLDER_SE = '1Ed0rrn4zmFssqj9M0lqxDjWoPEgr6zKM'; // pasta raiz SE
 
 var diC = [], seC = [], est = {}, saveT = null;
 var diCur = null, seCur = null, sePetC = null, sePetTxts = [];
@@ -1012,7 +991,7 @@ function setMod(m){
   if(m==='pt')ptListar();
 }
 function swDI(n){var i;for(i=0;i<8;i++){g('dp'+i).className='pg'+(i===n?' on':'');g('dn'+i).className=i===n?'on':'';}if(n===7)drivePopSel();}
-function swSE(n){var i;for(i=0;i<8;i++){g('sp'+i)&&(g('sp'+i).className='pg'+(i===n?' on':''));g('sn'+i)&&(g('sn'+i).className=i===n?'on':'');}}
+function swSE(n){var i;for(i=0;i<7;i++){g('sp'+i).className='pg'+(i===n?' on':'');g('sn'+i).className=i===n?'on':'';}}
 
 function diLoad(){
   g('di-lista').innerHTML='<div class="load"><span class="spin"></span> Carregando...</div>';
@@ -1152,9 +1131,7 @@ function verAnalises(cid){
 function docSalvarDrive(file,b64,c){
   var pastaId=getE(c.id).drivePastaId;
   if(pastaId){uploadDrive(file,b64,pastaId);return;}
-  var isSE=!!seC.find(function(x){return x.id===cid;});
-  var folder=isSE?DRIVE_FOLDER_SE:DRIVE_FOLDER_DI;
-  var q='"'+folder+'" in parents and mimeType="application/vnd.google-apps.folder" and trashed=false';
+  var q='"'+DRIVE_FOLDER_DI+'" in parents and mimeType="application/vnd.google-apps.folder" and trashed=false';
   fetch('https://www.googleapis.com/drive/v3/files?q='+encodeURIComponent(q)+'&fields=files(id,name)&pageSize=200',{headers:{Authorization:'Bearer '+driveToken}})
     .then(function(r){return r.json();})
     .then(function(d){
@@ -1267,47 +1244,18 @@ function lerArquivosDrive(cid, cb){
   var c=nomeN;
   var pastaId=getE(cid).drivePastaId;
   if(pastaId){lerArquivosDaPasta(pastaId,cb);return;}
-  var isSE=!!seC.find(function(x){return x.id===cid;});
-  var folder=isSE?DRIVE_FOLDER_SE:DRIVE_FOLDER_DI;
-  var nN=c.nome.toLowerCase().replace(/[^a-z0-9 ]/g,'');
-  var pals=nN.split(' ').filter(function(p){return p.length>2;});
-  function melhorPasta(files){
-    var melhor=null,melhorSc=0;
-    files.forEach(function(f){
-      var fn=f.name.toLowerCase().replace(/[^a-z0-9 ]/g,'');
-      var sc=0;pals.forEach(function(p){if(fn.indexOf(p)>=0)sc+=10;});
-      if(sc>melhorSc){melhorSc=sc;melhor=f;}
-    });
-    return melhorSc>=10?melhor:null;
-  }
-  var q1='"'+folder+'" in parents and mimeType="application/vnd.google-apps.folder" and trashed=false';
-  fetch('https://www.googleapis.com/drive/v3/files?q='+encodeURIComponent(q1)+'&fields=files(id,name)&pageSize=200',{headers:{Authorization:'Bearer '+driveToken}})
+  var q='"'+DRIVE_FOLDER_DI+'" in parents and mimeType="application/vnd.google-apps.folder" and trashed=false';
+  fetch('https://www.googleapis.com/drive/v3/files?q='+encodeURIComponent(q)+'&fields=files(id,name)&pageSize=200',{headers:{Authorization:'Bearer '+driveToken}})
     .then(function(r){return r.json();})
     .then(function(d){
       if(!d.files||!d.files.length){cb(null,'');return;}
-      // Try to find client folder at level 1 (DI structure)
-      var nivel1=melhorPasta(d.files);
-      if(nivel1){getE(cid).drivePastaId=nivel1.id;saveEst();lerArquivosDaPasta(nivel1.id,cb);return;}
-      if(!isSE){cb(null,'');return;}
-      // SE structure: root > mes > cliente - search all month folders
-      var meses=d.files;
-      var encontrado=false;
-      var pendentes=meses.length;
-      if(!pendentes){cb(null,'');return;}
-      meses.forEach(function(mes){
-        var q2='"'+mes.id+'" in parents and mimeType="application/vnd.google-apps.folder" and trashed=false';
-        fetch('https://www.googleapis.com/drive/v3/files?q='+encodeURIComponent(q2)+'&fields=files(id,name)&pageSize=200',{headers:{Authorization:'Bearer '+driveToken}})
-          .then(function(r){return r.json();})
-          .then(function(d2){
-            if(!encontrado&&d2.files&&d2.files.length){
-              var nivel2=melhorPasta(d2.files);
-              if(nivel2){encontrado=true;getE(cid).drivePastaId=nivel2.id;saveEst();lerArquivosDaPasta(nivel2.id,cb);}
-            }
-            pendentes--;
-            if(pendentes===0&&!encontrado)cb(null,'');
-          })
-          .catch(function(){pendentes--;if(pendentes===0&&!encontrado)cb(null,'');});
-      });
+      var nN=c.nome.toLowerCase().replace(/[^a-z0-9 ]/g,'');
+      var pals=nN.split(' ').filter(function(p){return p.length>2;});
+      var melhor=null,melhorSc=0;
+      d.files.forEach(function(f){var fn=f.name.toLowerCase().replace(/[^a-z0-9 ]/g,'');var sc=0;pals.forEach(function(p){if(fn.indexOf(p)>=0)sc+=10;});if(sc>melhorSc){melhorSc=sc;melhor=f;}});
+      if(!melhor||melhorSc<10){cb(null,'');return;}
+      getE(cid).drivePastaId=melhor.id;saveEst();
+      lerArquivosDaPasta(melhor.id,cb);
     })
     .catch(function(){cb(null,'');});
 }
@@ -1630,9 +1578,7 @@ function driveBuscar(){
 function driveBuscarPasta(c){
   var st=g('drive-status'),res=g('drive-resultado');
   st.style.display='block';st.textContent='Buscando pasta de '+c.nome+'...';res.style.display='none';
-  var isSE=!!seC.find(function(x){return x.id===cid;});
-  var folder=isSE?DRIVE_FOLDER_SE:DRIVE_FOLDER_DI;
-  var q='"'+folder+'" in parents and mimeType="application/vnd.google-apps.folder" and trashed=false';
+  var q='"'+DRIVE_FOLDER_DI+'" in parents and mimeType="application/vnd.google-apps.folder" and trashed=false';
   fetch('https://www.googleapis.com/drive/v3/files?q='+encodeURIComponent(q)+'&fields=files(id,name)&pageSize=200',{headers:{Authorization:'Bearer '+driveToken}})
     .then(function(r){return r.json();})
     .then(function(d){
@@ -1784,7 +1730,7 @@ function seListar(){
   g('se-lista').innerHTML=html;
 }
 function sePopSels(){
-  var sels=['se-sel-doc','se-sel-pet','se-sel-pet-old','se-sel-plano','se-p1','se-p2','se-crm-sel','se-not-sel','se-drive-sel'],i,j,s,c;
+  var sels=['se-sel-doc','se-sel-pet','se-sel-plano','se-p1','se-p2','se-crm-sel','se-not-sel','se-drive-sel'],i,j,s,c;
   for(i=0;i<sels.length;i++){s=g(sels[i]);if(!s)continue;s.innerHTML='<option value="">Selecionar...</option>';for(j=0;j<seC.length;j++){c=seC[j];s.innerHTML+='<option value="'+c.id+'">'+c.nome+'</option>';}}
 }
 function seIrDocs(id){swSE(1);g('se-sel-doc').value=id;seOpenDocs();}
@@ -1823,8 +1769,97 @@ function seWA(id){
   getE(c.id).ultimoContato=new Date().toISOString();saveEst();
 }
 var SE_LABELS=['Enderecamento e qualificacao','Justica gratuita e prioridade','Dos fatos','Tutela de urgencia','Pedidos e encerramento'];
+function seAtualizaDrivePet(){
+  var bar=g('se-drive-bar-pet');if(!bar)return;
+  if(driveToken){
+    bar.style.background='#e8f5e9';bar.style.borderColor='#a5d6a7';
+    bar.innerHTML='<span style="font-size:12px;color:#1b5e20;font-weight:600">&#9989; Drive conectado &mdash; documentos serao usados na peticao</span><button class="btn" style="font-size:11px" onclick="driveToken=null;localStorage.removeItem(\'drv_token\');atualizarStatusDrive();">Desconectar</button>';
+  }else{
+    bar.style.background='#fce4ec';bar.style.borderColor='#f8bbd0';
+    bar.innerHTML='<span style="font-size:12px;color:#c62828;font-weight:600">&#9888; Drive nao conectado</span><button class="btn" style="font-size:11px" onclick="driveConectar(function(){seAtualizaDrivePet();})">Conectar Drive</button>';
+  }
+}
+
+function seDownloadPet2(){
+  baixarDocx(limparMarkdown(g('se-pet-txt').textContent),'peticao_superendividamento.doc');
+}
+
+function seGerPet(){
+  var id=g('se-sel-pet').value;
+  if(!id){alert('Selecione um cliente.');return;}
+  g('se-pet-area').style.display='block';
+  g('se-pet-dl').style.display='none';
+  g('se-pet-lbl').textContent='Buscando documentos do Drive...';
+  g('se-pet-txt').textContent='Aguarde...';
+  lerArquivosDrive(id,function(err,docsTxt){
+    seGerarPeticaoSE(id,docsTxt||'');
+  });
+}
+
+function seGerarPeticaoSE(id,docsTxt){
+  var cl=seC.find(function(x){return x.id===id;});
+  if(!cl)return;
+  var vara=(g('se-vara-pet')&&g('se-vara-pet').value)||'Vara Civel';
+  var cidest=(g('se-cidade-pet')&&g('se-cidade-pet').value)||'Vargem Grande do Sul/SP';
+  var hoje=new Date().toLocaleDateString('pt-BR');
+  var rLiq=parseFloat(cl.rendaLiquida)||0;
+  var rBrut=parseFloat(cl.rendaBruta)||rLiq;
+  var minEx='R$ '+(rLiq*0.7).toLocaleString('pt-BR',{minimumFractionDigits:2});
+  var dispDiv='R$ '+(rLiq*0.3).toLocaleString('pt-BR',{minimumFractionDigits:2});
+  var totDiv=parseFloat(cl.totalDividas)||0;
+  var totDivStr='R$ '+totDiv.toLocaleString('pt-BR',{minimumFractionDigits:2});
+  var credCols=[cl.c1,cl.c2,cl.c3,cl.c4,cl.c5,cl.c6,cl.c7,cl.c8,cl.c9,cl.c10];
+  var creds=credCols.filter(function(r){return r&&r.nome;});
+  var credsQual=creds.map(function(r){
+    return r.nome+(r.cnpj?', CNPJ '+r.cnpj:'')+(r.end?', sede em '+r.end:'');
+  }).join('; ');
+  var credsList=creds.map(function(r){
+    return r.nome+': R$ '+(parseFloat(r.valor)||0).toLocaleString('pt-BR',{minimumFractionDigits:2})+(r.forma?' ('+r.forma+')':'')+(r.prest?', parcela R$ '+r.prest:'');
+  }).join('; ');
+  var analises=getE(id).analises||{};
+  var docInfo='';Object.keys(analises).forEach(function(did){docInfo+='['+analises[did].doc+']: '+analises[did].txt+'; ';});
+  var dados='Cliente: '+cl.nome+' | CPF: '+(cl.cpf||'-')+' | '+(cl.nac||'brasileiro(a)')+' | '+(cl.civil||'-')+' | '+(cl.prof||'-')+' | Nasc: '+(cl.nasc||'-')+' | End: '+(cl.end||cl.cidade||'-')+(cl.tel?' | Tel: '+cl.tel:'')+(cl.email?' | Email: '+cl.email:'')+(cl.doencas?' | Doencas: '+cl.doencas:'')+' | Renda bruta: R$ '+rBrut.toLocaleString('pt-BR',{minimumFractionDigits:2})+' | Renda liquida: R$ '+rLiq.toLocaleString('pt-BR',{minimumFractionDigits:2})+' | Minimo existencial 70%: '+minEx+' | Disponivel dividas 30%: '+dispDiv+' | Total dividas: '+totDivStr+' | Credores: '+credsList+(cl.serasa?' | Serasa: '+cl.serasa:'')+' | Motivos: '+(cl.motivos||'-')+(docInfo?' | Documentos analisados: '+docInfo:'')+(docsTxt?' | Documentos Drive: '+docsTxt:'');
+  var r='Escreva em portugues com todos os acentos e cedilhas. Zero markdown. Zero asteriscos. Paragrafos separados por linha em branco. Texto juridico formal. ';
+  var P=[
+    r+dados+' REDIJA APENAS: (1) ENDERECAMENTO centralizado em maiusculo: "Ao Juizo da '+vara+'"; (2) "JUIZO 100% DIGITAL" centralizado; (3) "TUTELA PROVISORIA" centralizado; (4) QUALIFICACAO DO AUTOR em texto corrido completo com todos os dados (nome, '+( cl.nac||'brasileiro(a)')+', '+cl.civil+', '+(cl.prof||'-')+', CPF '+cl.cpf+(cl.nasc?', nascido em '+cl.nasc:'')+', residente em '+(cl.end||cl.cidade||'-')+(cl.tel?', tel. '+cl.tel:'')+(cl.email?', e-mail '+cl.email:'')+(cl.doencas?', portador(a) de '+cl.doencas:'')+'), termine com "vem propor a presente:"; (5) NOME DA ACAO centralizado: "REPACTUACAO DE DIVIDAS (SUPERENDIVIDAMENTO)"; (6) "em relacao aos credores a seguir indicados:"; (7) QUALIFICACAO DE CADA CREDOR em paragrafo separado: '+credsQual+'; (8) I - DA GRATUIDADE DA JUSTICA: renda de R$ '+rLiq.toLocaleString('pt-BR',{minimumFractionDigits:2})+', hipossuficiencia economica e tecnica, Art. 5 LXXIV CF, Arts. 98-99 CPC.'+(cl.doencas?' (9) DA PRIORIDADE DE TRAMITACAO: portador(a) de '+cl.doencas+', Art. 1048 CPC.':''),
+
+    r+dados+' REDIJA APENAS a secao I - DA CONFIGURACAO DO SUPERENDIVIDAMENTO com subtopicos: I.1 - DA SITUACAO REMUNERATORIA E PATRIMONIAL: renda bruta R$ '+rBrut.toLocaleString('pt-BR',{minimumFractionDigits:2})+', liquida R$ '+rLiq.toLocaleString('pt-BR',{minimumFractionDigits:2})+', situacao patrimonial e contexto de vida usando documentos disponiveis. I.2 - DO QUADRO GERAL DE DIVIDAS: liste cada credor ('+credsList+'), total de '+totDivStr+', demonstre que e impagavel. Mencione dividas ainda nao documentadas. Declare que nao houve ma-fe. I.3 - DO MINIMO EXISTENCIAL: fundamente reserva de 70% ('+minEx+') para necessidades vitais. Os 30% restantes ('+dispDiv+') vao para o plano. Art. 54-A par. 3 CDC, Lei 14.181/2021, precedentes TJSC. I.4 - CONCLUSAO: cliente se enquadra no art. 54-A par. 1 CDC, motivos: '+(cl.motivos||'acumulo de dividas de boa-fe')+'.',
+
+    r+dados+' REDIJA APENAS: Secao II - DA NECESSARIA EXIBICAO DE DOCUMENTOS: os contratos e historicos estao em poder dos credores, nao do consumidor. Art. 397 CPC, Art. 6 VIII CDC, hipossuficiencia tecnica. Requeira exibicao em 15 dias. Secao III - TUTELA PROVISORIA (obrigatoria e fundamental): FUMUS BONI IURIS = superendividamento comprovado, dividas de '+totDivStr+' contra renda de R$ '+rLiq.toLocaleString('pt-BR',{minimumFractionDigits:2})+', pratica de credito irresponsavel pelos credores (SARB 001/08 e SARB 010/2013, art. 54-B CDC). PERICULUM IN MORA = impossibilidade de subsistencia, privacao de alimentacao moradia e medicamentos, dano irreparavel. Requeira: (a) SUSPENSAO DA EXIGIBILIDADE de todas as dividas ate audiencia de conciliacao; subsidiariamente (b) LIMITACAO dos descontos ao valor de '+dispDiv+' distribuido proporcionalmente. Art. 300 CPC, Lei 14.181/2021 arts. 104-A a 104-C.',
+
+    r+dados+' REDIJA APENAS a fundamentacao juridica com subtopicos: IV.1 - DO SUPERENDIVIDAMENTO E LEI 14.181/2021: conceito (art. 54-A CDC), direito ao tratamento, principios boa-fe e minimo existencial. IV.2 - DO CREDITO IRRESPONSAVEL: art. 54-B CDC, SARB 001/08, SARB 010/2013, obrigacao de avaliar capacidade de pagamento antes de conceder credito. IV.3 - DO PROCESSO DE REPACTUACAO: art. 104-A CDC, audiencia coletiva, plano ate 60 meses, preservacao dos 70%. IV.4 - DA TUTELA PROCESSUAL: Art. 6 VIII CDC (inversao onus prova), hipossuficiencia tecnica e juridica'+(cl.doencas?', vulnerabilidade agravada por '+cl.doencas:'')+'. Cite Leonardo Roscoe Bessa.',
+
+    r+dados+' REDIJA APENAS o final da peticao: Secao IV - REQUERIMENTOS E PEDIDOS. Ante o exposto requer-se: a) Admissao do pedido de repactuacao de dividas e designacao de audiencia de conciliacao coletiva com todos os credores (art. 104-A CDC); b) Concessao da GRATUIDADE DA JUSTICA (arts. 98-99 CPC);'+(cl.doencas?' c) PRIORIDADE DE TRAMITACAO (Art. 1048 CPC);':'')+' '+(cl.doencas?'d':'c')+') Concessao de TUTELA DE URGENCIA liminar para: (i) suspensao da exigibilidade de todas as dividas ate audiencia; subsidiariamente (ii) limitacao dos descontos a '+dispDiv+' proporcional entre credores; (iii) intimacao das demandadas em 48h sob pena de multa; '+(cl.doencas?'e':'d')+') Citacao de todos os credores (art. 246 CPC); '+(cl.doencas?'f':'e')+') Exibicao dos contratos e documentos em 15 dias; '+(cl.doencas?'g':'f')+') Producao de todas as provas; '+(cl.doencas?'h':'g')+') Homologacao do plano de pagamento e revisao judicial das clausulas abusivas (art. 104-B CDC); '+(cl.doencas?'i':'h')+') Honorarios e custas (Art. 85 CPC). VALOR DA CAUSA: '+totDivStr+' (Art. 292 CPC). "Pede deferimento." '+cidest+', '+hoje+'. Centralizados: _____________________________________________ Augusto de Andrade Gadiani OAB/SP n. 425.910 _____________________________________________ Ari D Antraccoli Neto OAB/SP n. 500.799'
+  ];
+
+  var acumulado='';
+  function gerarParte(i){
+    if(i>=P.length){
+      g('se-pet-txt').textContent=limparMarkdown(acumulado);
+      g('se-pet-lbl').textContent='Peticao completa! Revise e baixe o .doc.';
+      g('se-pet-dl').style.display='inline-flex';
+      return;
+    }
+    g('se-pet-lbl').textContent='Gerando parte '+(i+1)+' de '+P.length+'...';
+    var url=SCRIPT+'?action=ai&prompt='+encodeURIComponent(P[i]);
+    fetch(url,{method:'GET',redirect:'follow'})
+    .then(function(r){return r.text();})
+    .then(function(t){
+      var d;try{d=JSON.parse(t);}catch(x){throw new Error('Invalido parte '+(i+1));}
+      if(!d.ok)throw new Error(d.error||'Erro parte '+(i+1));
+      acumulado+=(acumulado?'\n\n':'')+( d.text||'');
+      gerarParte(i+1);
+    })
+    .catch(function(e){
+      g('se-pet-txt').textContent='Erro parte '+(i+1)+': '+e.message;
+      g('se-pet-lbl').textContent='Erro. Tente novamente.';
+    });
+  }
+  gerarParte(0);
+}
+
 function seIniciarPet(){
-  var id=g('se-sel-pet-old').value;if(!id)return;
+  var id=g('se-sel-pet').value;if(!id)return;
   sePetC=seC.find(function(x){return x.id===id;});sePetTxts=[];
   var html='',i;
   for(i=0;i<SE_LABELS.length;i++){html+='<div class="step-row'+(i===0?' cur':'')+'" id="srow'+i+'"><div class="snum'+(i===0?' cur':'')+'" id="snum'+i+'">'+(i+1)+'</div><div style="flex:1"><div style="font-size:13px;font-weight:600">'+SE_LABELS[i]+'</div></div><button class="btn'+(i===0?' btnp':'')+'" id="sbtn'+i+'" onclick="seGerEtapa('+i+')"'+(i>0?' disabled':'')+'>Gerar</button></div>';}
@@ -1862,216 +1897,6 @@ function seBaixarPet(){
   var txt=sePetTxts.join('\n\n'+sep+'\n\n');
   baixarDocx(txt,'peticao_superendividamento.doc');
 }
-function seDriveAtualizar(){
-  var id=g('se-drive-sel').value;if(!id)return;
-  var ds=g('se-drive-status');
-  if(ds){ds.className=driveToken?'info-box':'warn-box';ds.textContent=driveToken?'Drive conectado. Clique em Buscar no Drive.':'Drive nao conectado. Clique em Buscar no Drive para autorizar.';}
-}
-function seDriveBuscar(){
-  var id=g('se-drive-sel').value;if(!id){alert('Selecione um cliente.');return;}
-  if(!driveToken){driveConectar(function(){seDriveBuscarExec(id);});return;}
-  seDriveBuscarExec(id);
-}
-function seDriveBuscarExec(cid){
-  var cl=seC.find(function(x){return x.id===cid;});if(!cl)return;
-  var ds=g('se-drive-status');
-  ds.className='info-box';ds.textContent='Buscando pasta de '+cl.nome+'...';
-  g('se-drive-lista').innerHTML='';
-  g('se-drive-docs-card').style.display='none';
-  lerArquivosDrive(cid,function(err,docsTxt){
-    var pastaId=getE(cid).drivePastaId;
-    if(!pastaId){ds.className='warn-box';ds.textContent='Pasta nao encontrada para '+cl.nome+'. Verifique se o nome da pasta no Drive corresponde ao nome do cliente.';return;}
-    ds.className='info-box';ds.textContent='Pasta encontrada! Carregando arquivos...';
-    // List files in found folder
-    var q='"'+pastaId+'" in parents and trashed=false';
-    fetch('https://www.googleapis.com/drive/v3/files?q='+encodeURIComponent(q)+'&fields=files(id,name,mimeType,size)&pageSize=100',{headers:{Authorization:'Bearer '+driveToken}})
-      .then(function(r){return r.json();})
-      .then(function(d){
-        if(!d.files||!d.files.length){ds.textContent='Pasta encontrada mas sem arquivos.';return;}
-        ds.textContent='Encontrados '+d.files.length+' arquivo(s) para '+cl.nome+'.';
-        g('se-drive-docs-card').style.display='block';
-        var html='';
-        var est=getE(cid);
-        if(!est.seDriveDocs)est.seDriveDocs={};
-        d.files.forEach(function(f){
-          var chk=est.seDriveDocs[f.id]?'checked':'';
-          var ico=f.mimeType.indexOf('pdf')>=0?'&#128196;':f.mimeType.indexOf('image')>=0?'&#128247;':'&#128196;';
-          html+='<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #eee">'
-            +'<input type="checkbox" '+chk+' data-cid="'+cid+'" data-fid="'+f.id+'" onchange="seDriveMarcarEl(this)">'
-            +'<span style="font-size:13px">'+ico+' '+f.name+'</span>'
-            +'</div>';
-        });
-        g('se-drive-docs').innerHTML=html;
-        if(docsTxt)ds.textContent+=' | Informacoes extraidas: '+docsTxt.substring(0,200)+'...';
-      })
-      .catch(function(e){ds.className='warn-box';ds.textContent='Erro ao listar arquivos: '+e.message;});
-  });
-}
-function seDriveMarcarEl(el){
-  var cid=el.getAttribute('data-cid');
-  var fileId=el.getAttribute('data-fid');
-  var est=getE(cid);
-  if(!est.seDriveDocs)est.seDriveDocs={};
-  if(el.checked)est.seDriveDocs[fileId]=true;
-  else delete est.seDriveDocs[fileId];
-  saveEst();
-}
-function seDriveMarcar(cid,fileId,checked){
-  var est=getE(cid);
-  if(!est.seDriveDocs)est.seDriveDocs={};
-  if(checked)est.seDriveDocs[fileId]=true;
-  else delete est.seDriveDocs[fileId];
-  saveEst();
-}
-function atualizarStatusDriveSE(){
-  var bar=g('se-pet-drive-bar');
-  if(!bar)return;
-  if(driveToken){
-    bar.style.background='#e8f5e9';
-    bar.style.borderColor='#a5d6a7';
-    bar.innerHTML='<span style="font-size:12px;color:#1b5e20;font-weight:600">&#9989; Drive conectado - documentos serao lidos para enriquecer a peticao</span><button class="btn" style="font-size:11px;padding:4px 10px;background:#fff;border-color:#a5d6a7;color:#1b5e20" onclick="driveToken=null;localStorage.removeItem(\'drv_token\');atualizarStatusDriveSE();atualizarStatusDrive();">Desconectar</button>';
-  } else {
-    bar.style.background='#fce4ec';
-    bar.style.borderColor='#f8bbd0';
-    bar.innerHTML='<span style="font-size:12px;color:#c62828;font-weight:600">&#9888; Drive nao conectado - documentos NAO serao usados na peticao</span><button class="btn" style="font-size:11px;padding:4px 10px;background:#fff;border-color:#f8bbd0;color:#c62828" onclick="driveConectar(function(){atualizarStatusDriveSE();})">Conectar Drive</button>';
-  }
-}
-function seGerPeticaoComDrive(){
-  var id=g('se-sel-pet').value;
-  if(!id){alert('Selecione um cliente.');return;}
-  if(!driveToken){
-    // Generate without drive
-    seGerPeticaoCompleta();
-    return;
-  }
-  g('se-pet-area').style.display='block';
-  g('se-pet-lbl').textContent='Lendo documentos do Drive...';
-  g('se-pet-txt').textContent='Buscando documentos do cliente no Drive...';
-  lerArquivosDrive(id, function(err, docsTxt){
-    seGerPeticaoCompleta(docsTxt||'');
-  });
-}
-function sePetPreench(){
-  var id=g('se-sel-pet').value;if(!id)return;
-  var cl=seC.find(function(x){return x.id===id;});if(!cl)return;
-}
-
-function seDownloadPet(){
-  var txt=g('se-pet-txt').textContent;
-  baixarDocx(limparMarkdown(txt),'peticao_superendividamento.doc');
-}
-
-function seGerPeticaoCompleta(docsTxt){
-  var id=g('se-sel-pet').value;
-  if(!id){alert('Selecione um cliente.');return;}
-  var cl=seC.find(function(x){return x.id===id;});
-  var vara=(g('se-vara')&&g('se-vara').value)||'Vara Civel da Comarca de Vargem Grande do Sul - SP';
-  var trat=(g('se-vara-trat')&&g('se-vara-trat').value)||'Ao Juizo da';
-  var cidade=(g('se-cidade-pet')&&g('se-cidade-pet').value)||'Vargem Grande do Sul';
-  var estado=(g('se-estado-pet')&&g('se-estado-pet').value)||'Sao Paulo';
-  var hoje=new Date().toLocaleDateString('pt-BR');
-  var rLiq=parseFloat(cl.rendaLiquida)||0;
-  var rBrut=parseFloat(cl.rendaBruta)||rLiq;
-  var minExist=(rLiq*0.7).toLocaleString('pt-BR',{minimumFractionDigits:2});
-  var dispDiv=(rLiq*0.3).toLocaleString('pt-BR',{minimumFractionDigits:2});
-  var totalDiv=parseFloat(cl.totalDividas)||0;
-  var totalDivStr='R$ '+totalDiv.toLocaleString('pt-BR',{minimumFractionDigits:2});
-  // Build creditors list
-  var creds=[];
-  var credCols=[cl.c1,cl.c2,cl.c3,cl.c4,cl.c5,cl.c6,cl.c7,cl.c8,cl.c9,cl.c10];
-  credCols.forEach(function(cr){if(cr&&cr.nome)creds.push(cr);});
-  var credsQual=creds.map(function(r){
-    return r.nome+(r.cnpj?', pessoa juridica de direito privado, inscrita no CNPJ/MF sob o n. '+r.cnpj:'')+(r.end?', com sede em '+r.end:'');
-  }).join('; ');
-  var credsList=creds.map(function(r){
-    return r.nome+': R$ '+(parseFloat(r.valor)||0).toLocaleString('pt-BR',{minimumFractionDigits:2})+(r.forma?' ('+r.forma+')':'')+(r.prest?' - parcela R$ '+r.prest:'');
-  }).join('; ');
-  var analises=getE(cl.id).analises||{};
-  var docInfo='';Object.keys(analises).forEach(function(did){docInfo+='['+analises[did].doc+']: '+analises[did].txt+'; ';});
-  docsTxt=docsTxt||'';
-  var dados='DADOS DO CLIENTE: Nome: '+cl.nome+' | CPF: '+(cl.cpf||'-')+' | Nac: '+(cl.nac||'brasileiro(a)')+' | Estado civil: '+(cl.civil||'-')+' | Prof: '+(cl.prof||'-')+' | Nasc: '+(cl.nasc||'-')+' | End: '+(cl.end||cl.cidade||'-')+'/'+estado+(cl.tel?' | Tel: '+cl.tel:'')+(cl.email?' | Email: '+cl.email:'')+(cl.doencas?' | Doencas/Condicoes: '+cl.doencas:'')+' | Renda bruta: R$ '+rBrut.toLocaleString('pt-BR',{minimumFractionDigits:2})+' | Renda liquida: R$ '+rLiq.toLocaleString('pt-BR',{minimumFractionDigits:2})+' | Minimo existencial (70%): R$ '+minExist+' | Disponivel dividas (30%): R$ '+dispDiv+' | Total dividas: '+totalDivStr+' | Credores: '+credsList+(cl.serasa?' | Serasa/SPC: '+cl.serasa:'')+' | Motivos superendividamento: '+(cl.motivos||'nao informado')+(docInfo?' | Documentos analisados: '+docInfo:'')+(docsTxt?' | DOCUMENTOS DO DRIVE: '+docsTxt:'');
-  var r='Escreva em portugues com todos os acentos e cedilhas. Zero markdown. Zero asteriscos. Paragrafos separados por linha em branco. Texto juridico formal e tecnicamente preciso. ';
-
-  var P=[
-    // P1: Cabecalho + qualificacao + credores
-    r+dados+' REDIJA APENAS: (1) ENDERECAMENTO: "'+trat+' '+vara+'" - centralizado e em maiusculo; (2) "JUIZO 100% DIGITAL" centralizado; (3) "TUTELA PROVISORIA" centralizado; (4) QUALIFICACAO DO AUTOR em texto corrido com todos os dados (nome, nacionalidade, estado civil, profissao, CPF, RG se disponivel, nascimento, endereco, telefone, email'+(cl.doencas?', condicao de saude: '+cl.doencas:'')+'), termine com "vem, respeitosamente, a presenca de Vossa Excelencia, por intermedio de seus advogados, propor a presente:"; (5) NOME DA ACAO centralizado: REPACTUACAO DE DIVIDAS (SUPERENDIVIDAMENTO); (6) "em relacao aos credores a seguir indicados:" justificado; (7) QUALIFICACAO DE CADA CREDOR em paragrafo separado com todos os dados disponiveis: '+credsQual+'; (8) GRATUIDADE DA JUSTICA: renda de R$ '+rLiq.toLocaleString('pt-BR',{minimumFractionDigits:2})+', hipossuficiencia, Art. 5 LXXIV CF, Arts. 98-99 CPC'+(cl.doencas?'; (9) PRIORIDADE DE TRAMITACAO: portador(a) de '+cl.doencas+', Art. 1048 CPC':''),
-
-    // P2: Fatos - Superendividamento
-    r+dados+' REDIJA APENAS a secao I - DA CONFIGURACAO DA SITUACAO DE SUPERENDIVIDAMENTO com subtopicos:'+
-    ' I.1 - DA SITUACAO REMUNERATORIA E PATRIMONIAL: descreva a renda de R$ '+rBrut.toLocaleString('pt-BR',{minimumFractionDigits:2})+' bruta / R$ '+rLiq.toLocaleString('pt-BR',{minimumFractionDigits:2})+' liquida, situacao patrimonial, contexto de vida. Use os documentos disponiveis.'+
-    ' I.2 - DO QUADRO GERAL DE DIVIDAS: liste cada credor com valor, modalidade e parcela. Demonstre que o total de '+totalDivStr+' e impagavel com a renda atual. Mencione que algumas dividas ainda nao foram documentadas. Cite que o cliente nao agiu de ma-fe.'+
-    ' I.3 - DO MINIMO EXISTENCIAL: fundamente a reserva de 70% da renda (R$ '+minExist+') para necessidades vitais (alimentacao, moradia, saude, transporte). Os 30% restantes (R$ '+dispDiv+') serao destinados ao plano de pagamento. Cite Art. 54-A par. 3 CDC (Lei 14.181/2021) e precedentes do TJSC.'+
-    ' I.4 - CONCLUSAO: demonstre que o cliente se enquadra no art. 54-A par. 1 CDC - comprometimento de mais de 30% da renda com dividas, boa-fe, origem das dividas ('+( cl.motivos||'necessidades de consumo')+').',
-
-    // P3: Exibicao de documentos + Tutela
-    r+dados+' REDIJA APENAS:'+
-    ' Secao II - DA NECESSARIA EXIBICAO DE DOCUMENTOS PELOS CREDORES: fundamente que os documentos (contratos, propostas, historico de pagamentos) estao em poder dos credores, nao do consumidor. Art. 397 CPC, Art. 6 VIII CDC (inversao onus prova), hipossuficiencia tecnica. Requeira exibicao no prazo de 15 dias.'+
-    ' Secao III - TUTELA PROVISORIA: (obrigatoria). Desenvolva: FUMUS BONI IURIS = superendividamento comprovado, quadro de dividas de '+totalDivStr+' contra renda de R$ '+rLiq.toLocaleString('pt-BR',{minimumFractionDigits:2})+', pratica de credito irresponsavel pelos credores (SARB 001/08 e SARB 010/2013), violacao do minimo existencial. PERICULUM IN MORA = impossibilidade de subsistencia, privacao de bens vitais (alimentacao, moradia, medicamentos), dano irreparavel e continuado. Requeira: (a) suspensao da exigibilidade de TODAS as dividas ate audiencia de conciliacao; subsidiariamente (b) limitacao dos descontos consignados e debitos em conta ao valor disponivel de R$ '+dispDiv+' distribuido proporcionalmente entre credores. Cite Lei 14.181/2021 arts. 104-A a 104-C, Art. 300 CPC, SARB 001/08, SARB 010/2013.',
-
-    // P4: Direito
-    r+dados+' REDIJA APENAS a secao de fundamentacao juridica com subtopicos:'+
-    ' IV.1 - DO SUPERENDIVIDAMENTO E A LEI 14.181/2021: conceito legal (art. 54-A CDC), direito ao tratamento, principios da boa-fe, preservacao do minimo existencial, funcao social dos contratos.'+
-    ' IV.2 - DA RESPONSABILIDADE PELO CREDITO IRRESPONSAVEL: obrigacao dos fornecedores de avaliar capacidade de pagamento antes de conceder credito (art. 54-B CDC). Cite SARB 001/08 e SARB 010/2013.'+
-    ' IV.3 - DO PROCESSO DE REPACTUACAO: procedimento do art. 104-A CDC, audiencia de conciliacao coletiva com todos os credores, plano de pagamento de ate 60 meses, preservacao de 70% da renda.'+
-    ' IV.4 - DA TUTELA PROCESSUAL DO CONSUMIDOR: Art. 6 VIII CDC (inversao onus prova), hipossuficiencia tecnica e juridica, vulnerabilidade agravada'+(cl.doencas?' pela condicao de saude ('+cl.doencas+')':'')+'. Cite Leonardo Roscoe Bessa sobre hipossuficiencia.',
-
-    // P5: Pedidos + Valor + Fechamento
-    r+dados+' REDIJA APENAS o final da peticao:'+
-    ' Secao IV - REQUERIMENTOS E PEDIDOS - Ante o exposto requer-se:'+
-    ' a) Admissao do pedido de repactuacao de dividas e designacao de audiencia de conciliacao coletiva com todos os credores (art. 104-A CDC);'+
-    ' b) Concessao da GRATUIDADE DA JUSTICA (arts. 98 e 99 CPC);'+(cl.doencas?' c) Reconhecimento da PRIORIDADE DE TRAMITACAO (Art. 1048 CPC) por ser portador(a) de '+cl.doencas+';':'')+
-    ' '+(cl.doencas?'d':'c')+') Concessao de TUTELA DE URGENCIA liminar e sem oitiva da parte adversa para: (i) SUSPENSAO DA EXIGIBILIDADE de todas as dividas objeto deste processo ate a realizacao da audiencia de conciliacao; subsidiariamente (ii) LIMITACAO dos descontos consignados e debitos em conta ao montante de R$ '+dispDiv+' distribuido proporcionalmente;'+
-    ' '+(cl.doencas?'e':'d')+') Intimacao urgente das demandadas para cumprimento da tutela no prazo de 48 horas, sob pena de multa diaria;'+
-    ' '+(cl.doencas?'f':'e')+') Citacao e intimacao de todos os credores por meio eletronico (art. 246 CPC);'+
-    ' '+(cl.doencas?'g':'f')+') Exibicao pelos credores de todos os documentos dos contratos no prazo de 15 dias (contratos, propostas, historico de pagamentos);'+
-    ' '+(cl.doencas?'h':'g')+') Producao de todas as provas em direito admitidas;'+
-    ' '+(cl.doencas?'i':'h')+') Ao final, homologacao do plano de pagamento a ser apresentado na audiencia em relacao aos credores que com ele concordarem; e em relacao aos que nao concordarem, revisao judicial das clausulas abusivas (art. 104-B CDC);'+
-    ' '+(cl.doencas?'j':'i')+') Condenacao dos credores que praticaram credito irresponsavel em honorarios e custas (Art. 85 CPC).'+
-    ' VALOR DA CAUSA: '+totalDivStr+' (soma de todas as dividas), nos termos do Art. 292 CPC.'+
-    ' ENCERRAMENTO: "Pede deferimento."'+
-    ' '+cidade+'/'+estado+', '+hoje+'.'+
-    ' Centralizados e em negrito:'+
-    ' _____________________________________________'+
-    ' Augusto de Andrade Gadiani'+
-    ' OAB/SP n. 425.910'+
-    ' _____________________________________________'+
-    ' Ari D Antraccoli Neto'+
-    ' OAB/SP n. 500.799'
-  ];
-
-  g('se-pet-area').style.display='block';
-  g('se-pet-dl2').style.display='none';
-  g('se-pet-txt').textContent='';
-  var sePetTextoCompleto='';
-
-  function seGerarParte(i,acumulado){
-    if(i>=P.length){
-      sePetTextoCompleto=acumulado;
-      g('se-pet-txt').textContent=limparMarkdown(acumulado);
-      g('se-pet-lbl').textContent='Peticao completa! Revise e baixe o .doc.';
-      g('se-pet-dl2').style.display='inline-flex';
-      return;
-    }
-    g('se-pet-lbl').textContent='Gerando parte '+(i+1)+' de '+P.length+'...';
-    var url=SCRIPT+'?action=ai&prompt='+encodeURIComponent(P[i]);
-    fetch(url,{method:'GET',redirect:'follow'})
-    .then(function(r){return r.text();})
-    .then(function(t){
-      var d;
-      try{d=JSON.parse(t);}catch(x){throw new Error('Resposta invalida parte '+(i+1));}
-      if(!d.ok)throw new Error(d.error||'Erro parte '+(i+1));
-      var txt=d.text||'';
-      seGerarParte(i+1,acumulado+(acumulado?'\n\n':'')+txt);
-    })
-    .catch(function(e){
-      g('se-pet-txt').textContent='Erro na parte '+(i+1)+': '+e.message;
-      g('se-pet-lbl').textContent='Erro. Tente novamente.';
-    });
-  }
-
-  seGerarParte(0,'');
-}
-
 function seGerPlano(){
   var id=g('se-sel-plano').value;if(!id){alert('Selecione.');return;}
   var cl=seC.find(function(x){return x.id===id;});
@@ -2222,7 +2047,7 @@ function checarTokenDrive(){
   atualizarStatusDrive();
 }
 function atualizarStatusDrive(){
-  atualizarStatusDriveSE();
+  seAtualizaDrivePet();
   var bar=document.getElementById('drive-bar');
   if(!bar)return;
   if(driveToken){
