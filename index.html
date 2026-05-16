@@ -1091,6 +1091,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#1a1a1a}
         <button class="btn btnp" style="font-size:11px" onclick="djBuscarData()">&#8635; Buscar</button>
         <button class="btn" style="font-size:11px" onclick="djBuscarHoje()">Hoje</button>
         <button class="btn" style="font-size:11px" onclick="djBuscarSemana()">Semana</button>
+        <button class="btn" style="font-size:11px;background:#f3e5f5;border-color:#ce93d8;color:#6a1b9a" onclick="djAbrirAjudaCors()">&#9881; Configurar acesso</button>
       </div>
     </div>
 
@@ -1130,6 +1131,81 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#1a1a1a}
     <div id="dj-ultima-busca" style="font-size:11px;color:#aaa;margin-bottom:8px"></div>
 
     <div id="dj-lista"></div>
+  </div>
+
+  <!-- Modal ajuda CORS -->
+  <div id="dj-cors-modal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.55);z-index:3000;align-items:flex-start;justify-content:center;overflow-y:auto;padding:20px 0">
+    <div style="background:#fff;border-radius:14px;padding:28px;max-width:560px;width:92%;margin:auto">
+      <div style="font-size:17px;font-weight:700;margin-bottom:4px">Como ativar a busca DJEN</div>
+      <div style="font-size:12px;color:#aaa;margin-bottom:18px">O site do PJe bloqueia acesso de outros dominos (politica CORS). Siga um dos metodos abaixo.</div>
+
+      <!-- Metodo 1: Extensao Chrome -->
+      <div style="background:#e8f5e9;border:1px solid #a5d6a7;border-radius:10px;padding:16px;margin-bottom:14px">
+        <div style="font-size:13px;font-weight:700;color:#1b5e20;margin-bottom:10px">&#9989; Metodo 1 &mdash; Extensao do Chrome (recomendado)</div>
+        <ol style="font-size:12px;color:#1b5e20;margin:0;padding-left:18px;line-height:1.9">
+          <li>Instale a extensao <strong>"CORS Unblock"</strong> ou <strong>"Allow CORS"</strong> no Chrome:<br>
+            <a href="https://chrome.google.com/webstore/detail/cors-unblock/lfhmikememgdcahcdlaciloancbhjino" target="_blank" style="color:#1565c0;font-weight:600">&#128279; Abrir na Chrome Web Store</a>
+          </li>
+          <li>Clique no icone da extensao na barra do Chrome</li>
+          <li>Ative-a (botao deve ficar verde/ligado)</li>
+          <li>Volte aqui e clique em <strong>Buscar</strong></li>
+        </ol>
+        <div style="font-size:11px;color:#558b2f;margin-top:8px;background:#f1f8e9;padding:6px 10px;border-radius:6px">
+          <b>Importante:</b> desative a extensao quando nao estiver usando o sistema para nao interferir em outros sites.
+        </div>
+      </div>
+
+      <!-- Metodo 2: Acesso direto no PJe -->
+      <div style="background:#e3f2fd;border:1px solid #90caf9;border-radius:10px;padding:16px;margin-bottom:14px">
+        <div style="font-size:13px;font-weight:700;color:#1565c0;margin-bottom:10px">&#128196; Metodo 2 &mdash; Copiar publicacoes manualmente do PJe</div>
+        <p style="font-size:12px;color:#1565c0;margin:0 0 8px 0">Acesse diretamente o site do PJe e insira as publicacoes manualmente no sistema:</p>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <a href="https://comunica.pje.jus.br/consulta?numeroOab=425910&ufOab=SP" target="_blank"
+            style="background:#1565c0;color:#fff;padding:8px 14px;border-radius:8px;text-decoration:none;font-size:12px;font-weight:600;display:inline-block;text-align:center">
+            &#127758; Dr. Augusto (OAB 425910/SP)
+          </a>
+          <a href="https://comunica.pje.jus.br/consulta?numeroOab=500799&ufOab=SP" target="_blank"
+            style="background:#1565c0;color:#fff;padding:8px 14px;border-radius:8px;text-decoration:none;font-size:12px;font-weight:600;display:inline-block;text-align:center">
+            &#127758; Dr. Ari (OAB 500799/SP)
+          </a>
+        </div>
+        <button class="btn btng" style="width:100%;margin-top:10px;font-size:12px" onclick="djAbrirEntradaManual()">
+          + Inserir publicacao manualmente
+        </button>
+      </div>
+
+      <div style="display:flex;justify-content:flex-end">
+        <button class="btn" onclick="g('dj-cors-modal').style.display='none'">Fechar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal entrada manual DJEN -->
+  <div id="dj-manual-modal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.55);z-index:3100;align-items:center;justify-content:center">
+    <div style="background:#fff;border-radius:14px;padding:24px;max-width:520px;width:92%">
+      <div style="font-size:15px;font-weight:700;margin-bottom:14px">Inserir Publicacao Manualmente</div>
+      <label>Numero do processo</label>
+      <input id="djm-proc" placeholder="Ex: 1234567-89.2024.8.26.0100" style="margin-bottom:8px">
+      <label>Advogado</label>
+      <select id="djm-adv" style="margin-bottom:8px">
+        <option value="425910">Dr. Augusto Gadiani (OAB 425910/SP)</option>
+        <option value="500799">Dr. Ari D'Antraccoli (OAB 500799/SP)</option>
+      </select>
+      <label>Tribunal / Vara</label>
+      <input id="djm-trib" placeholder="Ex: TJSP - 3a Vara Civel" style="margin-bottom:8px">
+      <label>Data da publicacao</label>
+      <input type="date" id="djm-data" style="margin-bottom:8px">
+      <label>Tipo do ato</label>
+      <input id="djm-tipo" placeholder="Ex: Intimacao, Despacho, Sentenca..." style="margin-bottom:8px">
+      <label>Texto completo da publicacao</label>
+      <textarea id="djm-texto" style="min-height:120px;margin-bottom:8px" placeholder="Cole aqui o texto completo copiado do site do PJe..."></textarea>
+      <label>Link para o tribunal (opcional)</label>
+      <input id="djm-link" placeholder="https://..." style="margin-bottom:14px">
+      <div style="display:flex;gap:8px;justify-content:flex-end">
+        <button class="btn" onclick="g('dj-manual-modal').style.display='none'">Cancelar</button>
+        <button class="btn btng" onclick="djSalvarManual()">Salvar publicacao</button>
+      </div>
+    </div>
   </div>
 
   <!-- Modal delegar publicacao -->
@@ -4946,66 +5022,33 @@ function djBuscarIntervalo(ini,fim){
 }
 
 function djBuscarAdvogado(ini,fim,adv,cb){
-  // Busca direto do browser (o PJe bloqueia Apps Script mas aceita browser)
-  djBuscarPaginasDireto(ini,fim,adv,0,[],cb);
+  djBuscarPaginas(ini,fim,adv,0,[],cb);
 }
 
-function djBuscarPaginasDireto(ini,fim,adv,pagina,acumulado,cb){
-  var url='https://comunica.pje.jus.br/api/v1/comunicacao'
+function djBuscarPaginas(ini,fim,adv,pagina,acumulado,cb){
+  var base='https://comunica.pje.jus.br/api/v1/comunicacao'
     +'?dataDisponibilizacaoInicio='+ini
     +'&dataDisponibilizacaoFim='+fim
     +'&numeroOab='+adv.oab
     +'&ufOab='+adv.uf
     +'&page='+pagina+'&size=20';
 
-  fetch(url,{
-    method:'GET',
-    headers:{
-      'Accept':'application/json, text/plain, */*',
-      'Accept-Language':'pt-BR,pt;q=0.9'
-    },
-    mode:'cors',
-    credentials:'omit'
-  })
+  fetch(base,{method:'GET',headers:{'Accept':'application/json'},mode:'cors',credentials:'omit'})
   .then(function(r){
-    window._djLastLog=(window._djLastLog||[]);
-    window._djLastLog.push('OAB '+adv.oab+' p'+pagina+' HTTP:'+r.status);
-    if(!r.ok) throw new Error('HTTP '+r.status);
+    if(!r.ok) throw new Error('HTTP_'+r.status);
     return r.json();
   })
   .then(function(json){
-    var items=json.content||json.data||json.resultado||json.result||(Array.isArray(json)?json:[]);
+    var items=json.content||json.data||json.resultado||(Array.isArray(json)?json:[]);
     var todos=acumulado.concat(items);
-    var totalPaginas=json.totalPages||json.totalPaginas||json.total_pages||1;
-    window._djLastLog.push('OAB '+adv.oab+' p'+pagina+': '+items.length+' itens, total paginas: '+totalPaginas);
-    if(pagina+1<totalPaginas && pagina<49){
-      // Buscar proxima pagina
-      setTimeout(function(){djBuscarPaginasDireto(ini,fim,adv,pagina+1,todos,cb);},300);
-    } else {
-      cb(todos,null);
-    }
+    var totalPag=json.totalPages||json.totalPaginas||1;
+    if(pagina+1<totalPag&&pagina<49){
+      setTimeout(function(){djBuscarPaginas(ini,fim,adv,pagina+1,todos,cb);},400);
+    } else { cb(todos,null); }
   })
   .catch(function(e){
-    window._djLastLog=(window._djLastLog||[]);
-    window._djLastLog.push('OAB '+adv.oab+' ERRO: '+e.message);
-    // Se CORS bloquear, tentar via Apps Script como fallback
-    if(e.message.indexOf('Failed to fetch')>=0||e.message.indexOf('CORS')>=0||e.message.indexOf('NetworkError')>=0){
-      window._djLastLog.push('CORS bloqueado no browser -- tentando Apps Script fallback');
-      var urlProxy=SCRIPT+'?action=djen&oab='+adv.oab+'&uf='+adv.uf+'&ini='+ini+'&fim='+fim;
-      fetch(urlProxy,{method:'GET',redirect:'follow'})
-        .then(function(r2){return r2.text();})
-        .then(function(t){
-          try{
-            var d=JSON.parse(t);
-            if(d.log) window._djLastLog=window._djLastLog.concat(d.log);
-            if(d.aviso) window._djLastLog.push('AVISO: '+d.aviso);
-            cb(Array.isArray(d.data)?d.data:[],d.error||null);
-          }catch(ex){cb([],ex.message);}
-        })
-        .catch(function(e2){cb([],e2.message);});
-    } else {
-      cb(acumulado.length>0?acumulado:[],e.message);
-    }
+    // CORS bloqueado -- reportar erro para mostrar aviso
+    cb(acumulado.length>0?acumulado:[], e.message||'Failed to fetch');
   });
 }
 
@@ -5031,10 +5074,15 @@ function djProcessarResultados(pubs,ini,fim,st,err){
   st.style.background=novos>0?'#e8f5e9':(err?'#fce4ec':'#f5f5f5');
   st.style.color=novos>0?'#1b5e20':(err?'#c62828':'#666');
   var avisoExtra = (window._djLastLog && window._djLastLog.length) ? '<br><details style="font-size:10px;margin-top:4px"><summary style="cursor:pointer;color:#aaa">Detalhes do servidor</summary><pre style="white-space:pre-wrap;font-size:10px;color:#666">'+window._djLastLog.join('\n')+'</pre></details>' : '';
+  if(novos===0 && (err&&(err.indexOf('HTTP_')>=0||err.indexOf('CORS')>=0||err.indexOf('Failed')>=0||err.indexOf('fetch')>=0))){
+    djMostrarAvisoCors(st);
+    return;
+  }
   st.innerHTML=(novos>0?'<strong>'+novos+' nova(s) publicacao(oes)</strong> encontrada(s).'
     :(err?'<b>Erro:</b> '+err
-    :'Nenhuma publicacao encontrada para '+label+'. '+avisoExtra))
-    +' <span style="color:#aaa;font-size:11px">Consulta: '+label+' -- '+new Date().toLocaleString('pt-BR')+'</span>';
+    :'Nenhuma publicacao encontrada para '+label+'.'))
+    +' <span style="color:#aaa;font-size:11px">Consulta: '+label+' -- '+new Date().toLocaleString('pt-BR')+'</span>'
+    +(novos===0?' &nbsp;<button class="btn" style="font-size:11px" onclick="djAbrirEntradaManual()">+ Inserir manualmente</button>':'');
   // Salvar ultima busca
   est['_djen_ultima']={data:data,ts:new Date().toISOString(),total:pubs.length,novos:novos};
   saveEst();
@@ -5198,6 +5246,61 @@ function djListar(){
     html+='</div>';
   });
   el.innerHTML=html;
+}
+
+function djAbrirAjudaCors(){
+  g('dj-cors-modal').style.display='flex';
+}
+function djAbrirEntradaManual(){
+  g('dj-cors-modal').style.display='none';
+  var hoje=new Date().toISOString().split('T')[0];
+  if(g('djm-data'))g('djm-data').value=hoje;
+  if(g('djm-proc'))g('djm-proc').value='';
+  if(g('djm-texto'))g('djm-texto').value='';
+  if(g('djm-trib'))g('djm-trib').value='';
+  if(g('djm-tipo'))g('djm-tipo').value='';
+  if(g('djm-link'))g('djm-link').value='';
+  g('dj-manual-modal').style.display='flex';
+}
+function djSalvarManual(){
+  var proc=(g('djm-proc')&&g('djm-proc').value||'').trim();
+  var texto=(g('djm-texto')&&g('djm-texto').value||'').trim();
+  if(!proc&&!texto){alert('Informe ao menos o numero do processo ou o texto.');return;}
+  var oab=g('djm-adv')&&g('djm-adv').value||'425910';
+  var data=g('djm-data')&&g('djm-data').value||new Date().toISOString().split('T')[0];
+  var pub={
+    id:'manual_'+Date.now()+'_'+Math.random().toString(36).substr(2,5),
+    numeroProcesso:proc,
+    nomeParte:'',
+    texto:texto,
+    tipoDoDocumento:g('djm-tipo')&&g('djm-tipo').value||'',
+    siglaTribunal:g('djm-trib')&&g('djm-trib').value||'PJe',
+    linkTribunal:g('djm-link')&&g('djm-link').value||'',
+    oab:oab, uf:'SP',
+    dataDisponibilizacao:data,
+    status:'pendente',
+    area:djArea(texto+' '+(g('djm-trib')&&g('djm-trib').value||'')),
+    dataBusca:new Date().toISOString(),
+    dataPub:data,
+    manual:true
+  };
+  var lista=djGetLista();
+  lista.push(pub);
+  djSaveLista(lista);
+  g('dj-manual-modal').style.display='none';
+  djListar();
+  alert('Publicacao inserida com sucesso!');
+}
+
+// Mostrar aviso CORS no status quando busca falhar
+function djMostrarAvisoCors(st){
+  st.style.display='block';
+  st.style.background='#fff3e0';
+  st.style.color='#e65100';
+  st.innerHTML='<b>(!) Acesso bloqueado pelo PJe (politica CORS).</b><br>'
+    +'O site do tribunal nao permite buscas automaticas de outros dominios.<br><br>'
+    +'<button class="btn" style="font-size:11px;background:#e65100;color:#fff;border-color:#e65100" onclick="djAbrirAjudaCors()">&#9881; Ver como resolver</button>'
+    +' &nbsp; <button class="btn" style="font-size:11px" onclick="djAbrirEntradaManual()">+ Inserir manualmente</button>';
 }
 
 function djStats(){
