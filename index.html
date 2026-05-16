@@ -1113,15 +1113,29 @@ function tryProxy(id,gid,cb){
     .catch(function(e){cb(e,null);});
 }
 function callAIPost(prompt,cb){
-  fetch(SCRIPT,{method:'POST',redirect:'follow',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'ai',prompt:prompt})})
+  // Try POST first, fallback to GET if it fails
+  fetch(SCRIPT,{method:'POST',redirect:'follow',headers:{'Content-Type':'text/plain'},body:JSON.stringify({action:'ai',prompt:prompt})})
     .then(function(r){return r.text();})
     .then(function(t){
       var d;try{d=JSON.parse(t);}catch(x){throw new Error('Resposta invalida');}
       if(!d.ok)throw new Error(d.error||'Erro servidor');
-      if(!d.text||d.text.length<5)throw new Error('Resposta vazia. Tente novamente.');
+      if(!d.text||d.text.length<5)throw new Error('Resposta vazia.');
       cb(null,d.text);
     })
-    .catch(function(e){cb(e,null);});
+    .catch(function(){
+      // Fallback: GET with truncated prompt
+      var pTrunc=prompt.length>6000?prompt.substring(0,6000)+'... [continuacao omitida por limite]':prompt;
+      var url=SCRIPT+'?action=ai&prompt='+encodeURIComponent(pTrunc);
+      fetch(url,{method:'GET',redirect:'follow'})
+        .then(function(r){return r.text();})
+        .then(function(t){
+          var d;try{d=JSON.parse(t);}catch(x){throw new Error('Resposta invalida');}
+          if(!d.ok)throw new Error(d.error||'Erro servidor');
+          if(!d.text||d.text.length<5)throw new Error('Resposta vazia. Tente novamente.');
+          cb(null,d.text);
+        })
+        .catch(function(e){cb(e,null);});
+    });
 }
 function callAI(prompt,cb){
   var url=SCRIPT+'?action=ai&prompt='+encodeURIComponent(prompt);
@@ -2138,7 +2152,7 @@ function lerArquivosDaPasta(pastaId, cb){
               var isImg=f.mimeType.indexOf('image')>=0;
               var prompt='Extraia TODAS as informacoes relevantes deste documento de forma organizada: dados pessoais, valores, datas, contratos, diagnosticos, qualquer informacao util para um processo judicial. Nome do arquivo: '+f.name;
               var bodyContent=[{type:isImg?'image':'document',source:{type:'base64',media_type:f.mimeType,data:b64}},{type:'text',text:prompt}];
-              fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:600,messages:[{role:'user',content:bodyContent}]})})
+              fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:600,messages:[{role:'user',content:bodyContent}]})})
                 .then(function(r){return r.json();})
                 .then(function(d){
                   resultados[i]='['+f.name+'] '+(d.content&&d.content[0]?d.content[0].text:'sem dados');
@@ -2361,14 +2375,13 @@ function diGerPeticaoCompleta(){
     +'\nFone: (19) 99412-6931 | gadianiedantraccoli@gmail.com'
     +'\n\nINSTRUCOES ABSOLUTAS: escreva em portugues com todos os acentos e cedilhas. ZERO markdown, ZERO asteriscos, ZERO hashtags. Paragrafos separados por linha em branco. Texto juridico formal. Use os dados reais fornecidos.';
 
-  fetch(SCRIPT,{method:'POST',redirect:'follow',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'ai',prompt:prompt})})
-  .then(function(r){return r.text();})
-  .then(function(t){
-    var d;
-    try{d=JSON.parse(t);}catch(x){throw new Error('Resposta invalida');}
-    if(!d.ok)throw new Error(d.error||'Erro no servidor');
-    var txt=d.text||'';
-    if(!txt)throw new Error('Resposta vazia. Tente novamente.');
+  callAIPost(prompt,function(errP,txt){
+    if(errP){
+      g('di-pet-txt').textContent='Erro: '+errP.message;
+      g('di-pet-lbl').textContent='Falha na geracao';
+      return;
+    }
+    (function(){
     // Check if pedidos section is complete
     var temPedidos=txt.indexOf('DOS PEDIDOS')>=0||txt.indexOf('dos pedidos')>=0;
     var temValorCausa=txt.indexOf('VALOR DA CAUSA')>=0||txt.indexOf('valor da causa')>=0;
@@ -2385,7 +2398,7 @@ function diGerPeticaoCompleta(){
       g('di-pet-lbl').textContent='Completando pedidos e encerramento...';
       var promptCont='Continue a peticao abaixo exatamente de onde parou. Escreva APENAS a continuacao, sem repetir o que ja foi escrito. Complete os PEDIDOS (com letras a), b), c)...), o VALOR DA CAUSA e o ENCERRAMENTO com data '+hoje+', assinaturas de Ari D Antraccoli Neto OAB/SP 500.799 e Augusto de Andrade Gadiani OAB/SP 425.910 e dados do escritorio. Escreva em portugues com acentos. ZERO markdown.'
         +'\n\nTEXTO JA GERADO (continue a partir daqui):\n'+txt;
-      fetch(SCRIPT,{method:'POST',redirect:'follow',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'ai',prompt:promptCont})})
+      fetch(SCRIPT,{method:'POST',redirect:'follow',headers:{'Content-Type':'text/plain'},body:JSON.stringify({action:'ai',prompt:promptCont})})
         .then(function(r2){return r2.text();})
         .then(function(t2){
           var d2;
@@ -2407,10 +2420,7 @@ function diGerPeticaoCompleta(){
           g('di-pet-dl').style.display='inline-flex';
         });
     }
-  })
-  .catch(function(e){
-    g('di-pet-txt').textContent='Erro: '+e.message;
-    g('di-pet-lbl').textContent='Falha na geracao';
+    })();
   });
 }
 
@@ -3330,17 +3340,10 @@ function seGerPeticaoCompleta(){
         return;
       }
       g('se-pet-lbl').textContent='Gerando parte '+(i+1)+' de '+P.length+'...';
-      fetch(SCRIPT,{method:'POST',redirect:'follow',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'ai',prompt:P[i]})})
-      .then(function(r){return r.text();})
-      .then(function(t){
-        var d;try{d=JSON.parse(t);}catch(x){throw new Error('Invalido');}
-        if(!d.ok)throw new Error(d.error||'Erro');
-        seTxt+=(seTxt?'\n\n':'')+(d.text||'');
+      callAIPost(P[i],function(errP,txt){
+        if(errP){g('se-pet-txt').textContent='Erro parte '+(i+1)+': '+errP.message;g('se-pet-lbl').textContent='Erro. Tente novamente.';return;}
+        seTxt+=(seTxt?'\n\n':'')+(txt||'');
         gerarParte(i+1);
-      })
-      .catch(function(e){
-        g('se-pet-txt').textContent='Erro parte '+(i+1)+': '+e.message;
-        g('se-pet-lbl').textContent='Erro. Tente novamente.';
       });
     }
     gerarParte(0);
