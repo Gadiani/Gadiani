@@ -1790,25 +1790,86 @@ function seDriveListar(pastaId,cid){
   var st=g('se-drive-status');
   var lista=g('se-drive-lista');
   var q='"'+pastaId+'" in parents and trashed=false';
-  fetch('https://www.googleapis.com/drive/v3/files?q='+encodeURIComponent(q)+'&fields=files(id,name,mimeType,webViewLink)&pageSize=50',{headers:{Authorization:'Bearer '+driveToken}})
+  fetch('https://www.googleapis.com/drive/v3/files?q='+encodeURIComponent(q)+'&fields=files(id,name,mimeType,webViewLink,modifiedTime)&orderBy=name&pageSize=200',{headers:{Authorization:'Bearer '+driveToken}})
   .then(function(r){return r.json();})
   .then(function(d){
     if(!d.files||!d.files.length){st.textContent='Nenhum arquivo na pasta.';return;}
-    st.textContent=d.files.length+' arquivo(s). Marque os analisados:';
-    var e=getE(cid);if(!e.driveMarc)e.driveMarc={};
-    var html='';
+    var r2=getDC('se',cid);
+    var matched={},autoCount=0;
+    var kws={
+      's1':['cpf','rg.','rg-','cnh','identidade','documento com foto'],
+      's2':['endereco','residencia','comprovante de end'],
+      's3':['holerite','contracheque','salario','contra cheque','comprovante de renda','comprovante renda'],
+      's4':['extrato bancario','extrato banco','extrato conta','extrato'],
+      's5':['contrato credito','contrato banco','contrato emprestimo','contrato'],
+      's6':['contrato credito','contrato banco','contrato 2','contrato segundo'],
+      's7':['contrato credito','contrato banco','contrato 3','contrato terceiro'],
+      's8':['beneficio','inss','aposentadoria','pensao','loas','bpc'],
+      's9':['detran','veiculo','crlv'],
+      's10':['registrato','bacen','historico']
+    };
     d.files.forEach(function(f){
-      var chk=e.driveMarc[f.id]?'checked':'';
-      var ico=f.mimeType==='application/pdf'?'PDF':f.mimeType.indexOf('image')>=0?'IMG':'DOC';
-      html+='<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #f0ede8">'
-        +'<input type="checkbox" '+chk+' onchange="seDriveMarcar(\''+cid+'\',\''+f.id+'\',this.checked)" style="width:15px;height:15px">'
-        +'<span style="font-size:10px;background:#e8e6e0;padding:1px 4px;border-radius:3px;color:#666">'+ico+'</span>'
-        +'<a href="'+(f.webViewLink||'#')+'" target="_blank" style="font-size:12px;color:#1565c0;flex:1">'+f.name+'</a>'
-        +'</div>';
+      var fn=f.name.toLowerCase().replace(/_/g,' ');
+      var did,ks,j;
+      for(did in kws){
+        if(r2[did])continue;
+        ks=kws[did];
+        for(j=0;j<ks.length;j++){
+          if(fn.indexOf(ks[j])>=0){matched[did]=f.name;r2[did]=true;autoCount++;break;}
+        }
+      }
     });
+    if(autoCount>0){saveEst();}
+    var cl=seC.find(function(x){return x.id===cid;});
+    if(cl)seRenderDocs(cl);
+    st.style.display='block';
+    st.textContent=d.files.length+' arquivo(s) encontrado(s) | '+autoCount+' identificado(s) e dado baixa automaticamente.';
+    st.style.background=autoCount>0?'#e8f5e9':'#f5f5f5';
+    var html='';
+    var matchedNames=Object.values(matched);
+    d.files.forEach(function(f){
+      var ico=f.mimeType==='application/pdf'?'&#128196;':f.mimeType.indexOf('image')>=0?'&#128247;':'&#128196;';
+      var isAuto=matchedNames.indexOf(f.name)>=0;
+      var dt=f.modifiedTime?new Date(f.modifiedTime).toLocaleDateString('pt-BR'):'';
+      html+='<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid #f0ede8">';
+      html+=ico+' ';
+      html+='<a href="'+(f.webViewLink||'#')+'" target="_blank" style="flex:1;color:#1565c0;text-decoration:none;font-size:13px">'+f.name+'</a>';
+      html+='<span style="font-size:10px;color:#aaa">'+dt+'</span>';
+      if(isAuto)html+='<span style="font-size:10px;background:#c8e6c9;color:#1b5e20;padding:1px 6px;border-radius:8px;font-weight:600">Auto</span>';
+      html+='</div>';
+    });
+    html+='<div style="margin-top:16px;border-top:2px solid #e0ddd6;padding-top:14px">';
+    html+='<div class="ct" style="margin-bottom:8px">Dar baixa manual nos documentos</div>';
+    html+='<div class="info-box" style="margin-bottom:10px">Marque os documentos que estao presentes na pasta do Drive. Isso atualiza o checklist automaticamente.</div>';
+    var allDocs=SE_DOCS,k,doc,checked;
+    for(k=0;k<allDocs.length;k++){
+      doc=allDocs[k];checked=r2[doc.id];
+      html+='<div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid #f5f4f0">';
+      html+='<input type="checkbox" '+(checked?'checked':'')+' onchange="seDriveToggleDoc(\''+cid+'\',\''+doc.id+'\',this.checked)" style="width:16px;height:16px;cursor:pointer">';
+      html+='<span style="flex:1;font-size:12px'+(checked?';text-decoration:line-through;color:#aaa':'')+'">';
+      if(doc.ob)html+='<span style="font-size:10px;background:#ffcdd2;color:#c62828;padding:1px 5px;border-radius:8px;margin-right:4px">Obr.</span>';
+      html+=doc.txt+'</span>';
+      html+='<span style="font-size:11px;font-weight:600;color:'+(checked?'#1b5e20':'#c62828')+'">'+(checked?'Recebido':'Falta')+'</span>';
+      html+='</div>';
+    }
+    html+='</div>';
     lista.innerHTML=html;
   })
   .catch(function(e){st.textContent='Erro: '+e.message;});
+}
+
+function seDriveToggleDoc(cid,did,val){
+  var r=getDC('se',cid);
+  r[did]=val;
+  saveEst();
+  var cl=seC.find(function(x){return x.id===cid;});
+  if(cl)seRenderDocs(cl);
+  // Refresh the checklist section in the lista
+  var lista=g('se-drive-lista');
+  if(!lista)return;
+  var checks=lista.querySelectorAll('input[type=checkbox]');
+  // Re-render drive panel
+  seDriveBuscarCliente(cl,cid);
 }
 
 function seDriveMarcar(cid,fid,val){
