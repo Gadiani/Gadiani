@@ -272,7 +272,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#1a1a1a}
         <div class="ct" style="margin-bottom:0">Notificacao gerada</div>
         <div style="display:flex;gap:6px">
           <button class="btn" onclick="copiar('di-not-txt')">Copiar</button>
-          <button class="btn btng" id="di-not-dl" style="display:none" onclick="baixarDocx(g('di-not-txt').textContent,'notificacao.doc')">Baixar .doc</button>
+          <button class="btn btng" id="di-not-dl" style="display:none" onclick="baixarDocx(g('di-not-txt').textContent,'notificacao.doc')">Baixar peticao .doc</button>
         </div>
       </div>
       <div class="out" id="di-not-txt"></div>
@@ -317,11 +317,12 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#1a1a1a}
       </div>
       <div style="margin-top:14px">
         <div class="ct" style="margin-bottom:8px">Geracao em 4 etapas - cada etapa e revisavel antes de avancar</div>
-        <div style="display:flex;gap:8px;margin-bottom:10px">
-          <button class="btn btnp" style="flex:1;justify-content:center;padding:10px" onclick="diGerPet()">Gerar etapa por etapa</button>
-          <button class="btn" style="flex:1;justify-content:center;padding:10px;background:#1b5e20;color:#fff;border-color:#1b5e20" onclick="diGerTudo()">Gerar tudo de uma vez</button>
-        </div>
-        <div id="di-pet-steps"></div>
+        <div style="margin-top:10px;padding:10px;background:#fff8e1;border:1px solid #ffcc80;border-radius:8px;display:flex;align-items:center;gap:10px">
+        <input type="checkbox" id="tutela-urgencia" style="width:16px;height:16px">
+        <label for="tutela-urgencia" style="font-size:12px;font-weight:600;color:#e65100;cursor:pointer">Incluir Tutela de Urgencia (suspensao do desconto)</label>
+      </div>
+      <button class="btn btnp" style="width:100%;justify-content:center;margin-top:14px;padding:12px;font-size:14px" onclick="diGerPeticaoCompleta()">&#9654; Gerar peticao completa</button>
+      <div id="di-pet-steps" style="display:none"></div>
       </div>
       <div id="di-pet-area" style="display:none;margin-top:14px">
         <div style="font-size:12px;font-weight:600;color:#1b5e20;margin-bottom:6px" id="di-pet-lbl"></div>
@@ -449,7 +450,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#1a1a1a}
         <div class="out" id="se-pet-txt" style="min-height:120px"></div>
         <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
           <button class="btn" onclick="copiar('se-pet-txt')">Copiar etapa</button>
-          <button class="btn btng" id="se-pet-dl" style="display:none" onclick="seBaixarPet()">Baixar .doc</button>
+          <button class="btn btng" id="se-pet-dl" style="display:none" onclick="seBaixarPet()">Baixar peticao .doc</button>
         </div>
       </div>
     </div>
@@ -1315,152 +1316,138 @@ function diPetPreench(){
   if(primeiroReu&&!primeiroReu.value)primeiroReu.value=c.banco||'';
   g('di-pet-nr').value=g('di-nr')?g('di-nr').value||'':'';
 }
-var DI_PET_LABELS = [
-  'Enderecamento, Qualificacoes e Gratuidade da Justica',
-  'Dos Fatos',
-  'Do Direito',
-  'Dos Pedidos, Valor da Causa e Encerramento'
-];
+var diPetTexto = '';
 
-function diIniPet(){
-  var id=g('di-sel-pet').value;if(!id)return;
-  diPetTxts=[];
-  var html='',i;
-  for(i=0;i<DI_PET_LABELS.length;i++){
-    html+='<div class="srow'+(i===0?' cur':'')+'" id="dirow'+i+'">'
-      +'<div class="snum'+(i===0?' cur':'')+'" id="dinum'+i+'">'+(i+1)+'</div>'
-      +'<div style="flex:1"><div style="font-size:13px;font-weight:600">'+DI_PET_LABELS[i]+'</div></div>'
-      +'<button class="btn'+(i===0?' btnp':'')+'" id="dibtn'+i+'" onclick="diGerEtapa('+i+')"'+(i>0?' disabled':'')+'>Gerar</button>'
-      +'</div>';
-  }
-  g('di-pet-steps').innerHTML=html;
-  g('di-pet-dl').style.display='none';
-  g('di-pet-area').style.display='none';
+function diIniPet(){}
+function diGerPet(){diGerPeticaoCompleta();}
+function diGerTudo(){diGerPeticaoCompleta();}
+function diGerEtapa(step,cb){diGerPeticaoCompleta();}
+function diGerEtapaCallback(step,cb){diGerPeticaoCompleta();}
+
+function diDownloadPet(){
+  baixarDocx(limparMarkdown(diPetTexto||g('di-pet-txt').textContent),'peticao_descontos.doc');
 }
 
-function diGerEtapa(step,cb){
-  var id=g('di-sel-pet').value;if(!id){alert('Selecione um cliente.');return;}
-  var c=diC.find(function(x){return x.id===id;});
-  var trat=g('di-vara-trat').value||'Excelentissima Senhora Doutora Juiza de Direito';
-  var vara=g('di-vara').value||'Primeira Vara Civel';
-  var cidade=g('di-cidade').value||'Vargem Grande do Sul';
-  var estado=g('di-estado').value||'Sao Paulo';
-  var contrato=g('di-pet-nr').value||'[NR]';
-  var parc=parseFloat(g('di-pet-parc').value)||0;
-  var np=parseInt(g('di-pet-nparc').value)||0;
-  var dt=g('di-pet-dt').value;
-  var hoje=new Date().toLocaleDateString('pt-BR'),mes=0,tot=0;
+function diGerPeticaoCompleta(){
+  var id=g('di-sel-pet').value;
+  if(!id){alert('Selecione um cliente.');return;}
+  var cl=diC.find(function(x){return x.id===id;});
+  var vara=(g('di-vara')&&g('di-vara').value)||'Vara Civel';
+  var trat=(g('di-vara-trat')&&g('di-vara-trat').value)||'Excelentissimo(a) Senhor(a) Doutor(a) Juiz(a) de Direito';
+  var cidade=(g('di-cidade')&&g('di-cidade').value)||'Vargem Grande do Sul';
+  var estado=(g('di-estado')&&g('di-estado').value)||'Sao Paulo';
+  var contrato=(g('di-pet-nr')&&g('di-pet-nr').value)||'[NR]';
+  var parc=parseFloat(g('di-pet-parc')&&g('di-pet-parc').value)||0;
+  var np=parseInt(g('di-pet-nparc')&&g('di-pet-nparc').value)||0;
+  var dt=g('di-pet-dt')&&g('di-pet-dt').value;
+  var hoje=new Date().toLocaleDateString('pt-BR');
+  var mes=0,tot=0;
   if(dt&&parc){mes=Math.min(Math.floor((Date.now()-new Date(dt+'T12:00:00'))/(86400000*30.44)),np);tot=mes*parc;}
   var totStr='R$ '+tot.toLocaleString('pt-BR',{minimumFractionDigits:2});
-  var valorDobro='R$ '+(tot*2).toLocaleString('pt-BR',{minimumFractionDigits:2});
-  var valorTotal='R$ '+(tot*2+10000).toLocaleString('pt-BR',{minimumFractionDigits:2});
-  var reusEls=g('di-reus').querySelectorAll('.reu-row');
+  var dobro='R$ '+(tot*2).toLocaleString('pt-BR',{minimumFractionDigits:2});
+  var totalCausa='R$ '+(tot*2+10000).toLocaleString('pt-BR',{minimumFractionDigits:2});
+  var reusEls=g('di-reus')&&g('di-reus').querySelectorAll('.reu-row');
   var reus=[];
-  reusEls.forEach(function(row){
+  if(reusEls){reusEls.forEach(function(row){
     var nome=row.querySelector('.reu-nome').value.trim();
     var cnpj=row.querySelector('.reu-cnpj').value.trim();
     var end=row.querySelector('.reu-end').value.trim();
     if(nome)reus.push({nome:nome,cnpj:cnpj,end:end});
-  });
-  if(!reus.length){alert('Adicione ao menos um reu.');return;}
-  var reusQual=reus.map(function(r){return r.nome+(r.cnpj?', pessoa juridica de direito privado, inscrita no CNPJ/MF sob o n. '+r.cnpj:'')+(r.end?', com sede em '+r.end:'');}).join('; ');
-  var analises=getE(c.id).analises||{};
-  var analisesStr='';Object.keys(analises).forEach(function(did){analisesStr+='['+analises[did].doc+']: '+analises[did].txt+' | ';});
-  var contexto='DADOS DO CASO: Cliente: '+c.nome+' | Brasileiro(a) | '+c.civil+' | '+(c.prof||'Aposentado(a)')+' | CPF: '+c.cpf+' | Nascimento: '+c.nasc+' | Endereco: '+(c.end||c.cidade)+'/'+estado+(c.tel?' | Tel: '+c.tel:'')+(c.email?' | Email: '+c.email:'')+(c.doencas?' | Doencas: '+c.doencas:'')
-    +' | Reus: '+reusQual
-    +' | Tipo irregularidade: '+(c.tipo||'Cartao RMC/RCC nao contratado')
-    +' | Contrato: '+contrato+' | Banco: '+c.banco+' | Parcela: R$ '+parc+' | Parcelas: '+np
-    +' | Inicio: '+(dt?new Date(dt+'T12:00:00').toLocaleDateString('pt-BR'):'-')
-    +' | Meses descontados: '+mes+' | Total descontado: '+totStr
-    +' | Renda: '+(c.renda||'nao informada')
-    +(analisesStr?' | DOCUMENTOS ANALISADOS: '+analisesStr:'');
-  var regras='REGRAS ABSOLUTAS: texto puro sem markdown, sem asteriscos, sem hashtags, sem tracos decorativos, sem tabelas, sem pipes (|). Paragrafos separados por linha em branco. Titulos de secao em MAIUSCULO centralizado. Subtopicos como I.1, I.2 numerados. Linguagem juridica formal. Use os dados reais do caso. NUNCA corte o texto no meio. Escreva acentos e cedilhas normalmente.';
+  });}
+  if(!reus.length){reus.push({nome:cl.banco||'[REU]',cnpj:'',end:''});}
   var tutela=document.getElementById('tutela-urgencia')&&document.getElementById('tutela-urgencia').checked;
-  var reusStr2=reus.map(function(r){return r.nome+(r.cnpj?', pessoa juridica de direito privado, inscrita no CNPJ/MF sob o n. '+r.cnpj:'')+(r.end?', com sede em '+r.end:'');}).join('; ');
+  var analises=getE(cl.id).analises||{};
+  var docInfo='';
+  Object.keys(analises).forEach(function(did){docInfo+='['+analises[did].doc+']: '+analises[did].txt+'; ';});
+  var reusQual=reus.map(function(r){
+    return r.nome+(r.cnpj?', inscrita no CNPJ n. '+r.cnpj:'')+(r.end?', com sede em '+r.end:'');
+  }).join('; e ');
+  var n=cl.doencas?1:0;
+  var d=2+n, dir=3+n, ped=4+n, val=5+n;
 
   g('di-pet-area').style.display='block';
-  g('di-pet-lbl').textContent='Etapa '+(step+1)+' de 4 - gerando...';
-  g('di-pet-txt').textContent='Aguarde, gerando etapa '+(step+1)+'...';
-  g('dibtn'+step).disabled=true;
+  g('di-pet-lbl').textContent='Gerando peticao... aguarde (pode levar 30-60 segundos)';
+  g('di-pet-txt').textContent='A IA esta redigindo. Nao feche esta aba.';
+  g('di-pet-dl').style.display='none';
+  diPetTexto='';
 
-  lerArquivosDrive(id,function(err,docsTxt){
-    var instrucoes='INSTRUCOES: escreva em portugues correto com todos os acentos e cedilhas. Texto juridico formal. Sem markdown, sem asteriscos, sem tabelas, sem pipes. Paragrafos separados por linha em branco. Titulos em MAIUSCULO. Subtopicos numerados como I.1, I.2 etc.';
-    var dadosCliente='DADOS: Cliente: '+c.nome+' | CPF: '+c.cpf+' | Nascimento: '+c.nasc+' | Estado civil: '+c.civil+' | Profissao: '+(c.prof||'aposentado(a)')+' | Endereco: '+(c.end||c.cidade)+'/'+estado+(c.tel?' | Tel: '+c.tel:'')+(c.email?' | Email: '+c.email:'')+(c.doencas?' | Doencas: '+c.doencas:'')+' | Renda: '+(c.renda||'nao informada')+' | Banco: '+c.banco+' | Tipo: '+(c.tipo||'-')+' | Contrato: '+contrato+' | Parcela: R$ '+parc+' | Parcelas: '+np+' | Inicio: '+(dt?new Date(dt+'T12:00:00').toLocaleDateString('pt-BR'):'-')+' | Meses: '+mes+' | Total: '+totStr+(analisesStr?' | Docs analisados: '+analisesStr:'')+(docsTxt?' | Drive: '+docsTxt:'');
-    var prompts=[
-      instrucoes+' '+dadosCliente+' Voce e advogado senior especialista em direito do consumidor. Redija a PRIMEIRA PARTE da peticao inicial:'
-      +' (1) ENDERECAMENTO centralizado em maiusculo: EXCELENTISSIMO(A) SENHOR(A) DOUTOR(A) JUIZ(A) DE DIREITO DA '+vara.toUpperCase()+' DA COMARCA DE '+cidade.toUpperCase()+' - ESTADO DE '+estado.toUpperCase()
-      +' (2) NOME DA ACAO centralizado em maiusculo: ACAO DECLARATORIA DE NULIDADE DE CONTRATO C/C REPETICAO DE INDEBITO E INDENIZACAO POR DANOS MORAIS'
-      +' (3) QUALIFICACAO DO AUTOR em texto corrido: '+c.nome+', brasileiro(a), '+c.civil+', '+(c.prof||'aposentado(a)')+', portador(a) do CPF n. '+c.cpf+', nascido(a) em '+c.nasc+', residente em '+(c.end||c.cidade)+'/'+estado+(c.tel?', tel. '+c.tel:'')+(c.email?', e-mail '+c.email:'')+', vem propor a presente acao em face de:'
-      +' (4) QUALIFICACAO DO REU: '+reusStr2
-      +' (5) Secao I - DA GRATUIDADE DA JUSTICA E DA HIPERVULNERABILIDADE DO REQUERENTE: desenvolva com profundidade. Mencione renda de '+(c.renda||'beneficio INSS')+'. Fundamente em Art. 5 LXXIV CF/88, Arts. 98 e ss. CPC, Art. 4 I e Art. 6 VIII CDC.'
-      +(c.doencas?' (6) Secao II - DA PRIORIDADE NA TRAMITACAO: portador(a) de '+c.doencas+'. Art. 1048 I CPC.':''),
+  var prompt='Voce e advogado senior com 20 anos de experiencia em direito do consumidor. Redija uma PETICAO INICIAL completa, tecnica e robusta.'
+    +'\n\nDADOS DO CASO:\nAutor: '+cl.nome+' | brasileiro(a) | '+cl.civil+' | '+(cl.prof||'aposentado(a)')+' | CPF: '+cl.cpf+' | Nascimento: '+cl.nasc+' | Endereco: '+(cl.end||cl.cidade)+'/'+estado+(cl.tel?' | Tel: '+cl.tel:'')+(cl.email?' | Email: '+cl.email:'')+(cl.doencas?' | Condicao de saude: '+cl.doencas:'')+' | Renda: '+(cl.renda||'beneficio INSS')+'\nReus: '+reusQual+'\nBanco: '+cl.banco+' | Tipo: '+(cl.tipo||'desconto nao autorizado')+' | Contrato: '+contrato+' | Parcela: R$ '+parc+' | Total parcelas: '+np+' | Inicio: '+(dt?new Date(dt+'T12:00:00').toLocaleDateString('pt-BR'):'-')+' | Meses descontados: '+mes+' | Total descontado: '+totStr+(docInfo?' | Documentos analisados: '+docInfo:'')
+    +'\n\nESTRUTURA OBRIGATORIA (siga esta ordem exata):'
+    +'\n\n[ENDERECAMENTO - justificado, MAIUSCULO]'
+    +'\n'+trat.toUpperCase()+' DA '+vara.toUpperCase()+' DA COMARCA DE '+cidade.toUpperCase()+' - ESTADO DE '+estado.toUpperCase()
+    +'\n\n[NOME DA ACAO - centralizado]'
+    +'\nACAO DECLARATORIA DE NULIDADE DE CONTRATO C/C REPETICAO DE INDEBITO E INDENIZACAO POR DANOS MORAIS'
+    +'\n\n[QUALIFICACAO DO AUTOR - justificado, texto corrido com todos os dados acima]'
+    +'\n[termine com: "vem, respeitosamente, a presenca de Vossa Excelencia propor a presente:"]'
+    +'\n\n[NOME DA ACAO novamente - centralizado, igual ao anterior]'
+    +'\n\nem face de:'
+    +'\n\n[QUALIFICACAO DOS REUS - justificado]'
+    +'\n'+reusQual
+    +'\n\n[pelos fatos e fundamentos a seguir expostos.]'
+    +'\n\nI - DA GRATUIDADE DA JUSTICA E DA HIPERVULNERABILIDADE DO REQUERENTE'
+    +'\nDesenvolva com profundidade: renda de '+(cl.renda||'beneficio INSS')+', hipossuficiencia economica, vulnerabilidade'+(cl.doencas?' agravada por '+cl.doencas:'')+'. Fundamente: Art. 5 LXXIV CF/88; Arts. 98-99 par. 3 CPC (presuncao relativa); Art. 4 I e Art. 6 VIII CDC. Seja extenso e convincente.'
+    +(cl.doencas?'\n\nII - DA PRIORIDADE NA TRAMITACAO PROCESSUAL\nPortador(a) de '+cl.doencas+'. Art. 1048 I CPC.':'')
+    +'\n\n'+d+' - DOS FATOS'
+    +'\nNarrativa cronologica detalhada. Subtopicos numerados como '+d+'.1, '+d+'.2 etc. Use todos os dados reais. Descreva: como o desconto surgiu, o contrato '+contrato+', parcela R$ '+parc+', '+mes+' meses descontados, total '+totStr+'. Impacto na renda. Abalo emocional e psicologico. Texto corrido.'
+    +'\n\n'+dir+' - DO DIREITO'
+    +'\nSubtopicos obrigatorios (desenvolva cada um com densidade tecnica maxima):'
+    +'\n'+dir+'.1 - Da Relacao de Consumo e da Aplicabilidade do CDC (Arts. 2 e 3 CDC, Sumula 297 STJ)'
+    +'\n'+dir+'.2 - Da Nulidade do Contrato - Ausencia de Consentimento Valido (Arts. 104 e 166 CC; Art. 39 I, III e IV CDC; Art. 46 CDC)'
+    +'\n'+dir+'.3 - Da Responsabilidade Objetiva do Fornecedor (Art. 14 CDC)'
+    +'\n'+dir+'.4 - Da Inversao do Onus da Prova e da Hipossuficiencia Tecnica (Art. 6 VIII CDC; cite Leonardo Roscoe Bessa, Manual do Direito do Consumidor, RT)'
+    +'\n'+dir+'.5 - Da Repeticao do Indebito em Dobro (Art. 42 par. unico CDC). Total descontado: '+totStr+'. Dobro: '+dobro+'. Afaste o engano justificavel.'
+    +'\n'+dir+'.6 - Do Dano Moral in re ipsa. Descreva o sofrimento, angustia, restricao da dignidade.'
+    +'\n'+dir+'.7 - Da Nulidade das Clausulas Abusivas (Art. 51 CDC)'
+    +(tutela?'\n'+dir+'.8 - Da Tutela de Urgencia (Art. 300 CPC). Demonstre: FUMUS BONI IURIS (desconto comprovado sem autorizacao, verossimilhanca do direito) e PERICULUM IN MORA (dano continuado a renda mensal, cada mes novo desconto indevido). Requeira suspensao imediata dos descontos.':'')
+    +'\n\n'+ped+' - DOS PEDIDOS'
+    +'\nAnte o exposto, requer:'
+    +'\na) A concessao dos beneficios da GRATUIDADE DA JUSTICA (Arts. 98 e ss. CPC);'
+    +(tutela?'\nb) A concessao de TUTELA DE URGENCIA para imediata suspensao dos descontos referentes ao contrato '+contrato+';':'')
+    +'\n'+(tutela?'c':'b')+') A citacao do(s) Reu(s) para responder no prazo legal;'
+    +'\n'+(tutela?'d':'c')+') A INVERSAO DO ONUS DA PROVA (Art. 6 VIII CDC);'
+    +'\n'+(tutela?'e':'d')+') A DECLARACAO DE NULIDADE do contrato n. '+contrato+';'
+    +'\n'+(tutela?'f':'e')+') A condenacao a DEVOLUCAO EM DOBRO de todos os valores descontados ('+totStr+' x 2 = '+dobro+'), nos termos do Art. 42 par. unico CDC;'
+    +'\n'+(tutela?'g':'f')+') Alternativamente, ao menos a DEVOLUCAO SIMPLES de '+totStr+';'
+    +'\n'+(tutela?'h':'g')+') A condenacao ao pagamento de INDENIZACAO POR DANOS MORAIS de R$ 10.000,00;'
+    +'\n'+(tutela?'i':'h')+') A apresentacao de todos os documentos do contrato no prazo de 15 dias;'
+    +'\n'+(tutela?'j':'i')+') A producao de todas as provas em direito admitidas;'
+    +'\n'+(tutela?'k':'j')+') A condenacao em custas e honorarios advocaticios (Art. 85 CPC).'
+    +'\n\n'+val+' - DO VALOR DA CAUSA'
+    +'\nDa-se a causa o valor de '+totalCausa+', correspondente a soma da repeticao em dobro ('+dobro+') com os danos morais (R$ 10.000,00), nos termos do Art. 292 CPC.'
+    +'\n\nTermos em que pede deferimento.'
+    +'\n\n'+cidade+'/'+estado+', '+hoje+'.'
+    +'\n\n_____________________________________________'
+    +'\nARI D ANTRACCOLI NETO'
+    +'\nOAB/SP n. 500.799'
+    +'\n\n_____________________________________________'
+    +'\nAUGUSTO DE ANDRADE GADIANI'
+    +'\nOAB/SP n. 425.910'
+    +'\n\nGadiani & D Antraccoli Advogados'
+    +'\nRua Sao Pedro, n. 760, Centro, Vargem Grande do Sul/SP'
+    +'\nFone: (19) 99412-6931 | gadianiedantraccoli@gmail.com'
+    +'\n\nINSTRUCOES ABSOLUTAS: escreva em portugues com todos os acentos e cedilhas. ZERO markdown, ZERO asteriscos, ZERO hashtags. Paragrafos separados por linha em branco. Texto juridico formal. Use os dados reais fornecidos.';
 
-      instrucoes+' '+dadosCliente+' Voce e advogado senior. Redija APENAS a Secao '+(c.doencas?'III':'II')+' - DOS FATOS com subtopicos numerados. Narrativa cronologica detalhada usando os dados reais. Descreva como o desconto surgiu, o contrato '+contrato+' com parcela R$ '+parc+' por '+mes+' meses totalizando '+totStr+'. Impacto na renda. Abalo emocional e psicologico. Texto corrido sem bullets.',
-
-      instrucoes+' '+dadosCliente+' Voce e advogado senior especialista em CDC. Redija APENAS a Secao '+(c.doencas?'IV':'III')+' - DO DIREITO com os seguintes subtopicos obrigatorios:'
-      +' '+(c.doencas?'IV':'III')+'.1 Da Relacao de Consumo e Aplicabilidade do CDC (Arts. 2 e 3 CDC, Sumula 297 STJ);'
-      +' '+(c.doencas?'IV':'III')+'.2 Da Nulidade do Contrato por Ausencia de Consentimento (Arts. 104 e 166 CC; Art. 39 I, III e IV CDC; Art. 46 CDC);'
-      +' '+(c.doencas?'IV':'III')+'.3 Da Responsabilidade Objetiva do Fornecedor (Art. 14 CDC);'
-      +' '+(c.doencas?'IV':'III')+'.4 Da Inversao do Onus da Prova e Hipossuficiencia Tecnica (Art. 6 VIII CDC, cite Leonardo Roscoe Bessa);'
-      +' '+(c.doencas?'IV':'III')+'.5 Da Repeticao do Indebito em Dobro (Art. 42 paragrafo unico CDC) total '+totStr+' dobro R$ '+(tot*2).toLocaleString('pt-BR',{minimumFractionDigits:2})+';'
-      +' '+(c.doencas?'IV':'III')+'.6 Do Dano Moral in re ipsa;'
-      +' '+(c.doencas?'IV':'III')+'.7 Da Nulidade das Clausulas Abusivas (Art. 51 CDC)'
-      +(tutela?'; '+(c.doencas?'IV':'III')+'.8 DA TUTELA DE URGENCIA (Art. 300 CPC): fumus boni iuris (desconto comprovado e nao autorizado) e periculum in mora (dano continuado a renda - cada mes novo desconto prejudica a subsistencia). Requeira suspensao dos descontos.':''),
-
-      instrucoes+' '+dadosCliente+' Voce e advogado senior. Redija a QUARTA E ULTIMA PARTE da peticao:'
-      +' Secao '+(c.doencas?'V':'IV')+' - DOS PEDIDOS: liste com letras a), b), c)... : gratuidade; '+(tutela?'tutela urgencia para suspensao dos descontos; ':'')+' citacao dos reus; inversao onus prova; declaracao nulidade contrato '+contrato+'; devolucao em dobro de '+totStr+' = R$ '+(tot*2).toLocaleString('pt-BR',{minimumFractionDigits:2})+'; alternativamente devolucao simples; danos morais R$ 10.000,00; exibicao documentos; producao provas; custas e honorarios Art. 85 CPC.'
-      +' Secao '+(c.doencas?'VI':'V')+' - DO VALOR DA CAUSA: R$ '+(tot*2+10000).toLocaleString('pt-BR',{minimumFractionDigits:2})+' nos termos do Art. 292 CPC.'
-      +' Escreva: "Termos em que pede deferimento."'
-      +' '+cidade+'/'+estado+', '+hoje+'.'
-      +' Centralizados: _____________________________________________ | ARI D ANTRACCOLI NETO | OAB/SP n. 500.799'
-      +' _____________________________________________ | AUGUSTO DE ANDRADE GADIANI | OAB/SP n. 425.910'
-      +' Gadiani & D Antraccoli Advogados | Rua Sao Pedro, n. 760, Centro, Vargem Grande do Sul/SP | (19) 99412-6931 | gadianiedantraccoli@gmail.com'
-    ];
-    callAI(prompts[step],function(err2,txt){
-      if(err2){g('di-pet-txt').textContent='Erro: '+err2.message;g('dibtn'+step).disabled=false;return;}
-      diPetTxts[step]=limparMarkdown(txt);
-      g('di-pet-txt').textContent=diPetTxts[step];
-      g('di-pet-lbl').textContent='Etapa '+(step+1)+' concluida: '+DI_PET_LABELS[step];
-      g('dinum'+step).className='snum done';
-      g('dirow'+step).className='srow done';
-      if(step<3){
-        g('dibtn'+(step+1)).disabled=false;
-        g('dibtn'+(step+1)).className='btn btnp';
-        g('dinum'+(step+1)).className='snum cur';
-        g('dirow'+(step+1)).className='srow cur';
-      }
-      if(step===3)g('di-pet-dl').style.display='inline-flex';
-      if(cb)cb();
-    });
+  fetch('https://api.anthropic.com/v1/messages',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:8192,messages:[{role:'user',content:prompt}]})
+  })
+  .then(function(r){return r.json();})
+  .then(function(d){
+    if(d.error){g('di-pet-txt').textContent='Erro API: '+d.error.message;g('di-pet-lbl').textContent='Erro';return;}
+    var txt=d.content&&d.content[0]?d.content[0].text:'';
+    if(!txt){g('di-pet-txt').textContent='Resposta vazia. Tente novamente.';return;}
+    diPetTexto=txt;
+    diPetTxts=[txt];
+    g('di-pet-txt').textContent=limparMarkdown(txt);
+    g('di-pet-lbl').textContent='Peticao gerada com sucesso. Revise e baixe o .doc.';
+    g('di-pet-dl').style.display='inline-flex';
+  })
+  .catch(function(e){
+    g('di-pet-txt').textContent='Erro de rede: '+e.message+'. Verifique sua conexao.';
+    g('di-pet-lbl').textContent='Falha na geracao';
   });
-}
-function diGerEtapaCallback(step,cb){diGerEtapa(step,cb);}
-
-function diGerTudo(){
-  var id=g('di-sel-pet').value;
-  if(!id){alert('Selecione um cliente.');return;}
-  diIniPet();
-  g('di-pet-area').style.display='block';
-  g('di-pet-lbl').textContent='Gerando peticao completa (aguarde todas as etapas)...';
-  g('di-pet-txt').textContent='Iniciando...';
-  diPetTxts=[];
-  function gerarProxima(step){
-    if(step>=4){
-      g('di-pet-lbl').textContent='Peticao completa gerada! Clique em Baixar .doc';
-      g('di-pet-dl').style.display='inline-flex';
-      return;
-    }
-    g('di-pet-lbl').textContent='Gerando etapa '+(step+1)+' de 4: '+DI_PET_LABELS[step]+'...';
-    diGerEtapaCallback(step, function(){
-      gerarProxima(step+1);
-    });
-  }
-  gerarProxima(0);
-}
-function diGerPet(){
-  var id=g('di-sel-pet').value;if(!id){alert('Selecione um cliente.');return;}
-  diIniPet();
-  diGerEtapa(0);
 }
 
 function diNotPreench(){
