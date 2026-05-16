@@ -189,6 +189,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#1a1a1a}
     <button id="dn5" onclick="swDI(5)">Peticao</button>
     <button id="dn6" onclick="swDI(6)">Protocolo</button>
     <button id="dn7" onclick="swDI(7)">CRM</button>
+    <button id="dn8" onclick="swDI(8)" style="background:#e8f5e9;color:#1b5e20;font-weight:600">&#128230; Arquivos</button>
   </nav>
 
   <div id="dp0" class="pg on">
@@ -350,7 +351,20 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#1a1a1a}
           </div>
         </div>
       </div>
-      <div style="margin-top:12px;padding:12px;background:#fff8e1;border:1px solid #ffcc80;border-radius:8px;display:flex;align-items:center;gap:12px">
+      <div style="margin-bottom:12px">
+        <label style="font-size:12px;color:#666;margin-bottom:6px;display:block;font-weight:700">Tipo de irregularidade (para os fatos da acao)</label>
+        <select id="di-pet-tipo" style="width:100%;font-size:13px;padding:8px 11px;background:#f8f7f3;border:1px solid #ddd;border-radius:7px">
+          <option value="desconto">Desconto indevido em beneficio INSS (generica)</option>
+          <option value="rmc">Cartao RMC/RCC nao contratado</option>
+          <option value="consignado">Emprestimo consignado nao reconhecido / nao autorizado</option>
+          <option value="refinanciamento">Refinanciamento nao realizado / nao solicitado</option>
+          <option value="portabilidade">Portabilidade nao autorizada</option>
+          <option value="seguro">Seguro prestamista nao contratado</option>
+          <option value="fraude">Fraude / contrato em nome do cliente sem conhecimento</option>
+          <option value="geral">Cobrancas indevidas em geral</option>
+        </select>
+      </div>
+      <div style="margin-bottom:12px;padding:12px;background:#fff8e1;border:1px solid #ffcc80;border-radius:8px;display:flex;align-items:center;gap:12px">
         <input type="checkbox" id="tutela-urgencia" style="width:18px;height:18px;cursor:pointer">
         <div>
           <label for="tutela-urgencia" style="font-size:13px;font-weight:700;color:#e65100;cursor:pointer;display:block">Incluir Tutela de Urgencia</label>
@@ -423,6 +437,32 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#1a1a1a}
     </div>
   </div>
 </div>
+
+  <div id="dp8" class="pg">
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <div class="ct" style="margin-bottom:0">&#128230; Arquivos do Cliente &mdash; Download em PDF</div>
+        <div style="display:flex;gap:6px">
+          <select id="di-arq-sel" onchange="diArqAbrir(this.value)" style="font-size:12px;padding:5px 8px"><option value="">Selecionar cliente...</option></select>
+          <label class="btn btnp" style="cursor:pointer;font-size:12px">
+            + Adicionar arquivo
+            <input type="file" id="di-arq-input" multiple accept="image/*,.pdf,.doc,.docx" style="display:none" onchange="diArqUpload(this)">
+          </label>
+        </div>
+      </div>
+      <div class="info-box" style="margin-bottom:10px">Armazene documentos e imagens do cliente. Clique em "Baixar PDF" para converter e baixar qualquer arquivo. Use "Baixar todos PDF" para gerar um PDF unificado para protocolo.</div>
+      <div id="di-arq-area" style="display:none">
+        <div id="di-arq-stats" style="margin-bottom:10px;font-size:12px;color:#666"></div>
+        <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap">
+          <button class="btn btng" onclick="diArqBaixarTodosPDF()" style="font-weight:700">&#128196; Baixar todos em PDF unico</button>
+          <button class="btn" onclick="diArqBaixarZip()">&#128230; Baixar todos (.zip)</button>
+        </div>
+        <div id="di-arq-lista"></div>
+      </div>
+      <div id="di-arq-empty" style="padding:30px;text-align:center;color:#bbb;font-size:13px">Selecione um cliente para ver seus arquivos.</div>
+    </div>
+  </div>
+
 
 <!-- SE -->
 <div id="mod-se" style="display:none">
@@ -1409,6 +1449,191 @@ function docsVerDetalhes(id, tipo) {
   }
 }
 
+// -- ARQUIVOS DO CLIENTE -------------------------------------------------------
+var diArqCidAtual = null;
+
+function diArqAbrir(cid) {
+  if (!cid) { g('di-arq-area').style.display='none'; g('di-arq-empty').style.display='block'; return; }
+  diArqCidAtual = cid;
+  var cl = diC.find(function(x){return x.id===cid;});
+  g('di-arq-empty').style.display='none';
+  g('di-arq-area').style.display='block';
+  g('di-arq-input').setAttribute('data-cid', cid);
+  // Also sync arq-sel
+  var sel = g('di-arq-sel'); if(sel) sel.value = cid;
+  diArqRender(cid);
+}
+
+function diArqUpload(input) {
+  var cid = input.getAttribute('data-cid') || diArqCidAtual;
+  if (!cid || !input.files || !input.files.length) return;
+  var e = getE(cid);
+  if (!e.arquivos) e.arquivos = [];
+  var files = Array.from(input.files);
+  var done = 0;
+  files.forEach(function(file) {
+    var reader = new FileReader();
+    reader.onload = function(ev) {
+      var b64 = ev.target.result.split(',')[1];
+      var mime = file.type || 'application/octet-stream';
+      e.arquivos.push({
+        id: 'arq_'+Date.now()+'_'+Math.random().toString(36).substr(2,5),
+        nome: file.name,
+        mime: mime,
+        b64: b64,
+        data: new Date().toISOString(),
+        tamanho: file.size
+      });
+      done++;
+      if (done === files.length) { saveEst(); diArqRender(cid); }
+    };
+    reader.readAsDataURL(file);
+  });
+  input.value = '';
+}
+
+function diArqRender(cid) {
+  var e = getE(cid);
+  var arqs = e.arquivos || [];
+  var cl = diC.find(function(x){return x.id===cid;});
+  var stats = g('di-arq-stats');
+  if (stats) stats.innerHTML = '<strong>'+(cl?cl.nome:'')+'</strong> &mdash; '+arqs.length+' arquivo(s) &mdash; Total: '+diArqTamanhoTotal(arqs);
+  var lista = g('di-arq-lista');
+  if (!lista) return;
+  if (!arqs.length) { lista.innerHTML='<div style="padding:20px;text-align:center;color:#bbb">Nenhum arquivo. Clique em "+ Adicionar arquivo" para enviar.</div>'; return; }
+  var html = '';
+  arqs.forEach(function(arq, i) {
+    var isImg = arq.mime && arq.mime.indexOf('image') >= 0;
+    var isPDF = arq.mime === 'application/pdf';
+    var ico = isImg ? '&#128247;' : isPDF ? '&#128196;' : '&#128196;';
+    var dt = new Date(arq.data).toLocaleDateString('pt-BR');
+    html += '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #f0ede8">';
+    html += '<span style="font-size:18px">'+ico+'</span>';
+    if (isImg) {
+      html += '<img src="data:'+arq.mime+';base64,'+arq.b64+'" style="width:48px;height:48px;object-fit:cover;border-radius:4px;cursor:pointer" onclick="diArqPreview('+i+',\''+cid+'\')"> ';
+    }
+    html += '<div style="flex:1"><div style="font-size:13px;font-weight:600">'+arq.nome+'</div>';
+    html += '<div style="font-size:11px;color:#aaa">'+dt+' &middot; '+diArqFmtSize(arq.tamanho||0)+'</div></div>';
+    html += '<div style="display:flex;gap:5px">';
+    html += '<button class="btn" style="font-size:11px;padding:4px 8px;background:#e3f2fd;border-color:#90caf9;color:#1565c0" data-idx="'+i+'" data-cid="'+cid+'" onclick="diArqBaixarPDF(+this.dataset.idx,this.dataset.cid)">&#128196; PDF</button>';
+    html += '<button class="btn" style="font-size:11px;padding:4px 8px" data-idx="'+i+'" data-cid="'+cid+'" onclick="diArqBaixarOriginal(+this.dataset.idx,this.dataset.cid)">&#11015; Original</button>';
+    html += '<button class="btn" style="font-size:11px;padding:4px 6px;background:#fce4ec;border-color:#f8bbd0;color:#c62828" data-idx="'+i+'" data-cid="'+cid+'" onclick="diArqExcluir(+this.dataset.idx,this.dataset.cid)">&#10005;</button>';
+    html += '</div></div>';
+  });
+  lista.innerHTML = html;
+}
+
+function diArqFmtSize(bytes) {
+  if (!bytes) return '-';
+  if (bytes < 1024) return bytes+'B';
+  if (bytes < 1048576) return Math.round(bytes/1024)+'KB';
+  return (bytes/1048576).toFixed(1)+'MB';
+}
+
+function diArqTamanhoTotal(arqs) {
+  var total = arqs.reduce(function(s,a){return s+(a.tamanho||0);},0);
+  return diArqFmtSize(total);
+}
+
+function diArqPreview(idx, cid) {
+  var arq = (getE(cid).arquivos||[])[idx];
+  if (!arq) return;
+  var w = window.open('','_blank');
+  if (w) {
+    w.document.write('<html><body style="margin:0;background:#000;display:flex;justify-content:center;align-items:center;min-height:100vh">'
+      +'<img src="data:'+arq.mime+';base64,'+arq.b64+'" style="max-width:100%;max-height:100vh;object-fit:contain">'
+      +'</body></html>');
+  }
+}
+
+function diArqBaixarOriginal(idx, cid) {
+  var arq = (getE(cid).arquivos||[])[idx];
+  if (!arq) return;
+  var binary = atob(arq.b64);
+  var bytes = new Uint8Array(binary.length);
+  for (var i=0;i<binary.length;i++) bytes[i] = binary.charCodeAt(i);
+  var blob = new Blob([bytes], {type: arq.mime});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a'); a.href=url; a.download=arq.nome; a.click(); URL.revokeObjectURL(url);
+}
+
+function diArqBaixarPDF(idx, cid) {
+  var arq = (getE(cid).arquivos||[])[idx];
+  if (!arq) return;
+  var cl = diC.find(function(x){return x.id===cid;});
+  var isImg = arq.mime && arq.mime.indexOf('image') >= 0;
+  if (arq.mime === 'application/pdf') { diArqBaixarOriginal(idx, cid); return; }
+  if (!isImg) { alert('Apenas imagens e PDFs podem ser convertidos. Baixando original...'); diArqBaixarOriginal(idx, cid); return; }
+  // Convert image to PDF using canvas
+  var img = new Image();
+  img.onload = function() {
+    var canvas = document.createElement('canvas');
+    canvas.width = img.width; canvas.height = img.height;
+    canvas.getContext('2d').drawImage(img, 0, 0);
+    var imgData = canvas.toDataURL('image/jpeg', 0.85);
+    // Build minimal PDF
+    var pdfNome = arq.nome.replace(/\.[^.]+$/,'')+'.pdf';
+    var w = img.width, h = img.height;
+    var pw = Math.round(w*0.75), ph = Math.round(h*0.75); // px to pt approx
+    var jpgB64 = imgData.split(',')[1];
+    var jpgBytes = atob(jpgB64);
+    var len = jpgBytes.length;
+    // Simple PDF: open image in print window
+    var pdfNome = arq.nome.replace(/\.[^.]+$/,'')+'.pdf';
+    var printWin = window.open('','_blank');
+    if (printWin) {
+      printWin.document.write('<html><head><title>'+pdfNome+'</title>'
+        +'<style>body{margin:0}img{max-width:100%;height:auto}@media print{}</style>'
+        +'</head><body><img src="data:'+arq.mime+';base64,'+arq.b64+'">'
+        +'<script>window.onload=function(){window.print();window.onafterprint=function(){window.close();};};<\/script>'
+        +'</body></html>');
+      printWin.document.close();
+    }
+    var blob = new Blob([new Uint8Array([])], {type:'application/pdf'});
+    // (PDF content rendered by print window above)
+    URL.revokeObjectURL('');
+  };
+  img.src = 'data:'+arq.mime+';base64,'+arq.b64;
+}
+
+function diArqBaixarTodosPDF(cid) {
+  var c2 = cid || diArqCidAtual;
+  var arqs = (getE(c2||'').arquivos||[]);
+  var cl = diC.find(function(x){return x.id===c2;});
+  if (!arqs.length) { alert('Nenhum arquivo para baixar.'); return; }
+  var imgs = arqs.filter(function(a){return a.mime&&(a.mime.indexOf('image')>=0||a.mime==='application/pdf');});
+  if (!imgs.length) { alert('Nenhuma imagem ou PDF encontrado.'); return; }
+  // Build a simple HTML page with all images for printing as PDF
+  var nome = cl ? cl.nome : 'cliente';
+  var html2 = '<html><head><title>Documentos - '+nome+'</title>'
+    +'<style>body{margin:0;font-family:Arial}img{max-width:100%;page-break-after:always;display:block}'
+    +'h3{font-size:12px;color:#666;margin:8px 0 4px;padding:0 8px}'
+    +'@media print{h3{display:none}}</style></head><body>';
+  html2 += '<div style="padding:10px;border-bottom:2px solid #000;margin-bottom:10px"><b>DOCUMENTOS: '+nome+'</b> &mdash; '+(cl?cl.cpf||'':'')+' &mdash; '+new Date().toLocaleDateString('pt-BR')+'</div>';
+  imgs.forEach(function(a) {
+    if (a.mime.indexOf('image')>=0) {
+      html2 += '<h3>'+a.nome+'</h3><img src="data:'+a.mime+';base64,'+a.b64+'">';
+    }
+  });
+  html2 += '<script>window.onload=function(){window.print();}<\/script></body></html>';
+  var w2 = window.open('','_blank');
+  if (w2) { w2.document.write(html2); w2.document.close(); }
+}
+
+function diArqBaixarZip(cid) {
+  var c2 = cid || diArqCidAtual;
+  alert('Para baixar em ZIP, utilize o Google Drive do cliente. Esta funcao sera implementada em breve.');
+}
+
+function diArqExcluir(idx, cid) {
+  if (!confirm('Excluir este arquivo?')) return;
+  var e = getE(cid);
+  if (!e.arquivos) return;
+  e.arquivos.splice(idx, 1);
+  saveEst();
+  diArqRender(cid);
+}
+
 function saveUser(){localStorage.setItem('g_user',g('sel-user').value);}
 function loadUser(){var u=localStorage.getItem('g_user');if(u)g('sel-user').value=u;}
 
@@ -1425,7 +1650,7 @@ function setMod(m){
   if(m==='pt')ptListar();
   if(m==='docs')docsRefresh();
 }
-function swDI(n){var i;for(i=0;i<8;i++){g('dp'+i).className='pg'+(i===n?' on':'');g('dn'+i).className=i===n?'on':'';}if(n===3)drivePopSel();}
+function swDI(n){var i;for(i=0;i<9;i++){if(g('dp'+i))g('dp'+i).className='pg'+(i===n?' on':'');if(g('dn'+i))g('dn'+i).className=i===n?'on':'';}if(n===3)drivePopSel();if(n===8){var v=g('di-sel-doc')&&g('di-sel-doc').value;if(v)diArqAbrir(v);}}
 function swSE(n){var i;for(i=0;i<10;i++){var sp=g('sp'+i);var sn=g('sn'+i);if(sp)sp.className='pg'+(i===n?' on':'');if(sn)sn.className=i===n?'on':'';}if(n===2&&seC.length>0)seListarPend();}
 
 function diLoad(){
@@ -1517,7 +1742,7 @@ function diArq(id){if(!confirm('Arquivar este cliente?'))return;getE(id).arquiva
 function diDesarq(id){getE(id).arquivado=false;saveEst();diListar();diStats();}
 function diExcl(id){if(!confirm('EXCLUIR permanentemente?'))return;getE(id).excluido=true;saveEst();diListar();diStats();}
 function diPopSels(){
-  var sels=['di-sel-doc','di-sel-pet','di-p1','di-p2','di-crm-sel','di-not-sel','di-drive-sel','urg-cli'],i,j,s,c;
+  var sels=['di-sel-doc','di-sel-pet','di-p1','di-p2','di-crm-sel','di-not-sel','di-drive-sel','urg-cli','di-arq-sel'],i,j,s,c;
   for(i=0;i<sels.length;i++){s=g(sels[i]);if(!s)continue;s.innerHTML='<option value="">Selecionar...</option>';for(j=0;j<diC.length;j++){c=diC[j];s.innerHTML+='<option value="'+c.id+'">'+c.nome+(c.banco?' - '+c.banco:'')+'</option>';}}
 }
 function diIrDocs(id){swDI(1);g('di-sel-doc').value=id;diOpenDocs();}
@@ -1843,6 +2068,18 @@ function diGerPeticaoCompleta(){
     if(nome)reus.push({nome:nome,cnpj:cnpj,end:end});
   });}
   if(!reus.length){reus.push({nome:cl.banco||'[REU]',cnpj:'',end:''});}
+  var tipoIrreg=(g('di-pet-tipo')&&g('di-pet-tipo').value)||'desconto';
+  var tipoTextos={
+    desconto:'desconto indevido em beneficio INSS sem autorizacao ou contrato do titular',
+    rmc:'cartao de credito RMC/RCC inserido na conta do beneficiario sem consentimento e sem que o titular soubesse da contratacao',
+    consignado:'emprestimo consignado nao reconhecido pelo titular, contratado sem sua autorizacao expressa, possivelmente por fraude ou erro operacional do banco',
+    refinanciamento:'refinanciamento de contrato nao solicitado pelo titular, realizado unilateralmente pelo banco sem anuencia do cliente, alterando as condicoes originais do contrato',
+    portabilidade:'portabilidade de credito nao autorizada pelo titular, transferida sem seu conhecimento ou consentimento a outra instituicao financeira',
+    seguro:'seguro prestamista inserido no contrato sem consentimento do titular, cobrado mensalmente sem que o cliente soubesse ou tivesse contratado',
+    fraude:'fraude: contrato realizado em nome do cliente sem seu conhecimento, possivelmente com uso indevido de seus dados pessoais por terceiros',
+    geral:'cobrancas e descontos indevidos realizados sem autorizacao ou contrato valido do titular'
+  };
+  var tipoDescricao=tipoTextos[tipoIrreg]||tipoTextos.desconto;
   var tutela=document.getElementById('tutela-urgencia')&&document.getElementById('tutela-urgencia').checked;
   var analises=getE(cl.id).analises||{};
   var docInfo='';
@@ -1877,7 +2114,7 @@ function diGerPeticaoCompleta(){
     +'\nDesenvolva com profundidade: renda de '+(cl.renda||'beneficio INSS')+', hipossuficiencia economica, vulnerabilidade'+(cl.doencas?' agravada por '+cl.doencas:'')+'. Fundamente: Art. 5 LXXIV CF/88; Arts. 98-99 par. 3 CPC (presuncao relativa); Art. 4 I e Art. 6 VIII CDC. Seja extenso e convincente.'
     +(cl.doencas?'\n\nII - DA PRIORIDADE NA TRAMITACAO PROCESSUAL\nPortador(a) de '+cl.doencas+'. Art. 1048 I CPC.':'')
     +'\n\n'+d+' - DOS FATOS'
-    +'\nNarrativa cronologica detalhada. Subtopicos numerados como '+d+'.1, '+d+'.2 etc. Use todos os dados reais. Descreva: como o desconto surgiu, o contrato '+contrato+', parcela R$ '+parc+', '+mes+' meses descontados, total '+totStr+'. Impacto na renda. Abalo emocional e psicologico. Texto corrido.'
+    +'\nNarrativa cronologica e juridicamente tecnica. Subtopicos '+d+'.1, '+d+'.2, '+d+'.3. TIPO DE IRREGULARIDADE: '+tipoDescricao+'. Use esta irregularidade como eixo central dos fatos. Descreva com riqueza de detalhes: ('+d+'.1) Como o desconto/contrato surgiu, quando o cliente percebeu, o contrato '+contrato+', parcela R$ '+parc+', '+mes+' meses descontados, total '+totStr+'; ('+d+'.2) As tentativas de resolucao extrajudicial (contato com o banco, SAC, Procon), a recusa ou inertia da instituicao; ('+d+'.3) O impacto patrimonial (reducao da renda mensal), o dano moral (angustia, constrangimento, comprometimento da dignidade do aposentado/pensionista), a vulnerabilidade agravada'+(cl.doencas?' pela condicao de saude ('+cl.doencas+')':'')+'. Escreva em paragrafos corridos sem bullets.'
     +'\n\n'+dir+' - DO DIREITO'
     +'\nSubtopicos obrigatorios (desenvolva cada um com densidade tecnica maxima):'
     +'\n'+dir+'.1 - Da Relacao de Consumo e da Aplicabilidade do CDC (Arts. 2 e 3 CDC, Sumula 297 STJ)'
@@ -1986,7 +2223,15 @@ function diGerNot(){
   var banco=bancoOpt==='todos'?'TODAS AS INSTITUICOES FINANCEIRAS':bancoOpt==='outro'&&bancoTxt?bancoTxt:(c.banco||'banco');
   var contrato=g('di-not-contrato').value.trim()||'todos os contratos existentes';
   var tipo=g('di-not-tipo').value;
-  var tipoTxt={cartao:'cartao de credito RMC/RCC inserido sem autorizacao',consignado:'emprestimo consignado contratado sem autorizacao do titular',seguro:'seguro prestamista inserido sem consentimento',geral:'cobrancas e descontos indevidos'}[tipo]||'cobrancas indevidas';
+  var tipoTxt={
+    cartao:'cartao de credito RMC/RCC inserido sem autorizacao',
+    consignado:'emprestimo consignado contratado sem autorizacao do titular',
+    seguro:'seguro prestamista inserido sem consentimento',
+    refinanciamento:'refinanciamento de contrato nao solicitado pelo titular',
+    portabilidade:'portabilidade de credito nao autorizada pelo titular',
+    fraude:'fraude: contrato em nome do cliente sem seu conhecimento',
+    geral:'cobrancas e descontos indevidos'
+  }[tipo]||'cobrancas indevidas';
   var analises=getE(c.id).analises||{};
   var docsTxt='';
   Object.keys(analises).forEach(function(did){docsTxt+='['+analises[did].doc+']: '+analises[did].txt+' | ';});
