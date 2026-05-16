@@ -319,7 +319,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#1a1a1a}
         <input type="checkbox" id="tutela-urgencia" style="width:18px;height:18px;cursor:pointer">
         <div>
           <label for="tutela-urgencia" style="font-size:13px;font-weight:700;color:#e65100;cursor:pointer;display:block">Incluir Tutela de Urgencia</label>
-          <span style="font-size:11px;color:#bf360c">Suspensao imediata dos descontos — fumus boni iuris e periculum in mora</span>
+          <span style="font-size:11px;color:#bf360c">Suspensao imediata dos descontos - fumus boni iuris e periculum in mora</span>
         </div>
       </div>
       <button class="btn btnp" style="width:100%;justify-content:center;margin-top:12px;padding:12px;font-size:14px" onclick="diGerPeticaoCompleta()">&#9654; Gerar peticao completa</button>
@@ -457,22 +457,30 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#1a1a1a}
 
   <div id="sp3" class="pg">
     <div class="card">
-      <div class="ct">Plano de Pagamento &mdash; Art. 104-A CDC</div>
-      <div class="info-box">70% minimo existencial + 30% proporcional entre credores. 60 meses.</div>
-      <div style="display:flex;gap:8px;margin-bottom:12px">
-        <select id="se-sel-plano" style="flex:1"><option value="">Selecionar cliente...</option></select>
-        <button class="btn btnp" onclick="seGerPlano()">Calcular plano</button>
+      <div class="ct">Peticao Inicial - Repactuacao de Dividas (Superendividamento)</div>
+      <div class="warn-box">Preencha os dados, conecte o Drive para usar documentos do cliente, e clique em Gerar.</div>
+      <select id="se-sel-pet" style="margin-bottom:12px" onchange="sePetPreench()"><option value="">Selecionar cliente...</option></select>
+      <div class="g2">
+        <div><label>Tratamento do(a) Juiz(a)</label><input id="se-vara-trat" value="Ao Juizo da"></div>
+        <div><label>Vara</label><input id="se-vara" value="Vara Civel da Comarca de Vargem Grande do Sul - SP"></div>
       </div>
-    </div>
-    <div id="se-plano-area" style="display:none" class="card">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-        <div class="ct" style="margin-bottom:0">Plano gerado</div>
-        <div style="display:flex;gap:6px">
-          <button class="btn" onclick="copiar('se-plano-txt')">Copiar</button>
-          <button class="btn btng" id="se-plano-dl" style="display:none" onclick="baixarPlanoDocx()">Baixar Plano .doc</button>
+      <div class="g2">
+        <div><label>Cidade</label><input id="se-cidade-pet" value="Vargem Grande do Sul"></div>
+        <div><label>Estado</label><input id="se-estado-pet" value="Sao Paulo"></div>
+      </div>
+      <div style="margin-top:10px;padding:10px;background:#e8f5e9;border:1px solid #a5d6a7;border-radius:8px">
+        <div style="font-size:12px;font-weight:700;color:#1b5e20;margin-bottom:4px">Tutela de Urgencia obrigatoria nesta acao</div>
+        <div style="font-size:11px;color:#2e7d32">Suspensao de todas as dividas ate audiencia de conciliacao + limitacao dos descontos ao minimo existencial</div>
+      </div>
+      <button class="btn btnp" style="width:100%;justify-content:center;margin-top:14px;padding:12px;font-size:14px" onclick="seGerPeticaoCompleta()">&#9654; Gerar peticao completa</button>
+      <div id="se-pet-area" style="display:none;margin-top:14px">
+        <div style="font-size:12px;font-weight:600;color:#1b5e20;margin-bottom:6px" id="se-pet-lbl"></div>
+        <div class="out" id="se-pet-txt" style="min-height:100px"></div>
+        <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+          <button class="btn" onclick="copiar('se-pet-txt')">Copiar texto</button>
+          <button class="btn btng" id="se-pet-dl2" style="display:none" onclick="seDownloadPet()">Baixar .doc</button>
         </div>
       </div>
-      <div class="out" id="se-plano-txt"></div>
     </div>
   </div>
 
@@ -1798,6 +1806,126 @@ function seBaixarPet(){
   var txt=sePetTxts.join('\n\n'+sep+'\n\n');
   baixarDocx(txt,'peticao_superendividamento.doc');
 }
+function sePetPreench(){
+  var id=g('se-sel-pet').value;if(!id)return;
+  var cl=seC.find(function(x){return x.id===id;});if(!cl)return;
+}
+
+function seDownloadPet(){
+  var txt=g('se-pet-txt').textContent;
+  baixarDocx(limparMarkdown(txt),'peticao_superendividamento.doc');
+}
+
+function seGerPeticaoCompleta(){
+  var id=g('se-sel-pet').value;
+  if(!id){alert('Selecione um cliente.');return;}
+  var cl=seC.find(function(x){return x.id===id;});
+  var vara=(g('se-vara')&&g('se-vara').value)||'Vara Civel da Comarca de Vargem Grande do Sul - SP';
+  var trat=(g('se-vara-trat')&&g('se-vara-trat').value)||'Ao Juizo da';
+  var cidade=(g('se-cidade-pet')&&g('se-cidade-pet').value)||'Vargem Grande do Sul';
+  var estado=(g('se-estado-pet')&&g('se-estado-pet').value)||'Sao Paulo';
+  var hoje=new Date().toLocaleDateString('pt-BR');
+  var rLiq=parseFloat(cl.rendaLiquida)||0;
+  var rBrut=parseFloat(cl.rendaBruta)||rLiq;
+  var minExist=(rLiq*0.7).toLocaleString('pt-BR',{minimumFractionDigits:2});
+  var dispDiv=(rLiq*0.3).toLocaleString('pt-BR',{minimumFractionDigits:2});
+  var totalDiv=parseFloat(cl.totalDividas)||0;
+  var totalDivStr='R$ '+totalDiv.toLocaleString('pt-BR',{minimumFractionDigits:2});
+  // Build creditors list
+  var creds=[];
+  var credCols=[cl.c1,cl.c2,cl.c3,cl.c4,cl.c5,cl.c6,cl.c7,cl.c8,cl.c9,cl.c10];
+  credCols.forEach(function(cr){if(cr&&cr.nome)creds.push(cr);});
+  var credsQual=creds.map(function(r){
+    return r.nome+(r.cnpj?', pessoa juridica de direito privado, inscrita no CNPJ/MF sob o n. '+r.cnpj:'')+(r.end?', com sede em '+r.end:'');
+  }).join('; ');
+  var credsList=creds.map(function(r){
+    return r.nome+': R$ '+(parseFloat(r.valor)||0).toLocaleString('pt-BR',{minimumFractionDigits:2})+(r.forma?' ('+r.forma+')':'')+(r.prest?' - parcela R$ '+r.prest:'');
+  }).join('; ');
+  var analises=getE(cl.id).analises||{};
+  var docInfo='';Object.keys(analises).forEach(function(did){docInfo+='['+analises[did].doc+']: '+analises[did].txt+'; ';});
+  var dados='DADOS DO CLIENTE: Nome: '+cl.nome+' | CPF: '+(cl.cpf||'-')+' | Nac: '+(cl.nac||'brasileiro(a)')+' | Estado civil: '+(cl.civil||'-')+' | Prof: '+(cl.prof||'-')+' | Nasc: '+(cl.nasc||'-')+' | End: '+(cl.end||cl.cidade||'-')+'/'+estado+(cl.tel?' | Tel: '+cl.tel:'')+(cl.email?' | Email: '+cl.email:'')+(cl.doencas?' | Doencas/Condicoes: '+cl.doencas:'')+' | Renda bruta: R$ '+rBrut.toLocaleString('pt-BR',{minimumFractionDigits:2})+' | Renda liquida: R$ '+rLiq.toLocaleString('pt-BR',{minimumFractionDigits:2})+' | Minimo existencial (70%): R$ '+minExist+' | Disponivel dividas (30%): R$ '+dispDiv+' | Total dividas: '+totalDivStr+' | Credores: '+credsList+(cl.serasa?' | Serasa/SPC: '+cl.serasa:'')+' | Motivos superendividamento: '+(cl.motivos||'nao informado')+(docInfo?' | Documentos analisados: '+docInfo:'');
+  var r='Escreva em portugues com todos os acentos e cedilhas. Zero markdown. Zero asteriscos. Paragrafos separados por linha em branco. Texto juridico formal e tecnicamente preciso. ';
+
+  var P=[
+    // P1: Cabecalho + qualificacao + credores
+    r+dados+' REDIJA APENAS: (1) ENDERECAMENTO: "'+trat+' '+vara+'" - centralizado e em maiusculo; (2) "JUIZO 100% DIGITAL" centralizado; (3) "TUTELA PROVISORIA" centralizado; (4) QUALIFICACAO DO AUTOR em texto corrido com todos os dados (nome, nacionalidade, estado civil, profissao, CPF, RG se disponivel, nascimento, endereco, telefone, email'+(cl.doencas?', condicao de saude: '+cl.doencas:'')+'), termine com "vem, respeitosamente, a presenca de Vossa Excelencia, por intermedio de seus advogados, propor a presente:"; (5) NOME DA ACAO centralizado: REPACTUACAO DE DIVIDAS (SUPERENDIVIDAMENTO); (6) "em relacao aos credores a seguir indicados:" justificado; (7) QUALIFICACAO DE CADA CREDOR em paragrafo separado com todos os dados disponiveis: '+credsQual+'; (8) GRATUIDADE DA JUSTICA: renda de R$ '+rLiq.toLocaleString('pt-BR',{minimumFractionDigits:2})+', hipossuficiencia, Art. 5 LXXIV CF, Arts. 98-99 CPC'+(cl.doencas?'; (9) PRIORIDADE DE TRAMITACAO: portador(a) de '+cl.doencas+', Art. 1048 CPC':''),
+
+    // P2: Fatos - Superendividamento
+    r+dados+' REDIJA APENAS a secao I - DA CONFIGURACAO DA SITUACAO DE SUPERENDIVIDAMENTO com subtopicos:'+
+    ' I.1 - DA SITUACAO REMUNERATORIA E PATRIMONIAL: descreva a renda de R$ '+rBrut.toLocaleString('pt-BR',{minimumFractionDigits:2})+' bruta / R$ '+rLiq.toLocaleString('pt-BR',{minimumFractionDigits:2})+' liquida, situacao patrimonial, contexto de vida. Use os documentos disponiveis.'+
+    ' I.2 - DO QUADRO GERAL DE DIVIDAS: liste cada credor com valor, modalidade e parcela. Demonstre que o total de '+totalDivStr+' e impagavel com a renda atual. Mencione que algumas dividas ainda nao foram documentadas. Cite que o cliente nao agiu de ma-fe.'+
+    ' I.3 - DO MINIMO EXISTENCIAL: fundamente a reserva de 70% da renda (R$ '+minExist+') para necessidades vitais (alimentacao, moradia, saude, transporte). Os 30% restantes (R$ '+dispDiv+') serao destinados ao plano de pagamento. Cite Art. 54-A par. 3 CDC (Lei 14.181/2021) e precedentes do TJSC.'+
+    ' I.4 - CONCLUSAO: demonstre que o cliente se enquadra no art. 54-A par. 1 CDC - comprometimento de mais de 30% da renda com dividas, boa-fe, origem das dividas ('+( cl.motivos||'necessidades de consumo')+').',
+
+    // P3: Exibicao de documentos + Tutela
+    r+dados+' REDIJA APENAS:'+
+    ' Secao II - DA NECESSARIA EXIBICAO DE DOCUMENTOS PELOS CREDORES: fundamente que os documentos (contratos, propostas, historico de pagamentos) estao em poder dos credores, nao do consumidor. Art. 397 CPC, Art. 6 VIII CDC (inversao onus prova), hipossuficiencia tecnica. Requeira exibicao no prazo de 15 dias.'+
+    ' Secao III - TUTELA PROVISORIA: (obrigatoria). Desenvolva: FUMUS BONI IURIS = superendividamento comprovado, quadro de dividas de '+totalDivStr+' contra renda de R$ '+rLiq.toLocaleString('pt-BR',{minimumFractionDigits:2})+', pratica de credito irresponsavel pelos credores (SARB 001/08 e SARB 010/2013), violacao do minimo existencial. PERICULUM IN MORA = impossibilidade de subsistencia, privacao de bens vitais (alimentacao, moradia, medicamentos), dano irreparavel e continuado. Requeira: (a) suspensao da exigibilidade de TODAS as dividas ate audiencia de conciliacao; subsidiariamente (b) limitacao dos descontos consignados e debitos em conta ao valor disponivel de R$ '+dispDiv+' distribuido proporcionalmente entre credores. Cite Lei 14.181/2021 arts. 104-A a 104-C, Art. 300 CPC, SARB 001/08, SARB 010/2013.',
+
+    // P4: Direito
+    r+dados+' REDIJA APENAS a secao de fundamentacao juridica com subtopicos:'+
+    ' IV.1 - DO SUPERENDIVIDAMENTO E A LEI 14.181/2021: conceito legal (art. 54-A CDC), direito ao tratamento, principios da boa-fe, preservacao do minimo existencial, funcao social dos contratos.'+
+    ' IV.2 - DA RESPONSABILIDADE PELO CREDITO IRRESPONSAVEL: obrigacao dos fornecedores de avaliar capacidade de pagamento antes de conceder credito (art. 54-B CDC). Cite SARB 001/08 e SARB 010/2013.'+
+    ' IV.3 - DO PROCESSO DE REPACTUACAO: procedimento do art. 104-A CDC, audiencia de conciliacao coletiva com todos os credores, plano de pagamento de ate 60 meses, preservacao de 70% da renda.'+
+    ' IV.4 - DA TUTELA PROCESSUAL DO CONSUMIDOR: Art. 6 VIII CDC (inversao onus prova), hipossuficiencia tecnica e juridica, vulnerabilidade agravada'+(cl.doencas?' pela condicao de saude ('+cl.doencas+')':'')+'. Cite Leonardo Roscoe Bessa sobre hipossuficiencia.',
+
+    // P5: Pedidos + Valor + Fechamento
+    r+dados+' REDIJA APENAS o final da peticao:'+
+    ' Secao IV - REQUERIMENTOS E PEDIDOS - Ante o exposto requer-se:'+
+    ' a) Admissao do pedido de repactuacao de dividas e designacao de audiencia de conciliacao coletiva com todos os credores (art. 104-A CDC);'+
+    ' b) Concessao da GRATUIDADE DA JUSTICA (arts. 98 e 99 CPC);'+(cl.doencas?' c) Reconhecimento da PRIORIDADE DE TRAMITACAO (Art. 1048 CPC) por ser portador(a) de '+cl.doencas+';':'')+
+    ' '+(cl.doencas?'d':'c')+') Concessao de TUTELA DE URGENCIA liminar e sem oitiva da parte adversa para: (i) SUSPENSAO DA EXIGIBILIDADE de todas as dividas objeto deste processo ate a realizacao da audiencia de conciliacao; subsidiariamente (ii) LIMITACAO dos descontos consignados e debitos em conta ao montante de R$ '+dispDiv+' distribuido proporcionalmente;'+
+    ' '+(cl.doencas?'e':'d')+') Intimacao urgente das demandadas para cumprimento da tutela no prazo de 48 horas, sob pena de multa diaria;'+
+    ' '+(cl.doencas?'f':'e')+') Citacao e intimacao de todos os credores por meio eletronico (art. 246 CPC);'+
+    ' '+(cl.doencas?'g':'f')+') Exibicao pelos credores de todos os documentos dos contratos no prazo de 15 dias (contratos, propostas, historico de pagamentos);'+
+    ' '+(cl.doencas?'h':'g')+') Producao de todas as provas em direito admitidas;'+
+    ' '+(cl.doencas?'i':'h')+') Ao final, homologacao do plano de pagamento a ser apresentado na audiencia em relacao aos credores que com ele concordarem; e em relacao aos que nao concordarem, revisao judicial das clausulas abusivas (art. 104-B CDC);'+
+    ' '+(cl.doencas?'j':'i')+') Condenacao dos credores que praticaram credito irresponsavel em honorarios e custas (Art. 85 CPC).'+
+    ' VALOR DA CAUSA: '+totalDivStr+' (soma de todas as dividas), nos termos do Art. 292 CPC.'+
+    ' ENCERRAMENTO: "Pede deferimento."'+
+    ' '+cidade+'/'+estado+', '+hoje+'.'+
+    ' Centralizados e em negrito:'+
+    ' _____________________________________________'+
+    ' Augusto de Andrade Gadiani'+
+    ' OAB/SP n. 425.910'+
+    ' _____________________________________________'+
+    ' Ari D Antraccoli Neto'+
+    ' OAB/SP n. 500.799'
+  ];
+
+  g('se-pet-area').style.display='block';
+  g('se-pet-dl2').style.display='none';
+  g('se-pet-txt').textContent='';
+  var sePetTextoCompleto='';
+
+  function seGerarParte(i,acumulado){
+    if(i>=P.length){
+      sePetTextoCompleto=acumulado;
+      g('se-pet-txt').textContent=limparMarkdown(acumulado);
+      g('se-pet-lbl').textContent='Peticao completa! Revise e baixe o .doc.';
+      g('se-pet-dl2').style.display='inline-flex';
+      return;
+    }
+    g('se-pet-lbl').textContent='Gerando parte '+(i+1)+' de '+P.length+'...';
+    var url=SCRIPT+'?action=ai&prompt='+encodeURIComponent(P[i]);
+    fetch(url,{method:'GET',redirect:'follow'})
+    .then(function(r){return r.text();})
+    .then(function(t){
+      var d;
+      try{d=JSON.parse(t);}catch(x){throw new Error('Resposta invalida parte '+(i+1));}
+      if(!d.ok)throw new Error(d.error||'Erro parte '+(i+1));
+      var txt=d.text||'';
+      seGerarParte(i+1,acumulado+(acumulado?'\n\n':'')+txt);
+    })
+    .catch(function(e){
+      g('se-pet-txt').textContent='Erro na parte '+(i+1)+': '+e.message;
+      g('se-pet-lbl').textContent='Erro. Tente novamente.';
+    });
+  }
+
+  seGerarParte(0,'');
+}
+
 function seGerPlano(){
   var id=g('se-sel-plano').value;if(!id){alert('Selecione.');return;}
   var cl=seC.find(function(x){return x.id===id;});
