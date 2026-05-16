@@ -443,7 +443,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#1a1a1a}
     <div class="card">
       <div class="ct">Peticao &mdash; Superendividamento (5 etapas)</div>
       <div class="info-box">Cada etapa e gerada e revisada antes de avancar.</div>
-      <select id="se-sel-pet" style="margin-bottom:14px" onchange="seIniciarPet()"><option value="">Selecionar cliente...</option></select>
+      <select id="se-sel-pet-old" style="margin-bottom:14px" onchange="seIniciarPet()"><option value="">Selecionar cliente...</option></select>
       <div id="se-steps"></div>
       <div id="se-pet-area" style="display:none;margin-top:14px">
         <div class="ct" id="se-pet-lbl"></div>
@@ -1784,7 +1784,7 @@ function seListar(){
   g('se-lista').innerHTML=html;
 }
 function sePopSels(){
-  var sels=['se-sel-doc','se-sel-pet','se-sel-plano','se-p1','se-p2','se-crm-sel','se-not-sel','se-drive-sel'],i,j,s,c;
+  var sels=['se-sel-doc','se-sel-pet','se-sel-pet-old','se-sel-plano','se-p1','se-p2','se-crm-sel','se-not-sel','se-drive-sel'],i,j,s,c;
   for(i=0;i<sels.length;i++){s=g(sels[i]);if(!s)continue;s.innerHTML='<option value="">Selecionar...</option>';for(j=0;j<seC.length;j++){c=seC[j];s.innerHTML+='<option value="'+c.id+'">'+c.nome+'</option>';}}
 }
 function seIrDocs(id){swSE(1);g('se-sel-doc').value=id;seOpenDocs();}
@@ -1824,7 +1824,7 @@ function seWA(id){
 }
 var SE_LABELS=['Enderecamento e qualificacao','Justica gratuita e prioridade','Dos fatos','Tutela de urgencia','Pedidos e encerramento'];
 function seIniciarPet(){
-  var id=g('se-sel-pet').value;if(!id)return;
+  var id=g('se-sel-pet-old').value;if(!id)return;
   sePetC=seC.find(function(x){return x.id===id;});sePetTxts=[];
   var html='',i;
   for(i=0;i<SE_LABELS.length;i++){html+='<div class="step-row'+(i===0?' cur':'')+'" id="srow'+i+'"><div class="snum'+(i===0?' cur':'')+'" id="snum'+i+'">'+(i+1)+'</div><div style="flex:1"><div style="font-size:13px;font-weight:600">'+SE_LABELS[i]+'</div></div><button class="btn'+(i===0?' btnp':'')+'" id="sbtn'+i+'" onclick="seGerEtapa('+i+')"'+(i>0?' disabled':'')+'>Gerar</button></div>';}
@@ -1897,7 +1897,7 @@ function seDriveBuscarExec(cid){
           var chk=est.seDriveDocs[f.id]?'checked':'';
           var ico=f.mimeType.indexOf('pdf')>=0?'&#128196;':f.mimeType.indexOf('image')>=0?'&#128247;':'&#128196;';
           html+='<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #eee">'
-            +'<input type="checkbox" '+chk+' onchange="seDriveMarcar(''+cid+'',''+f.id+'',this.checked)">'
+            +'<input type="checkbox" '+chk+' data-cid="'+cid+'" data-fid="'+f.id+'" onchange="seDriveMarcarEl(this)">'
             +'<span style="font-size:13px">'+ico+' '+f.name+'</span>'
             +'</div>';
         });
@@ -1906,6 +1906,15 @@ function seDriveBuscarExec(cid){
       })
       .catch(function(e){ds.className='warn-box';ds.textContent='Erro ao listar arquivos: '+e.message;});
   });
+}
+function seDriveMarcarEl(el){
+  var cid=el.getAttribute('data-cid');
+  var fileId=el.getAttribute('data-fid');
+  var est=getE(cid);
+  if(!est.seDriveDocs)est.seDriveDocs={};
+  if(el.checked)est.seDriveDocs[fileId]=true;
+  else delete est.seDriveDocs[fileId];
+  saveEst();
 }
 function seDriveMarcar(cid,fileId,checked){
   var est=getE(cid);
