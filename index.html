@@ -267,7 +267,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#1a1a1a}
     </div>
   </div>
 
-  <div id="dp3" class="pg">
+  <div id="dp4" class="pg">
     <div class="card">
       <div class="ct">Notificacao Extrajudicial</div>
       <div class="info-box">Gerada em nome do consumidor. Registrar em Consumidor.gov e Banco Central.</div>
@@ -314,7 +314,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#1a1a1a}
     </div>
   </div>
 
-  <div id="dp4" class="pg">
+  <div id="dp5" class="pg">
     <div class="card">
       <div class="ct">Gerar Peticao Inicial &mdash; Descontos Indevidos</div>
       <div class="warn-box">Preencha todos os campos antes de gerar. Conecte o Drive para enriquecer a peticao com os documentos do cliente.</div>
@@ -369,7 +369,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#1a1a1a}
     </div>
   </div>
 
-  <div id="dp5" class="pg">
+  <div id="dp6" class="pg">
     <div class="card">
       <div class="ct">Gestao de Protocolo</div>
       <div class="g2">
@@ -391,7 +391,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#1a1a1a}
     </div>
   </div>
 
-  <div id="dp6" class="pg">
+  <div id="dp7" class="pg">
     <div class="card">
       <div class="ct">CRM &mdash; Cadencia de Relacionamento</div>
       <div class="info-box">Sequencia de mensagens para manter vinculo com o cliente.</div>
@@ -403,7 +403,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#1a1a1a}
     </div>
   </div>
 
-  <div id="dp7" class="pg">
+  <div id="dp3" class="pg">
     <div class="card">
       <div class="ct">Google Drive &mdash; Documentos do Cliente</div>
       <div class="info-box">Busca a pasta do cliente no Drive, lista os arquivos e identifica documentos automaticamente no checklist.</div>
@@ -429,12 +429,13 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#1a1a1a}
   <nav class="tabs">
     <button class="on" id="sn0" onclick="swSE(0)">Fila</button>
     <button id="sn1" onclick="swSE(1)">Documentos</button>
-    <button id="sn2" onclick="swSE(2)">Peticao</button>
-    <button id="sn3" onclick="swSE(3)">Plano 70/30</button>
-    <button id="sn4" onclick="swSE(4)">Protocolo</button>
-    <button id="sn5" onclick="swSE(5)">CRM</button>
-    <button id="sn6" onclick="swSE(6)">Notificacoes</button>
-    <button id="sn7" onclick="swSE(7)">Drive</button>
+    <button id="sn2" onclick="swSE(2)">Pendencias</button>
+    <button id="sn3" onclick="swSE(3)">Drive</button>
+    <button id="sn4" onclick="swSE(4)">Notificacoes</button>
+    <button id="sn5" onclick="swSE(5)">Peticao</button>
+    <button id="sn6" onclick="swSE(6)">Plano 70/30</button>
+    <button id="sn7" onclick="swSE(7)">Protocolo</button>
+    <button id="sn8" onclick="swSE(8)">CRM</button>
   </nav>
 
   <div id="sp0" class="pg on">
@@ -474,7 +475,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#1a1a1a}
     </div>
   </div>
 
-  <div id="sp2" class="pg">
+  <div id="sp5" class="pg">
     <div class="card">
       <div class="ct">Peticao Inicial &mdash; Superendividamento</div>
       <select id="se-sel-pet" style="margin-bottom:12px" onchange="seIniciarPet()"><option value="">Selecionar cliente...</option></select>
@@ -518,7 +519,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#1a1a1a}
     </div>
   </div>
 
-  <div id="sp3" class="pg">
+  <div id="sp6" class="pg">
     <div class="card">
       <div class="ct">Plano de Pagamento &mdash; Art. 104-A CDC</div>
       <div class="info-box">70% minimo existencial + 30% proporcional entre credores. 60 meses.</div>
@@ -539,7 +540,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#1a1a1a}
     </div>
   </div>
 
-  <div id="sp4" class="pg">
+  <div id="sp7" class="pg">
     <div class="card">
       <div class="ct">Protocolo &mdash; Superendividamento</div>
       <div class="g2">
@@ -561,7 +562,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#1a1a1a}
     </div>
   </div>
 
-  <div id="sp5" class="pg">
+  <div id="sp8" class="pg">
     <div class="card">
       <div class="ct">CRM &mdash; Superendividamento</div>
       <select id="se-crm-sel" style="margin-bottom:14px" onchange="seOpenCRM()"><option value="">Selecionar cliente...</option></select>
@@ -572,7 +573,26 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#1a1a1a}
     </div>
   </div>
 
-  <div id="sp7" class="pg">
+    <div id="sp2" class="pg">
+    <div class="card">
+      <div class="ct">Central de Pendencias &mdash; Superendividamento</div>
+      <div class="info-box">Ordenados por tempo sem atualizacao. Clique em WhatsApp para cobrar.</div>
+      <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+        <select id="se-pend-filtro" onchange="seListarPend()" style="font-size:12px;padding:4px 8px">
+          <option value="todos">Todos os status</option>
+          <option value="critico">Critico (0 docs)</option>
+          <option value="incompleto">Incompleto</option>
+          <option value="completo">Completo</option>
+        </select>
+        <button class="btn btng" onclick="seEnviarTodosPend()">&#9889; Cobrar todos hoje</button>
+        <button class="btn" onclick="seListarPend()">&#8635; Atualizar</button>
+      </div>
+      <div id="se-pend-stats" style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;margin-bottom:12px"></div>
+      <div id="se-pend-lista"></div>
+    </div>
+  </div>
+
+<div id="sp3" class="pg">
     <div class="card">
       <div class="ct">Drive &mdash; Documentos do Cliente SE</div>
       <div class="info-box">Os clientes estao separados por mes. O sistema busca a pasta do cliente automaticamente.</div>
@@ -585,7 +605,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#1a1a1a}
     </div>
   </div>
 
-  <div id="sp6" class="pg">
+  <div id="sp4" class="pg">
     <div class="card">
       <div class="ct">Notificacoes &mdash; Todos os Credores</div>
       <div class="info-box">Uma notificacao por credor, em nome do consumidor.</div>
@@ -1405,8 +1425,8 @@ function setMod(m){
   if(m==='pt')ptListar();
   if(m==='docs')docsRefresh();
 }
-function swDI(n){var i;for(i=0;i<8;i++){g('dp'+i).className='pg'+(i===n?' on':'');g('dn'+i).className=i===n?'on':'';}if(n===7)drivePopSel();}
-function swSE(n){var i;for(i=0;i<8;i++){var sp=g('sp'+i);var sn=g('sn'+i);if(sp)sp.className='pg'+(i===n?' on':'');if(sn)sn.className=i===n?'on':'';}}
+function swDI(n){var i;for(i=0;i<8;i++){g('dp'+i).className='pg'+(i===n?' on':'');g('dn'+i).className=i===n?'on':'';}if(n===3)drivePopSel();}
+function swSE(n){var i;for(i=0;i<10;i++){var sp=g('sp'+i);var sn=g('sn'+i);if(sp)sp.className='pg'+(i===n?' on':'');if(sn)sn.className=i===n?'on':'';}if(n===2&&seC.length>0)seListarPend();}
 
 function diLoad(){
   g('di-lista').innerHTML='<div class="load"><span class="spin"></span> Carregando...</div>';
@@ -2322,6 +2342,115 @@ function seDriveToggleDoc(cid,did,val){
 function seDriveMarcar(cid,fid,val){
   var e=getE(cid);if(!e.driveMarc)e.driveMarc={};
   e.driveMarc[fid]=val;saveEst();
+}
+
+function seListarPend(){
+  var filtro=g('se-pend-filtro')&&g('se-pend-filtro').value||'todos';
+  var stats=g('se-pend-stats');
+  var lista=g('se-pend-lista');
+  if(!lista)return;
+
+  var nCrit=0,nInc=0,nOk=0;
+  seC.forEach(function(cl){
+    var info=docsGetInfo(cl,'se');
+    if(info.status==='critico')nCrit++;
+    else if(info.status==='atencao')nInc++;
+    else nOk++;
+  });
+
+  if(stats)stats.innerHTML=
+    '<div style="background:#fce4ec;border-radius:8px;padding:10px;text-align:center"><div style="font-size:22px;font-weight:700;color:#c62828">'+nCrit+'</div><div style="font-size:11px;color:#c62828;font-weight:600">&#128308; Criticos<br><small>0 documentos</small></div></div>'
+   +'<div style="background:#fff8e1;border-radius:8px;padding:10px;text-align:center"><div style="font-size:22px;font-weight:700;color:#e65100">'+nInc+'</div><div style="font-size:11px;color:#e65100;font-weight:600">&#128993; Incompletos<br><small>docs faltando</small></div></div>'
+   +'<div style="background:#e8f5e9;border-radius:8px;padding:10px;text-align:center"><div style="font-size:22px;font-weight:700;color:#1b5e20">'+nOk+'</div><div style="font-size:11px;color:#1b5e20;font-weight:600">&#128994; Completos<br><small>prontos</small></div></div>'
+   +'<div style="background:#e3f2fd;border-radius:8px;padding:10px;text-align:center"><div style="font-size:22px;font-weight:700;color:#1565c0">'+seC.length+'</div><div style="font-size:11px;color:#1565c0;font-weight:600">&#128101; Total<br><small>clientes SE</small></div></div>';
+
+  var filtrados=seC.filter(function(cl){
+    var st=getE(cl.id);
+    if(st.excluido||st.arquivado||st.protocolado)return false;
+    var info=docsGetInfo(cl,'se');
+    if(filtro==='critico')return info.status==='critico';
+    if(filtro==='incompleto')return info.status==='atencao';
+    if(filtro==='completo')return info.status==='ok';
+    return true;
+  });
+
+  filtrados.sort(function(a,b){
+    var ia=docsGetInfo(a,'se'),ib=docsGetInfo(b,'se');
+    var ord={critico:0,atencao:1,ok:2};
+    if(ord[ia.status]!==ord[ib.status])return ord[ia.status]-ord[ib.status];
+    return ib.diasDesde-ia.diasDesde;
+  });
+
+  if(!filtrados.length){
+    lista.innerHTML='<div style="padding:16px;text-align:center;color:#bbb">Nenhum cliente nesta categoria.</div>';
+    return;
+  }
+
+  var html='';
+  filtrados.forEach(function(cl){
+    var info=docsGetInfo(cl,'se');
+    var st=getE(cl.id);
+    var cor=info.status==='critico'?'#c62828':info.status==='atencao'?'#e65100':'#1b5e20';
+    var d2=info.diasDesde;
+    var diasLabel=d2===0?'hoje':d2===1?'1 dia':d2+' dias';
+    var dotCls=d2>14?'dr':d2>7?'do':'db';
+
+    html+='<div class="alert-row">';
+    html+='<div class="dot '+dotCls+'" style="margin-top:6px"></div>';
+    html+='<div style="flex:1">';
+    html+='<div style="font-weight:600;font-size:13px">'+cl.nome+' <span style="font-size:10px;color:#aaa;font-weight:400">&mdash; '+diasLabel+' sem atualizacao</span></div>';
+    html+='<div style="font-size:11px;color:#999;margin-top:2px">'+(cl.tel||'sem tel.')+' &middot; '+(cl.situacaoProfissional||cl.prof||'-');
+    if(cl.totalDividas)html+=' &middot; Total: R$ '+parseFloat(cl.totalDividas).toLocaleString('pt-BR',{minimumFractionDigits:2});
+    html+='</div>';
+
+    // Progress bar
+    html+='<div style="display:flex;align-items:center;gap:6px;margin-top:4px">';
+    html+='<div style="flex:1;height:4px;background:#e0ddd6;border-radius:2px"><div style="height:4px;background:'+cor+';border-radius:2px;width:'+info.pct+'%"></div></div>';
+    html+='<span style="font-size:10px;color:'+cor+';font-weight:700">'+info.recebidos.length+'/'+info.total+'</span>';
+    html+='</div>';
+
+    if(info.faltando.length){
+      html+='<div style="font-size:11px;color:#c62828;margin-top:3px">Faltam: '+info.faltando.slice(0,4).map(function(d){return d.txt;}).join(', ')+(info.faltando.length>4?' +mais '+(info.faltando.length-4):'')+'</div>';
+    }
+    html+='</div>';
+
+    html+='<div style="display:flex;gap:6px;align-items:center">';
+    if(info.deveEnviar&&cl.tel){
+      html+='<button class="btn" style="padding:4px 8px;font-size:11px;background:#e65100;border-color:#e65100;color:#fff" '
+          +'data-cid="'+cl.id+'" onclick="docsCobrar(this.dataset.cid,\'se\')">&#9889; Cobrar</button>';
+    } else if(cl.tel){
+      html+='<button class="btn btnw" style="padding:4px 8px;font-size:11px" '
+          +'data-cid="'+cl.id+'" onclick="docsCobrar(this.dataset.cid,\'se\')">&#128172; WA</button>';
+    }
+    if(info.status==='ok'){
+      html+='<span style="font-size:10px;color:#1b5e20;font-weight:600">&#9989; Pronto</span>';
+    }
+    html+='</div>';
+    html+='</div>';
+  });
+  lista.innerHTML=html;
+}
+
+function seEnviarTodosPend(){
+  var fila=seC.filter(function(cl){
+    var info=docsGetInfo(cl,'se');
+    return info.deveEnviar&&cl.tel&&info.status!=='ok';
+  });
+  if(!fila.length){alert('Nenhum cliente SE para cobrar hoje.');return;}
+  if(!confirm('Enviar cobranca para '+fila.length+' cliente(s) SE via WhatsApp?'))return;
+  var idx=0;
+  function proximo(){
+    if(idx>=fila.length){alert('Cobrancas SE enviadas!');seListarPend();return;}
+    var cl=fila[idx];
+    idx++;
+    docsCobrar(cl.id,'se');
+    if(idx<fila.length){
+      setTimeout(function(){if(confirm('Enviar para o proximo? ('+idx+' de '+fila.length+')'))proximo();},2000);
+    } else {
+      setTimeout(function(){alert('Todas as cobrancas SE foram enviadas!');seListarPend();},1500);
+    }
+  }
+  proximo();
 }
 
 function seLoad(){
