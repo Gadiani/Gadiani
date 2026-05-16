@@ -1734,7 +1734,7 @@ function lerArquivosDrive(cid, cb){
               checked++;
               if(!found&&d2.files){
                 var melhor=null,melhorSc=0;
-                d2.files.forEach(function(f){var fn=f.name.toLowerCase().replace(/[^a-z0-9 ]/g,'');var sc=0;pals.forEach(function(p){if(fn.indexOf(p)>=0)sc+=10;});if(sc>melhorSc){melhorSc=sc;melhor=f;}});
+                d2.files.forEach(function(f){var fn=f.name.toLowerCase().replace(/[^a-z0-9 ]/g,' ').trim();var matched=pals.filter(function(p){return (' '+fn+' ').indexOf(' '+p)>=0||fn.indexOf(p)===0;});var sc=matched.length>=2?matched.length*10:(matched.length===1&&pals.length===1?10:0);if(sc>melhorSc){melhorSc=sc;melhor=f;}});
                 if(melhor&&melhorSc>=10){found=true;getE(cid).drivePastaId=melhor.id;saveEst();lerArquivosDaPasta(melhor.id,cb);}
               }
               if(checked===d.files.length&&!found)cb(null,'');
@@ -2233,13 +2233,18 @@ function seDriveBuscarEmMeses(meses,cl,id,idx){
   .then(function(r){return r.json();})
   .then(function(d){
     if(!d.files||!d.files.length){seDriveBuscarEmMeses(meses,cl,id,idx+1);return;}
-    var nN=cl.nome.toLowerCase().replace(/[^a-z0-9 ]/g,'');
-    var pals=nN.split(' ').filter(function(p){return p.length>2;});
+    var nN=cl.nome.toLowerCase().replace(/[^a-z0-9 ]/g,' ').trim();
+    var pals=nN.split(/\s+/).filter(function(p){return p.length>2;});
     var melhor=null,melhorSc=0;
     d.files.forEach(function(f){
-      var fn=f.name.toLowerCase().replace(/[^a-z0-9 ]/g,'');
-      var sc=0;
-      pals.forEach(function(p){if(fn.indexOf(p)>=0)sc+=10;});
+      var fn=f.name.toLowerCase().replace(/[^a-z0-9 ]/g,' ').trim();
+      // Require ALL significant words to match as whole words or start of word
+      var matched=pals.filter(function(p){
+        // Match as whole word boundary using space-padded comparison
+        return (' '+fn+' ').indexOf(' '+p)>=0||fn.indexOf(p)===0;
+      });
+      // Score: must match at least 2 words OR match the first+last name
+      var sc=matched.length>=2?matched.length*10:(matched.length===1&&pals.length===1?10:0);
       if(sc>melhorSc){melhorSc=sc;melhor=f;}
     });
     if(melhor&&melhorSc>=10){
