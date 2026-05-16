@@ -125,7 +125,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#1a1a1a}
   </div>
 </div>
 
-<div class="mod-tabs">
+<div class="mod-tabs" style="grid-template-columns:1fr 1fr 1fr 1fr">
   <button class="mod-btn on" id="mb-di" onclick="setMod('di')">
     <div class="mod-icon">&#127974;</div>
     <div class="mod-title">Descontos Indevidos</div>
@@ -136,11 +136,46 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#1a1a1a}
     <div class="mod-title">Superendividamento</div>
     <div class="mod-sub">Plano 70/30 &middot; Peticao</div>
   </button>
+  <button class="mod-btn" id="mb-docs" onclick="setMod('docs')">
+    <div class="mod-icon">&#128203;</div>
+    <div class="mod-title">Documentos</div>
+    <div class="mod-sub" id="mb-docs-badge">Cobranca &middot; Pendencias</div>
+  </button>
   <button class="mod-btn" id="mb-pt" onclick="setMod('pt')">
     <div class="mod-icon">&#9989;</div>
     <div class="mod-title">Protocolados</div>
     <div class="mod-sub">DI e SE protocolados</div>
   </button>
+</div>
+
+<!-- DOCS -->
+<div id="mod-docs" style="display:none">
+  <div class="card" style="margin-bottom:10px">
+    <!-- Alertas de acao imediata -->
+    <div id="docs-alertas" style="margin-bottom:12px"></div>
+
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <div class="ct" style="margin-bottom:0">Central de Documentos &mdash; Todos os Clientes</div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btng" style="font-size:11px" onclick="docsEnviarTodos()">&#9889; Cobrar todos pendentes</button>
+        <button class="btn" style="font-size:11px" onclick="docsRefresh()">&#8635; Atualizar</button>
+        <select id="docs-filtro" onchange="docsRefresh()" style="font-size:11px;padding:4px 8px">
+          <option value="todos">Todos</option>
+          <option value="urgente">Cobrar hoje</option>
+          <option value="critico">Critico (0 docs)</option>
+          <option value="atencao">Atencao (incompleto)</option>
+          <option value="ok">Completo</option>
+        </select>
+        <select id="docs-tipo" onchange="docsRefresh()" style="font-size:11px;padding:4px 8px">
+          <option value="todos">DI + SE</option>
+          <option value="di">Apenas DI</option>
+          <option value="se">Apenas SE</option>
+        </select>
+      </div>
+    </div>
+    <div id="docs-stats" style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;margin-bottom:12px"></div>
+    <div id="docs-lista"></div>
+  </div>
 </div>
 
 <!-- DI -->
@@ -319,7 +354,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#1a1a1a}
         <input type="checkbox" id="tutela-urgencia" style="width:18px;height:18px;cursor:pointer">
         <div>
           <label for="tutela-urgencia" style="font-size:13px;font-weight:700;color:#e65100;cursor:pointer;display:block">Incluir Tutela de Urgencia</label>
-          <span style="font-size:11px;color:#bf360c">Suspensao imediata dos descontos — fumus boni iuris e periculum in mora</span>
+          <span style="font-size:11px;color:#bf360c">Suspensao imediata dos descontos - fumus boni iuris e periculum in mora</span>
         </div>
       </div>
       <button class="btn btnp" style="width:100%;justify-content:center;margin-top:12px;padding:12px;font-size:14px" onclick="diGerPeticaoCompleta()">&#9654; Gerar peticao completa</button>
@@ -460,7 +495,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#1a1a1a}
       </div>
 
       <div style="margin-bottom:10px;padding:8px 12px;background:#e8f5e9;border:1px solid #a5d6a7;border-radius:8px;font-size:11px;color:#1b5e20;font-weight:600">
-        &#9654; Tutela de Urgencia obrigatoria — suspensao de todas as dividas ate audiencia
+        &#9654; Tutela de Urgencia obrigatoria - suspensao de todas as dividas ate audiencia
       </div>
 
       <!-- Botao gerar tudo -->
@@ -1009,6 +1044,351 @@ function callAI(prompt,cb){
     .catch(function(e){cb(e,null);});
 }
 
+// -- CENTRAL DE DOCUMENTOS --
+
+var WA_ESCRITORIO = '5519999276352';
+
+var DOCS_MSGS = {
+  imediato: function(nome, tipo, lista) {
+    return 'Ola, '+nome+'! Tudo bem? Aqui e o escritorio Gadiani & D Antraccoli Advogados!'
+      +'\n\nFicamos felizes em ter voce como cliente! Para darmos inicio ao seu processo de '+(tipo==='di'?'Desconto Indevido':'Superendividamento')+', precisamos dos seguintes documentos:\n\n'
+      +lista.map(function(d,i){return (i+1)+'. '+d;}).join('\n')
+      +'\n\nSe puder fotografar e nos enviar hoje mesmo, conseguimos iniciar o processo muito mais rapido! &#128512;'
+      +'\n\nQualquer duvida pode perguntar.'
+      +'\n\nGadiani & D Antraccoli Advogados';
+  },
+  lembrete3: function(nome, tipo, lista) {
+    return 'Ola, '+nome+'! Tudo bem? &#128522;'
+      +'\n\nPassamos para um rapido lembrete: ainda precisamos dos documentos abaixo para dar andamento ao seu processo:\n\n'
+      +lista.map(function(d,i){return (i+1)+'. '+d;}).join('\n')
+      +'\n\nQuanto antes enviar, mais rapido seu caso avanca! Por aqui mesmo pode mandar as fotos.'
+      +'\n\nGadiani & D Antraccoli Advogados';
+  },
+  urgente7: function(nome, tipo, lista) {
+    return '&#9888; '+nome+', precisamos da sua ajuda!'
+      +'\n\nEstamos trabalhando no seu processo e o juiz pode solicitar os documentos abaixo a qualquer momento. Sem eles, ficamos impossibilitados de agir:\n\n'
+      +lista.map(function(d,i){return (i+1)+'. '+d;}).join('\n')
+      +'\n\nPor favor, nos envie com urgencia. Qualquer foto ja ajuda!'
+      +'\n\nGadiani & D Antraccoli Advogados';
+  },
+  final14: function(nome, tipo, lista) {
+    return '&#128680; '+nome+', ATENCAO URGENTE!'
+      +'\n\nJa se passaram mais de 14 dias e ainda nao recebemos os documentos necessarios para o seu processo. SEM ELES, NAO CONSEGUIMOS DAR ENTRADA NA SUA ACAO.'
+      +'\n\nDocumentos necessarios HOJE:\n\n'
+      +lista.map(function(d,i){return (i+1)+'. '+d;}).join('\n')
+      +'\n\nPor favor, fotografe e envie agora mesmo. Em caso de dificuldade, nos ligue.'
+      +'\n\nGadiani & D Antraccoli Advogados';
+  }
+};
+
+function docsDeveEnviarHoje(info) {
+  var d = info.diasDesde;
+  // Day 0-1: send welcome
+  // Day 3: first reminder
+  // Day 7: urgent
+  // Day 14: final
+  // Check if already sent today using localStorage
+  return d === 0 || d === 1 || d === 3 || d === 7 || d === 14;
+}
+
+function docsJaEnviouHoje(cid, tipo, msgKey) {
+  var key = 'sent_'+cid+'_'+tipo+'_'+msgKey;
+  var sent = localStorage.getItem(key);
+  if (!sent) return false;
+  var sentDate = new Date(sent).toDateString();
+  return sentDate === new Date().toDateString();
+}
+
+function docsMarcarEnviado(cid, tipo, msgKey) {
+  var key = 'sent_'+cid+'_'+tipo+'_'+msgKey;
+  localStorage.setItem(key, new Date().toISOString());
+  // Also save in est
+  var e = getE(cid);
+  if (!e.cobrancas) e.cobrancas = {};
+  e.cobrancas[msgKey] = new Date().toISOString();
+  saveEst();
+}
+
+function docsGetMsgKey(diasDesde) {
+  if (diasDesde <= 1) return 'imediato';
+  if (diasDesde <= 4) return 'lembrete3';
+  if (diasDesde <= 10) return 'urgente7';
+  return 'final14';
+}
+
+function docsGetInfo(cl, tipo) {
+  var docs = tipo === 'di' ? DC.concat(GV) : SE_DOCS;
+  var rec = getDC(tipo, cl.id);
+  var obrigatorios = docs.filter(function(d){return d.ob;});
+  var recebidos = docs.filter(function(d){return rec[d.id];});
+  var faltando = docs.filter(function(d){return !rec[d.id];});
+  var faltandoOb = obrigatorios.filter(function(d){return !rec[d.id];});
+  var diasDesde = 0;
+  var dataFech = cl.data;
+  if (dataFech) {
+    var partes = dataFech.toString().split('/');
+    if (partes.length === 3) {
+      var dt = new Date(parseInt(partes[2]), parseInt(partes[1])-1, parseInt(partes[0]));
+      if (!isNaN(dt)) diasDesde = Math.max(0, Math.floor((Date.now()-dt.getTime())/86400000));
+    }
+  }
+  var pct = docs.length ? Math.round(recebidos.length/docs.length*100) : 0;
+  var status = faltandoOb.length===0 ? 'ok' : (recebidos.length===0 ? 'critico' : 'atencao');
+  var msgKey = docsGetMsgKey(diasDesde);
+  var jaEnviou = docsJaEnviouHoje(cl.id, tipo, msgKey);
+  var deveEnviar = !jaEnviou && status !== 'ok' && (diasDesde===0||diasDesde===1||diasDesde===3||diasDesde===7||diasDesde>=14);
+  return {recebidos:recebidos, faltando:faltando, faltandoOb:faltandoOb,
+          diasDesde:diasDesde, pct:pct, status:status, total:docs.length,
+          msgKey:msgKey, jaEnviou:jaEnviou, deveEnviar:deveEnviar};
+}
+
+function docsRefresh() {
+  var filtro = (g('docs-filtro') && g('docs-filtro').value) || 'todos';
+  var tipo = (g('docs-tipo') && g('docs-tipo').value) || 'todos';
+  var lista = g('docs-lista');
+  var stats = g('docs-stats');
+  var alertas = g('docs-alertas');
+  if (!lista || !stats) return;
+
+  var clientes = [];
+  if (tipo !== 'se') diC.forEach(function(cl){clientes.push({cl:cl, tipo:'di'});});
+  if (tipo !== 'di') seC.forEach(function(cl){clientes.push({cl:cl, tipo:'se'});});
+
+  var nCritico=0, nAtencao=0, nOk=0, nUrgente=0;
+  var urgentesHoje = [];
+
+  clientes.forEach(function(item) {
+    var info = docsGetInfo(item.cl, item.tipo);
+    if (info.status==='critico') nCritico++;
+    else if (info.status==='atencao') nAtencao++;
+    else nOk++;
+    if (info.deveEnviar && item.cl.tel) {
+      nUrgente++;
+      urgentesHoje.push(item);
+    }
+  });
+
+  // Alertas
+  if (alertas) {
+    var alertHtml = '';
+    if (urgentesHoje.length > 0) {
+      alertHtml += '<div style="background:#fff3e0;border:1px solid #ffb300;border-radius:8px;padding:12px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;gap:12px">'
+        +'<div><div style="font-size:13px;font-weight:700;color:#e65100">&#9889; '+urgentesHoje.length+' cliente(s) precisam de cobranca HOJE</div>'
+        +'<div style="font-size:11px;color:#bf360c;margin-top:2px">Clique em "Cobrar todos" para abrir os WhatsApps em sequencia</div></div>'
+        +'<button class="btn btnp" style="white-space:nowrap" onclick="docsEnviarTodos()">Cobrar todos agora</button>'
+        +'</div>';
+    }
+    // Novos clientes (fechados hoje)
+    var novos = clientes.filter(function(item) {
+      var info = docsGetInfo(item.cl, item.tipo);
+      return info.diasDesde <= 1 && info.recebidos.length === 0 && item.cl.tel;
+    });
+    if (novos.length > 0) {
+      alertHtml += '<div style="background:#e8f5e9;border:1px solid #66bb6a;border-radius:8px;padding:12px;margin-bottom:8px">'
+        +'<div style="font-size:13px;font-weight:700;color:#1b5e20">&#127381; '+novos.length+' cliente(s) novo(s) hoje &mdash; envie as boas-vindas!</div>'
+        +'<div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">';
+      novos.forEach(function(item) {
+        alertHtml += '<button class="btn btng" style="font-size:11px" data-cid="'+item.cl.id+'" data-tp="'+item.tipo+'" onclick="docsCobrar(this.getAttribute(\'data-cid\'),this.getAttribute(\'data-tp\'))">&#128172; '+item.cl.nome.split(' ')[0]+'</button>';
+      });
+      alertHtml += '</div></div>';
+    }
+    alertas.innerHTML = alertHtml;
+  }
+
+  // Stats
+  stats.innerHTML =
+    '<div style="background:#fce4ec;border-radius:8px;padding:10px;text-align:center"><div style="font-size:22px;font-weight:700;color:#c62828">'+nCritico+'</div><div style="font-size:11px;color:#c62828;font-weight:600">&#128308; Criticos</div></div>'
+   +'<div style="background:#fff8e1;border-radius:8px;padding:10px;text-align:center"><div style="font-size:22px;font-weight:700;color:#e65100">'+nAtencao+'</div><div style="font-size:11px;color:#e65100;font-weight:600">&#128993; Incompletos</div></div>'
+   +'<div style="background:#fff3e0;border-radius:8px;padding:10px;text-align:center"><div style="font-size:22px;font-weight:700;color:#e65100">'+nUrgente+'</div><div style="font-size:11px;color:#e65100;font-weight:600">&#9889; Cobrar hoje</div></div>'
+   +'<div style="background:#e8f5e9;border-radius:8px;padding:10px;text-align:center"><div style="font-size:22px;font-weight:700;color:#1b5e20">'+nOk+'</div><div style="font-size:11px;color:#1b5e20;font-weight:600">&#128994; Completos</div></div>';
+
+  // Badge
+  if (g('mb-docs-badge')) {
+    if (nUrgente > 0) {
+      g('mb-docs-badge').innerHTML = '&#9889; '+nUrgente+' cobrar hoje';
+      g('mb-docs-badge').style.color = '#e65100';
+    } else if (nCritico > 0) {
+      g('mb-docs-badge').innerHTML = '&#128308; '+nCritico+' criticos';
+      g('mb-docs-badge').style.color = '#c62828';
+    } else {
+      g('mb-docs-badge').innerHTML = 'Cobranca & Pendencias';
+      g('mb-docs-badge').style.color = '';
+    }
+  }
+
+  // Filter
+  var filtrados = clientes.filter(function(item) {
+    var info = docsGetInfo(item.cl, item.tipo);
+    if (filtro === 'urgente') return info.deveEnviar;
+    if (filtro === 'critico') return info.status === 'critico';
+    if (filtro === 'atencao') return info.status === 'atencao';
+    if (filtro === 'ok') return info.status === 'ok';
+    return true;
+  });
+
+  filtrados.sort(function(a, b) {
+    var ia = docsGetInfo(a.cl, a.tipo);
+    var ib = docsGetInfo(b.cl, b.tipo);
+    // Urgentes primeiro, depois criticos, atencao, ok
+    if (ia.deveEnviar !== ib.deveEnviar) return ia.deveEnviar ? -1 : 1;
+    var ord = {critico:0, atencao:1, ok:2};
+    if (ord[ia.status] !== ord[ib.status]) return ord[ia.status] - ord[ib.status];
+    return ib.diasDesde - ia.diasDesde;
+  });
+
+  if (!filtrados.length) {
+    lista.innerHTML = '<div style="color:#aaa;text-align:center;padding:30px;font-size:13px">Nenhum cliente encontrado.</div>';
+    return;
+  }
+
+  var html = '';
+  filtrados.forEach(function(item) {
+    var cl = item.cl, tp = item.tipo;
+    var info = docsGetInfo(cl, tp);
+    var cor = info.status==='critico' ? '#c62828' : info.status==='atencao' ? '#e65100' : '#1b5e20';
+    var bg = info.status==='critico' ? '#fff5f5' : info.status==='atencao' ? '#fffbf0' : '#f1fff4';
+    var ico = info.status==='critico' ? '&#128308;' : info.status==='atencao' ? '&#128993;' : '&#128994;';
+    var diasLabel = info.diasDesde===0 ? 'hoje' : info.diasDesde===1 ? '1 dia' : info.diasDesde+' dias';
+    var faltaNomes = info.faltando.map(function(d){return d.txt;});
+
+    html += '<div style="border:1px solid #e0ddd6;border-left:4px solid '+cor+';border-radius:8px;padding:12px;margin-bottom:8px;background:'+bg+'">';
+
+    // Header
+    html += '<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">';
+    html += ico+' <strong style="flex:1;font-size:13px">'+cl.nome+'</strong>';
+    html += '<span style="font-size:10px;background:#e8e6e0;padding:2px 6px;border-radius:8px;color:#666">'+(tp==='di'?'DI':'SE')+'</span>';
+    html += '<span style="font-size:10px;color:#aaa">&#128197; '+diasLabel+'</span>';
+
+    if (info.deveEnviar) {
+      html += '<span style="font-size:10px;font-weight:700;color:#e65100;background:#fff3e0;padding:2px 6px;border-radius:8px">&#9889; Cobrar hoje</span>';
+    } else if (info.jaEnviou) {
+      html += '<span style="font-size:10px;color:#1b5e20">&#9989; Enviado hoje</span>';
+    }
+    html += '</div>';
+
+    // Progress bar
+    html += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">';
+    html += '<div style="flex:1;height:6px;background:#e0ddd6;border-radius:3px"><div style="height:6px;background:'+cor+';border-radius:3px;width:'+info.pct+'%"></div></div>';
+    html += '<span style="font-size:11px;color:'+cor+';font-weight:700">'+info.recebidos.length+'/'+info.total+'</span>';
+    html += '</div>';
+
+    // Faltando
+    if (info.faltando.length > 0) {
+      html += '<div style="font-size:11px;color:#666;margin-bottom:8px">Faltando: <span style="color:'+cor+';font-weight:600">'+info.faltando.slice(0,3).map(function(d){return d.txt;}).join(', ')+(info.faltando.length>3?' +mais '+(info.faltando.length-3):'')+'</span></div>';
+    }
+
+    // Buttons
+    html += '<div style="display:flex;gap:6px;flex-wrap:wrap">';
+    if (cl.tel && info.status !== 'ok') {
+      var btnLabel = info.diasDesde>=14 ? 'Ultimo aviso' : info.diasDesde>=7 ? 'Urgente' : info.diasDesde>=3 ? 'Lembrete' : 'Boas-vindas';
+      var btnCor = info.deveEnviar ? '#e65100' : '#25d366';
+      var btnId1='btn_'+cl.id+'_'+tp;
+      html += '<button class="btn" id="'+btnId1+'" style="font-size:11px;padding:4px 10px;background:'+btnCor+';border-color:'+btnCor+';color:#fff" '
+           +'data-cid="'+cl.id+'" data-tp="'+tp+'" '
+           +'onclick="var b=this;docsCobrar(b.dataset.cid,b.dataset.tp)">&#128172; '+btnLabel+'</button>';
+    }
+    html += '<button class="btn" style="font-size:11px;padding:4px 8px" '
+         +'data-cid="'+cl.id+'" data-tp="'+tp+'" '
+         +'onclick="var b=this;docsVerDetalhes(b.dataset.cid,b.dataset.tp)">&#128203; Ver docs</button>';
+    if (info.status === 'ok') {
+      html += '<span style="font-size:11px;color:#1b5e20;padding:4px 8px;font-weight:600">&#9989; Pronto para protocolo</span>';
+    }
+    html += '</div></div>';
+  });
+  lista.innerHTML = html;
+}
+
+function docsCobrar(cid, tipo) {
+  var cl = (tipo==='di'?diC:seC).find(function(x){return x.id===cid;});
+  if (!cl || !cl.tel) {alert('Cliente sem telefone cadastrado.');return;}
+  var info = docsGetInfo(cl, tipo);
+  if (info.faltando.length === 0) {alert('Todos os documentos ja foram recebidos!');return;}
+  var faltaNomes = info.faltando.map(function(d){return d.txt;});
+  var msg = DOCS_MSGS[info.msgKey](cl.nome.split(' ')[0], tipo, faltaNomes);
+  docsMarcarEnviado(cid, tipo, info.msgKey);
+  docsEnviarWA(cl.tel, msg);
+  setTimeout(function(){docsRefresh();}, 1000);
+}
+
+var docsEnviarFila = [];
+var docsEnviarIdx = 0;
+
+function docsEnviarTodos() {
+  var tipo = (g('docs-tipo') && g('docs-tipo').value) || 'todos';
+  var clientes = [];
+  if (tipo !== 'se') diC.forEach(function(cl){clientes.push({cl:cl, tipo:'di'});});
+  if (tipo !== 'di') seC.forEach(function(cl){clientes.push({cl:cl, tipo:'se'});});
+
+  docsEnviarFila = clientes.filter(function(item) {
+    var info = docsGetInfo(item.cl, item.tipo);
+    return info.deveEnviar && item.cl.tel && info.status !== 'ok';
+  });
+
+  if (!docsEnviarFila.length) {alert('Nenhum cliente para cobrar hoje.');return;}
+  if (!confirm('Enviar cobranca para '+docsEnviarFila.length+' cliente(s) via WhatsApp?')) return;
+  docsEnviarIdx = 0;
+  docsProximoEnvio();
+}
+
+function docsProximoEnvio() {
+  if (docsEnviarIdx >= docsEnviarFila.length) {
+    alert('Cobrancas enviadas para '+docsEnviarFila.length+' clientes!');
+    docsRefresh();
+    return;
+  }
+  var item = docsEnviarFila[docsEnviarIdx];
+  var cl = item.cl, tp = item.tipo;
+  var info = docsGetInfo(cl, tp);
+  var faltaNomes = info.faltando.map(function(d){return d.txt;});
+  var msg = DOCS_MSGS[info.msgKey](cl.nome.split(' ')[0], tp, faltaNomes);
+  docsMarcarEnviado(cl.id, tp, info.msgKey);
+  docsEnviarIdx++;
+  docsEnviarWA(cl.tel, msg);
+  // Wait 3s before next to avoid browser blocking
+  if (docsEnviarIdx < docsEnviarFila.length) {
+    setTimeout(function() {
+      if (confirm('Enviar para o proximo? ('+docsEnviarIdx+' de '+docsEnviarFila.length+')')) {
+        docsProximoEnvio();
+      }
+    }, 2000);
+  } else {
+    setTimeout(function(){alert('Todas as cobrancas foram enviadas!');docsRefresh();}, 1500);
+  }
+}
+
+function docsBtnWA(btn) {
+  var cid = btn.getAttribute('data-cid');
+  var tp = btn.getAttribute('data-tp');
+  var mk = btn.getAttribute('data-mk');
+  docsCobrar(cid, tp);
+}
+
+function docsGetMsg(cid, tipo, msgKey) {
+  var cl = (tipo==='di'?diC:seC).find(function(x){return x.id===cid;});
+  if (!cl) return '';
+  var info = docsGetInfo(cl, tipo);
+  var faltaNomes = info.faltando.map(function(d){return d.txt;});
+  return DOCS_MSGS[msgKey](cl.nome.split(' ')[0], tipo, faltaNomes);
+}
+
+function docsEnviarWA(tel, msg) {
+  var num = tel.toString().replace(/[^0-9]/g,'');
+  if (num.length === 11) num = '55'+num;
+  window.open('https://wa.me/'+num+'?text='+encodeURIComponent(msg),'_blank');
+}
+
+function docsVerDetalhes(id, tipo) {
+  if (tipo === 'di') {
+    setMod('di'); swDI(1);
+    var diSel = document.querySelector('#mod-di select[onchange*="diOpenDocs"]');
+    if (diSel) {diSel.value=id; diOpenDocs();}
+  } else {
+    setMod('se'); swSE(1);
+    var seSel = g('se-sel-doc');
+    if (seSel) {seSel.value=id; seOpenDocs();}
+  }
+}
+
 function saveUser(){localStorage.setItem('g_user',g('sel-user').value);}
 function loadUser(){var u=localStorage.getItem('g_user');if(u)g('sel-user').value=u;}
 
@@ -1016,11 +1396,14 @@ function setMod(m){
   g('mod-di').style.display=m==='di'?'block':'none';
   g('mod-se').style.display=m==='se'?'block':'none';
   g('mod-pt').style.display=m==='pt'?'block':'none';
+  g('mod-docs').style.display=m==='docs'?'block':'none';
   g('mb-di').className='mod-btn'+(m==='di'?' on':'');
   g('mb-se').className='mod-btn'+(m==='se'?' on':'');
   g('mb-pt').className='mod-btn'+(m==='pt'?' on':'');
+  if(g('mb-docs'))g('mb-docs').className='mod-btn'+(m==='docs'?' on':'');
   if(m==='se'&&seC.length===0)seLoad();
   if(m==='pt')ptListar();
+  if(m==='docs')docsRefresh();
 }
 function swDI(n){var i;for(i=0;i<8;i++){g('dp'+i).className='pg'+(i===n?' on':'');g('dn'+i).className=i===n?'on':'';}if(n===7)drivePopSel();}
 function swSE(n){var i;for(i=0;i<8;i++){var sp=g('sp'+i);var sn=g('sn'+i);if(sp)sp.className='pg'+(i===n?' on':'');if(sn)sn.className=i===n?'on':'';}}
