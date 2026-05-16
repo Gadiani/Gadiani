@@ -441,15 +441,42 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#1a1a1a}
 
   <div id="sp2" class="pg">
     <div class="card">
-      <div class="ct">Peticao &mdash; Superendividamento (5 etapas)</div>
-      <div class="info-box">Cada etapa e gerada e revisada antes de avancar.</div>
-      <select id="se-sel-pet" style="margin-bottom:14px" onchange="seIniciarPet()"><option value="">Selecionar cliente...</option></select>
-      <div id="se-steps"></div>
+      <div class="ct">Peticao Inicial &mdash; Superendividamento</div>
+      <select id="se-sel-pet" style="margin-bottom:12px" onchange="seIniciarPet()"><option value="">Selecionar cliente...</option></select>
+
+      <!-- Anexos para subsidiar a peticao -->
+      <div style="margin-bottom:12px;padding:12px;background:#f3e5f5;border:1px solid #ce93d8;border-radius:8px">
+        <div style="font-size:12px;font-weight:700;color:#6a1b9a;margin-bottom:8px">&#128206; Anexar documentos para subsidiar a peticao</div>
+        <div style="font-size:11px;color:#7b1fa2;margin-bottom:8px">Suba holerites, extratos, contratos ou qualquer documento. A IA vai ler e usar o conteudo na peticao.</div>
+        <div id="se-pet-anexos" style="margin-bottom:8px"></div>
+        <button class="btn" style="font-size:11px;padding:4px 10px;background:#fff;border-color:#ce93d8;color:#6a1b9a" onclick="seAddAnexo()">+ Adicionar arquivo</button>
+        <div id="se-pet-anexos-status" style="font-size:11px;color:#1b5e20;margin-top:6px;display:none"></div>
+      </div>
+
+      <!-- Drive status -->
+      <div id="se-drive-bar-pet" style="margin-bottom:10px;padding:8px 12px;border-radius:8px;display:flex;align-items:center;justify-content:space-between;gap:10px;background:#fce4ec;border:1px solid #f8bbd0">
+        <span style="font-size:11px;color:#c62828;font-weight:600">&#9888; Drive nao conectado - documentos do Drive NAO serao usados</span>
+        <button class="btn" style="font-size:11px;padding:3px 8px" onclick="driveConectar(function(){seAtualizaDrivePet();})">Conectar</button>
+      </div>
+
+      <div style="margin-bottom:10px;padding:8px 12px;background:#e8f5e9;border:1px solid #a5d6a7;border-radius:8px;font-size:11px;color:#1b5e20;font-weight:600">
+        &#9654; Tutela de Urgencia obrigatoria — suspensao de todas as dividas ate audiencia
+      </div>
+
+      <!-- Botao gerar tudo -->
+      <button class="btn btnp" style="width:100%;justify-content:center;padding:12px;font-size:14px;margin-bottom:8px" onclick="seGerPeticaoCompleta()">&#9654; Gerar peticao completa de uma vez</button>
+
+      <!-- Etapas individuais -->
+      <div style="margin-bottom:8px">
+        <div id="se-steps" style="display:none"></div>
+        <button class="btn" style="width:100%;justify-content:center;padding:8px;font-size:12px;background:#f5f5f5;border-color:#ddd;color:#666" onclick="seToggleEtapas()">&#9660; Gerar etapa por etapa (avancado)</button>
+      </div>
+
       <div id="se-pet-area" style="display:none;margin-top:14px">
-        <div class="ct" id="se-pet-lbl"></div>
+        <div style="font-size:12px;font-weight:600;color:#1b5e20;margin-bottom:6px" id="se-pet-lbl"></div>
         <div class="out" id="se-pet-txt" style="min-height:120px"></div>
         <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
-          <button class="btn" onclick="copiar('se-pet-txt')">Copiar etapa</button>
+          <button class="btn" onclick="copiar('se-pet-txt')">Copiar texto</button>
           <button class="btn btng" id="se-pet-dl" style="display:none" onclick="seBaixarPet()">Baixar peticao .doc</button>
         </div>
       </div>
@@ -1725,6 +1752,9 @@ function seDriveBuscar(){
   var st=g('se-drive-status');
   st.style.display='block';
   st.textContent='Verificando conexao...';
+  // Clear cached folder to force fresh search for THIS client
+  getE(id).drivePastaId=null;
+  saveEst();
   if(!driveToken){
     driveConectar(function(){seDriveBuscarCliente(cl,id);});
     return;
@@ -1987,6 +2017,202 @@ function seWA(id){
   getE(c.id).ultimoContato=new Date().toISOString();saveEst();
 }
 var SE_LABELS=['Enderecamento e qualificacao','Justica gratuita e prioridade','Dos fatos','Tutela de urgencia','Pedidos e encerramento'];
+var sePetAnexos = []; // {nome, b64, mime, texto}
+
+function seToggleEtapas(){
+  var steps = g('se-steps');
+  steps.style.display = steps.style.display === 'none' ? 'block' : 'none';
+}
+
+function seAtualizaDrivePet(){
+  var bar=g('se-drive-bar-pet');if(!bar)return;
+  if(driveToken){
+    bar.style.background='#e8f5e9';bar.style.borderColor='#a5d6a7';
+    bar.innerHTML='<span style="font-size:11px;color:#1b5e20;font-weight:600">&#9989; Drive conectado - documentos serao lidos na geracao</span><button class="btn" style="font-size:11px;padding:3px 8px" onclick="driveToken=null;localStorage.removeItem(\'drv_token\');atualizarStatusDrive();">Desconectar</button>';
+  }else{
+    bar.style.background='#fce4ec';bar.style.borderColor='#f8bbd0';
+    bar.innerHTML='<span style="font-size:11px;color:#c62828;font-weight:600">&#9888; Drive nao conectado</span><button class="btn" style="font-size:11px;padding:3px 8px" onclick="driveConectar(function(){seAtualizaDrivePet();})">Conectar</button>';
+  }
+}
+
+function seAddAnexo(){
+  var input=document.createElement('input');
+  input.type='file';
+  input.accept='image/*,.pdf';
+  input.style.display='none';
+  input.onchange=function(){
+    if(!input.files||!input.files[0])return;
+    var file=input.files[0];
+    var reader=new FileReader();
+    reader.onload=function(e){
+      var b64=e.target.result.split(',')[1];
+      var obj={nome:file.name,b64:b64,mime:file.type,texto:''};
+      sePetAnexos.push(obj);
+      seRenderAnexos();
+      // Analyze the file
+      seAnalisarAnexo(obj);
+    };
+    reader.readAsDataURL(file);
+  };
+  document.body.appendChild(input);
+  input.click();
+  document.body.removeChild(input);
+}
+
+function seAnalisarAnexo(obj){
+  var statusEl=g('se-pet-anexos-status');
+  statusEl.style.display='block';
+  statusEl.textContent='Analisando '+obj.nome+'...';
+  var isImg=obj.mime.indexOf('image')>=0;
+  var bodyContent=[
+    {type:isImg?'image':'document',source:{type:'base64',media_type:obj.mime,data:obj.b64}},
+    {type:'text',text:'Extraia TODAS as informacoes deste documento de forma detalhada: dados pessoais, valores, datas, nomes de credores, numeros de contratos, saldos, parcelas, qualquer dado relevante para uma peticao judicial de superendividamento.'}
+  ];
+  fetch(SCRIPT,{method:'POST',redirect:'follow',body:JSON.stringify({action:'aiDoc',prompt:'Extraia todas as informacoes',b64:obj.b64,mime:obj.mime,isImg:isImg})})
+    .then(function(r){return r.text();})
+    .then(function(t){
+      var d;try{d=JSON.parse(t);}catch(x){d={ok:false};}
+      obj.texto=d.ok?d.text:'Nao foi possivel extrair automaticamente.';
+      seRenderAnexos();
+      var pendentes=sePetAnexos.filter(function(a){return !a.texto;});
+      statusEl.textContent=pendentes.length===0?'Todos os documentos analisados!':'Analisando...';
+      if(pendentes.length===0)setTimeout(function(){statusEl.style.display='none';},3000);
+    })
+    .catch(function(){obj.texto='Erro na analise.';seRenderAnexos();});
+}
+
+function seRenderAnexos(){
+  var el=g('se-pet-anexos');if(!el)return;
+  if(!sePetAnexos.length){el.innerHTML='';return;}
+  var html='';
+  sePetAnexos.forEach(function(a,i){
+    var ok=a.texto&&a.texto!=='Analisando...'&&a.texto!=='Erro na analise.';
+    html+='<div style="display:flex;align-items:center;gap:6px;padding:4px 0;border-bottom:1px solid #e1bee7">'
+      +'<span style="font-size:10px;background:'+(ok?'#c8e6c9':'#fff9c4')+';padding:1px 5px;border-radius:8px">'+(ok?'OK':'...')+'</span>'
+      +'<span style="flex:1;font-size:11px;color:#333">'+a.nome+'</span>'
+      +'<button onclick="sePetAnexos.splice('+i+',1);seRenderAnexos()" style="background:none;border:none;cursor:pointer;color:#c62828;font-size:12px">&#10005;</button>'
+      +'</div>';
+  });
+  el.innerHTML=html;
+}
+
+function seGerPeticaoCompleta(){
+  var id=g('se-sel-pet').value;
+  if(!id){alert('Selecione um cliente.');return;}
+  var cl=seC.find(function(x){return x.id===id;});
+  if(!cl)return;
+
+  // Build anexos context
+  var anexosTxt='';
+  sePetAnexos.forEach(function(a){
+    if(a.texto&&a.texto.length>5){
+      anexosTxt+='\n[DOCUMENTO ANEXADO: '+a.nome+']:\n'+a.texto+'\n';
+    }
+  });
+
+  var hoje=new Date().toLocaleDateString('pt-BR');
+  var rLiq=parseFloat(cl.rendaLiquida)||0;
+  var rBrut=parseFloat(cl.rendaBruta)||rLiq;
+  var minEx='R$ '+(rLiq*0.7).toLocaleString('pt-BR',{minimumFractionDigits:2});
+  var dispDiv='R$ '+(rLiq*0.3).toLocaleString('pt-BR',{minimumFractionDigits:2});
+  var totalDiv=parseFloat(cl.totalDividas)||0;
+  var totalDivStr='R$ '+totalDiv.toLocaleString('pt-BR',{minimumFractionDigits:2});
+  var creds=[cl.c1,cl.c2,cl.c3,cl.c4,cl.c5,cl.c6,cl.c7,cl.c8,cl.c9,cl.c10].filter(function(r){return r&&r.nome;});
+  var credStr=creds.map(function(r){return r.nome+': R$ '+(r.valor||'?')+' ('+( r.forma||'?')+', parcela R$ '+(r.prest||'?')+')';}).join('; ');
+  var analises=getE(id).analises||{};
+  var docInfo='';Object.keys(analises).forEach(function(did){docInfo+='['+analises[did].doc+']: '+analises[did].txt+'; ';});
+  var dados='DADOS DO CLIENTE: '+cl.nome+' | CPF: '+(cl.cpf||'-')+' | '+(cl.civil||'-')+' | '+(cl.prof||'-')+' | Nasc: '+(cl.nasc||'-')+' | End: '+(cl.end||cl.cidade||'-')+(cl.tel?' | Tel: '+cl.tel:'')+(cl.email?' | Email: '+cl.email:'')+(cl.doencas?' | Doencas: '+cl.doencas:'')+' | Renda bruta: R$ '+rBrut.toLocaleString('pt-BR',{minimumFractionDigits:2})+' | Renda liquida: R$ '+rLiq.toLocaleString('pt-BR',{minimumFractionDigits:2})+' | Minimo existencial (70%): '+minEx+' | Disponivel dividas (30%): '+dispDiv+' | Total dividas: '+totalDivStr+' | Credores: '+credStr+(cl.serasa?' | Serasa: '+cl.serasa:'')+' | Motivos: '+(cl.motivos||'-')+(docInfo?' | Docs sistema: '+docInfo:'')+(anexosTxt?' | DOCUMENTOS ANEXADOS NA GERACAO:'+anexosTxt:'');
+  var regras='Voce e advogado senior especialista em superendividamento (Lei 14.181/2021) com 20 anos de experiencia. Escreva em portugues correto com todos os acentos e cedilhas. Zero markdown. Zero asteriscos. Paragrafos separados por linha em branco. Texto juridico formal, tecnico e bem fundamentado. Use TODOS os dados reais do cliente e dos documentos anexados.';
+
+  var P=[
+    // P1: Cabecalho + qualificacoes + gratuidade + minimo existencial
+    regras+' '+dados+' REDIJA A PRIMEIRA PARTE da peticao inicial, seguindo exatamente esta ordem e formatacao:'
+    +' (1) ENDERECAMENTO: centralizado, maiusculo, negrito: "AO JUIZO DA VARA CIVEL DA COMARCA DE VARGEM GRANDE DO SUL - SP"'
+    +' (2) Centralizado maiusculo negrito: "JUIZO 100% DIGITAL"'
+    +' (3) Centralizado maiusculo negrito: "TUTELA PROVISORIA"'
+    +' (4) EMENTA em paragrafo justificado negrito: escreva uma ementa tecnica de 2-3 linhas resumindo a causa (Superendividamento, Lei 14.181/2021, tutela de urgencia, repactuacao de dividas)'
+    +' (5) QUALIFICACAO DO AUTOR: paragrafo justificado negrito com todos os dados do cliente terminando com "vem propor a presente:"'
+    +' (6) NOME DA ACAO centralizado maiusculo negrito: "REPACTUACAO DE DIVIDAS (SUPERENDIVIDAMENTO)"'
+    +' (7) Justificado: "em relacao aos credores a seguir indicados:"'
+    +' (8) QUALIFICACAO DE CADA CREDOR: um paragrafo justificado negrito por credor com nome completo, natureza juridica, CNPJ se disponivel e sede. Credores: '+credStr
+    +' (9) Secao "PRELIMINARMENTE - DA NECESSIDADE DE CONCESSAO DE JUSTICA GRATUITA": desenvolva com profundidade real usando os dados dos documentos anexados. Mencione o holerite (renda bruta R$ '+rBrut.toLocaleString('pt-BR',{minimumFractionDigits:2})+', liquida R$ '+rLiq.toLocaleString('pt-BR',{minimumFractionDigits:2})+'), comprometimento da renda com descontos, impossibilidade de pagar custas. Arts. 98-99 CPC. Inclua pedido subsidiario de pagamento ao final. Se nao concedida, parcelamento.'
+    +' (10) Subsecao "DO VALOR MINIMO EXISTENCIAL": desenvolva o argumento de que R$ 600,00 nao e suficiente como minimo existencial, a requerente precisa de 70% da renda ('+minEx+') para subsistencia digna (alimentacao, moradia, saude, transporte, filhos). Fundamente em Art. 54-A par. 3 CDC, precedente TJSC.'
+    +(cl.doencas?' (11) Subsecao "DA PRIORIDADE DE TRAMITACAO": portador(a) de '+cl.doencas+', Art. 1048 I CPC.':''),
+
+    // P2: Fatos - superendividamento completo
+    regras+' '+dados+' REDIJA A SEGUNDA PARTE: Secao "I - DA CONFIGURACAO DA SITUACAO DE SUPERENDIVIDAMENTO" com os seguintes subtopicos em negrito justificado:'
+    +' "I.1 - DA SITUACAO REMUNERATORIA E PATRIMONIAL DA PARTE AUTORA": Narrativa em paragrafos corridos, sem bullets. Descreva o perfil da autora ('+( cl.prof||'profissional')+'), a trajetoria de vida, o momento em que as dividas se acumularam e os motivos ('+( cl.motivos||'necessidades de consumo')+'), impacto familiar, situacao emocional. Use os documentos anexados para detalhar. Enfatize a boa-fe.'
+    +' "I.2 - DO QUADRO GERAL DE DIVIDAS DE CONSUMO": Liste cada divida detalhadamente com credor, valor, modalidade, parcela e situacao. Total: '+totalDivStr+'. Mencione que algumas dividas ainda nao foram documentadas e o plano completo sera apresentado na audiencia.'
+    +' "I.3 - DO MINIMO EXISTENCIAL": Da soma da remuneracao bruta R$ '+rBrut.toLocaleString('pt-BR',{minimumFractionDigits:2})+', o minimo existencial de 70% corresponde a R$ '+minEx+'. O remanescente de R$ '+dispDiv+' (30%) sera destinado ao plano de pagamento. Demonstre matematicamente que as dividas atuais consomem muito mais que os 30% disponiveis.'
+    +' "I.4 - CONCLUSAO": A autora se enquadra no art. 54-A par. 1 CDC. Superendividamento comprovado. Boa-fe demonstrada. Direito ao tratamento garantido por lei.',
+
+    // P3: Exibicao de docs + Tutela de urgencia
+    regras+' '+dados+' REDIJA A TERCEIRA PARTE com as seguintes secoes:'
+    +' Secao "II - DA NECESSARIA EXIBICAO DE DOCUMENTOS PELOS CREDORES": Os documentos (contratos, propostas, historico de pagamentos, demonstrativos) estao em poder exclusivo dos credores. Art. 320 CPC, Art. 397 CPC, Art. 6 VIII CDC (inversao onus prova por hipossuficiencia tecnica). Requeira exibicao de todos os contratos e demonstrativos em prazo razoavel.'
+    +' Secao "III - TUTELA PROVISORIA": Art. 300 CPC. PROBABILIDADE DO DIREITO (fumus boni iuris): superendividamento enquadrado no art. 54-A CDC, holerites e extratos demonstram comprometimento da renda, credores praticaram credito irresponsavel sem verificar capacidade de pagamento (art. 54-B CDC, SARB 001/08, SARB 010/2013). PERIGO DE DANO (periculum in mora): cada mes os descontos reduzem a renda disponivel a zero, impossibilidade de alimentacao, moradia, medicamentos, dano grave continuo e de dificil reparacao. A propria Lei 14.181/2021 autoriza a suspensao. Nao se aplica tema repetitivo 1085 STJ (construido para situacao diversa da Lei 14.181/2021). Cite jurisprudencia do TJSC e TJRJ sobre limitacao de descontos em superendividamento. Requeira: (a) suspensao da exigibilidade de TODAS as dividas ate audiencia; subsidiariamente (b) limitacao dos descontos a '+dispDiv+' mensais distribuidos proporcionalmente; (c) intimacao das demandadas para cumprimento em 48h sob pena de multa diaria de R$ 1.000,00 por credor.',
+
+    // P4: Impossibilidade de custas + fundamentacao juridica
+    regras+' '+dados+' REDIJA A QUARTA PARTE:'
+    +' Secao "IV - DA IMPOSSIBILIDADE MATERIAL DE ARCAR COM AS CUSTAS PROCESSUAIS": A situacao de superendividamento torna impossivel pagar custas fixadas com base no valor da causa ('+totalDivStr+'). A Lei 14.181/2021 foi criada para garantir acesso a justica ao consumidor vulneravel. A gratuidade nao se vincula ao valor da causa. Cite STJ AgRg no AREsp 440.971/SP, Min. Luis Felipe Salomao: "A negativa da justica gratuita com fundamento exclusivo no valor da causa configura violacao ao principio do acesso a justica". Cite tambem TJSP sobre gratuidade em acoes de superendividamento. Inclua a justificativa de que a propria natureza da causa (superendividamento) demonstra a incapacidade de pagar custas.',
+
+    // P5: Pedidos + valor da causa + encerramento
+    regras+' '+dados+' REDIJA A QUINTA E ULTIMA PARTE:'
+    +' Secao "X - REQUERIMENTOS E PEDIDOS": "Ante o exposto, requer-se admitido o pedido de repactuacao de dividas, com designacao de audiencia de conciliacao coletiva com todos os credores (art. 104-A CDC), e ainda:"'
+    +' a) A concessao dos beneficios da JUSTICA GRATUITA (arts. 98 e 99 CPC); subsidiariamente, pagamento das custas ao final ou parcelamento;'
+    +(cl.doencas?' b) PRIORIDADE DE TRAMITACAO (Art. 1048 CPC);':'')
+    +' '+(cl.doencas?'c':'b')+') A concessao de TUTELA DE URGENCIA, liminarmente e sem oitiva da parte adversa, para: (i) suspensao da exigibilidade de TODAS as dividas ate audiencia de conciliacao; subsidiariamente (ii) limitacao dos descontos consignados e debitos em conta ao montante de '+dispDiv+' distribuidos proporcionalmente; (iii) urgente intimacao das demandadas para cumprimento em 48 horas, sob pena de multa de R$ 1.000,00/dia por credor;'
+    +' '+(cl.doencas?'d':'c')+') A citacao e intimacao de todos os credores por meio eletronico (art. 246 CPC);'
+    +' '+(cl.doencas?'e':'d')+') Que todos os credores apresentem em juizo todos os contratos e demonstrativo de evolucao da divida em prazo razoavel;'
+    +' '+(cl.doencas?'f':'e')+') Seja deferida a producao de todos os meios de prova admitidos;'
+    +' '+(cl.doencas?'g':'f')+') Ao final, sejam homologado o plano de pagamento a ser apresentado na audiencia em relacao aos credores que com ele concordarem; e em relacao aos que nao concordarem, revisao judicial das clausulas abusivas (art. 104-B CDC), com exclusao de encargos moratorios e juros remuneratorios a 1% ao mes, e exclusao do nome da autora dos cadastros de inadimplentes em 10 dias uteis da homologacao;'
+    +' '+(cl.doencas?'h':'g')+') Condenacao dos credores que praticaram credito irresponsavel em honorarios e custas (art. 85 CPC).'
+    +' "Da-se a causa o valor de '+totalDivStr+'."'
+    +' "Pede deferimento."'
+    +' Vargem Grande do Sul/SP, '+hoje+'.'
+    +' Centralizados: Augusto de Andrade Gadiani | OAB/SP n. 425.910 | Ari D Antraccoli Neto | OAB/SP n. 500.799'
+  ];
+
+  g('se-pet-area').style.display='block';
+  g('se-pet-dl').style.display='none';
+  g('se-pet-txt').textContent='';
+  var seTxt='';
+
+  g('se-pet-area').style.display='block';
+  g('se-pet-lbl').textContent='Buscando documentos do Drive...';
+  g('se-pet-txt').textContent='Aguarde...';
+
+  lerArquivosDrive(id,function(err,docsTxt){
+    if(docsTxt){
+      for(var pi=0;pi<P.length;pi++){P[pi]+=' | DOCUMENTOS DO DRIVE: '+docsTxt;}
+    }
+
+    function gerarParte(i){
+      if(i>=P.length){
+        g('se-pet-txt').textContent=limparMarkdown(seTxt);
+        g('se-pet-lbl').textContent='Peticao completa! Revise e baixe o .doc.';
+        g('se-pet-dl').style.display='inline-flex';
+        sePetTxts=[seTxt];
+        return;
+      }
+      g('se-pet-lbl').textContent='Gerando parte '+(i+1)+' de '+P.length+'...';
+      var url=SCRIPT+'?action=ai&prompt='+encodeURIComponent(P[i]);
+      fetch(url,{method:'GET',redirect:'follow'})
+      .then(function(r){return r.text();})
+      .then(function(t){
+        var d;try{d=JSON.parse(t);}catch(x){throw new Error('Invalido');}
+        if(!d.ok)throw new Error(d.error||'Erro');
+        seTxt+=(seTxt?'\n\n':'')+(d.text||'');
+        gerarParte(i+1);
+      })
+      .catch(function(e){
+        g('se-pet-txt').textContent='Erro parte '+(i+1)+': '+e.message;
+        g('se-pet-lbl').textContent='Erro. Tente novamente.';
+      });
+    }
+    gerarParte(0);
+  });
+}
+
 function seIniciarPet(){
   var id=g('se-sel-pet').value;if(!id)return;
   sePetC=seC.find(function(x){return x.id===id;});sePetTxts=[];
@@ -2192,6 +2418,7 @@ function checarTokenDrive(){
   atualizarStatusDrive();
 }
 function atualizarStatusDrive(){
+  if(typeof seAtualizaDrivePet==='function')seAtualizaDrivePet();
   var bar=document.getElementById('drive-bar');
   if(!bar)return;
   if(driveToken){
