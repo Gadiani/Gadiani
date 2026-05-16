@@ -364,6 +364,21 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#1a1a1a}
           <option value="geral">Cobrancas indevidas em geral</option>
         </select>
       </div>
+      <!-- Anexos DI -->
+      <div style="margin-bottom:12px;padding:12px;background:#f3e5f5;border:1px solid #ce93d8;border-radius:8px">
+        <div style="font-size:12px;font-weight:700;color:#6a1b9a;margin-bottom:6px">&#128206; Anexar documentos para subsidiar a peticao</div>
+        <div style="font-size:11px;color:#7b1fa2;margin-bottom:8px">Suba holerites, extratos, contratos ou qualquer documento. A IA vai ler e usar o conteudo na peticao.</div>
+        <div id="di-pet-anexos" style="margin-bottom:8px"></div>
+        <button class="btn" style="font-size:11px;padding:4px 10px;background:#fff;border-color:#ce93d8;color:#6a1b9a" onclick="diAddAnexo()">+ Adicionar arquivo</button>
+        <div id="di-pet-anexos-status" style="font-size:11px;color:#1b5e20;margin-top:6px;display:none"></div>
+      </div>
+
+      <!-- Drive status DI -->
+      <div id="di-drive-bar-pet" style="margin-bottom:10px;padding:8px 12px;border-radius:8px;display:flex;align-items:center;justify-content:space-between;gap:10px;background:#fce4ec;border:1px solid #f8bbd0">
+        <span style="font-size:11px;color:#c62828;font-weight:600">&#9888; Drive nao conectado - documentos do Drive NAO serao usados</span>
+        <button class="btn" style="font-size:11px;padding:3px 8px" onclick="driveConectar(function(){diAtualizaDrivePet();})">Conectar</button>
+      </div>
+
       <div style="margin-bottom:12px;padding:12px;background:#fff8e1;border:1px solid #ffcc80;border-radius:8px;display:flex;align-items:center;gap:12px">
         <input type="checkbox" id="tutela-urgencia" style="width:18px;height:18px;cursor:pointer">
         <div>
@@ -450,12 +465,19 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#1a1a1a}
           </label>
         </div>
       </div>
-      <div class="info-box" style="margin-bottom:10px">Armazene documentos e imagens do cliente. Clique em "Baixar PDF" para converter e baixar qualquer arquivo. Use "Baixar todos PDF" para gerar um PDF unificado para protocolo.</div>
+      <div class="info-box" style="margin-bottom:10px">Armazene e visualize documentos do cliente. "Puxar do Drive" importa automaticamente os arquivos da pasta do cliente no Drive. "Baixar todos PDF" abre janela para imprimir/salvar como PDF unificado para protocolo. "JPG" converte e baixa qualquer imagem.</div>
+      <div id="di-arq-drive-bar" style="margin-bottom:10px;padding:8px 12px;border-radius:8px;background:#e8f5e9;border:1px solid #a5d6a7;display:none">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+          <span style="font-size:12px;color:#1b5e20;font-weight:600">&#9989; Drive conectado</span>
+          <button class="btn btng" style="font-size:11px" onclick="diArqPuxarDrive()">&#9660; Puxar arquivos do Drive</button>
+        </div>
+        <div id="di-arq-drive-status" style="font-size:11px;color:#1b5e20;margin-top:4px;display:none"></div>
+      </div>
       <div id="di-arq-area" style="display:none">
         <div id="di-arq-stats" style="margin-bottom:10px;font-size:12px;color:#666"></div>
         <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap">
           <button class="btn btng" onclick="diArqBaixarTodosPDF()" style="font-weight:700">&#128196; Baixar todos em PDF unico</button>
-          <button class="btn" onclick="diArqBaixarZip()">&#128230; Baixar todos (.zip)</button>
+          <button class="btn" style="background:#fff3e0;border-color:#ffcc80;color:#e65100" onclick="diArqBaixarTodosJPG()">&#128247; Baixar todos em JPG</button>
         </div>
         <div id="di-arq-lista"></div>
       </div>
@@ -1459,9 +1481,9 @@ function diArqAbrir(cid) {
   g('di-arq-empty').style.display='none';
   g('di-arq-area').style.display='block';
   g('di-arq-input').setAttribute('data-cid', cid);
-  // Also sync arq-sel
   var sel = g('di-arq-sel'); if(sel) sel.value = cid;
   diArqRender(cid);
+  diArqAtualizarDriveBar(cid);
 }
 
 function diArqUpload(input) {
@@ -1492,6 +1514,110 @@ function diArqUpload(input) {
   input.value = '';
 }
 
+function diArqAtualizarDriveBar(cid) {
+  var bar = g('di-arq-drive-bar');
+  if (!bar) return;
+  if (driveToken) {
+    bar.style.display = 'block';
+    var e2 = getE(cid);
+    if (e2.drivePastaId) {
+      var st2 = g('di-arq-drive-status');
+      if (st2) { st2.style.display='block'; st2.textContent='Pasta em cache. Clique em "Puxar" para importar arquivos.'; }
+    }
+  } else {
+    bar.style.display = 'none';
+  }
+}
+
+function diArqPuxarDrive() {
+  var cid = diArqCidAtual;
+  if (!cid) { alert('Selecione um cliente primeiro.'); return; }
+  if (!driveToken) { driveConectar(function(){diArqPuxarDrive();}); return; }
+  var st2 = g('di-arq-drive-status');
+  if (st2) { st2.style.display='block'; st2.textContent='Buscando pasta no Drive...'; }
+  lerArquivosDrive(cid, function(err, docsTxt) {
+    // lerArquivosDrive reads text - we need the actual files
+    // Use drivePastaId to list and import files
+    var pastaId = getE(cid).drivePastaId;
+    if (!pastaId) {
+      if (st2) st2.textContent='Pasta nao encontrada no Drive. Va na aba Drive primeiro.';
+      return;
+    }
+    if (st2) st2.textContent='Importando arquivos da pasta do Drive...';
+    var q='"'+pastaId+'" in parents and trashed=false';
+    fetch('https://www.googleapis.com/drive/v3/files?q='+encodeURIComponent(q)+'&fields=files(id,name,mimeType,size)&pageSize=50',{headers:{Authorization:'Bearer '+driveToken}})
+    .then(function(r){return r.json();})
+    .then(function(d){
+      if (!d.files||!d.files.length) { if(st2)st2.textContent='Nenhum arquivo na pasta.'; return; }
+      var imgsEPdfs = d.files.filter(function(f){return f.mimeType.indexOf('image')>=0||f.mimeType==='application/pdf';});
+      if (!imgsEPdfs.length) { if(st2)st2.textContent='Nenhuma imagem ou PDF na pasta.'; return; }
+      if(st2)st2.textContent='Importando '+imgsEPdfs.length+' arquivo(s)...';
+      var e3=getE(cid); if(!e3.arquivos)e3.arquivos=[];
+      var jaExistem=e3.arquivos.map(function(a){return a.nome;});
+      var novos=imgsEPdfs.filter(function(f){return jaExistem.indexOf(f.name)<0;});
+      if(!novos.length){if(st2)st2.textContent='Todos os arquivos ja foram importados.';return;}
+      var done=0;
+      novos.forEach(function(f){
+        fetch('https://www.googleapis.com/drive/v3/files/'+f.id+'?alt=media',{headers:{Authorization:'Bearer '+driveToken}})
+        .then(function(r){return r.blob();})
+        .then(function(blob){
+          var reader=new FileReader();
+          reader.onload=function(ev){
+            var b64=ev.target.result.split(',')[1];
+            e3.arquivos.push({id:'drv_'+f.id,nome:f.name,mime:f.mimeType,b64:b64,data:new Date().toISOString(),tamanho:blob.size,fonte:'drive'});
+            done++;
+            if(st2)st2.textContent='Importando... '+done+'/'+novos.length;
+            if(done===novos.length){saveEst();diArqRender(cid);if(st2)st2.textContent=novos.length+' arquivo(s) importado(s) do Drive!';}
+          };
+          reader.readAsDataURL(blob);
+        })
+        .catch(function(){done++;if(done===novos.length){saveEst();diArqRender(cid);}});
+      });
+    })
+    .catch(function(e){if(st2)st2.textContent='Erro: '+e.message;});
+  });
+}
+
+function diArqBaixarJPG(idx, cid) {
+  var arq = (getE(cid).arquivos||[])[idx];
+  if (!arq) return;
+  var isImg = arq.mime && arq.mime.indexOf('image') >= 0;
+  if (!isImg) { alert('Apenas imagens podem ser convertidas para JPG.'); return; }
+  var img = new Image();
+  img.onload = function() {
+    var canvas = document.createElement('canvas');
+    canvas.width = img.width; canvas.height = img.height;
+    canvas.getContext('2d').drawImage(img, 0, 0);
+    var jpgUrl = canvas.toDataURL('image/jpeg', 0.92);
+    var a = document.createElement('a');
+    a.href = jpgUrl;
+    a.download = arq.nome.replace(/\.[^.]+$/, '') + '.jpg';
+    a.click();
+  };
+  img.src = 'data:'+arq.mime+';base64,'+arq.b64;
+}
+
+function diArqBaixarTodosJPG() {
+  var cid = diArqCidAtual;
+  var arqs = (getE(cid||'').arquivos||[]).filter(function(a){return a.mime&&a.mime.indexOf('image')>=0;});
+  if (!arqs.length) { alert('Nenhuma imagem para converter.'); return; }
+  arqs.forEach(function(arq, i) {
+    setTimeout(function() {
+      var img = new Image();
+      img.onload = function() {
+        var canvas = document.createElement('canvas');
+        canvas.width = img.width; canvas.height = img.height;
+        canvas.getContext('2d').drawImage(img, 0, 0);
+        var a = document.createElement('a');
+        a.href = canvas.toDataURL('image/jpeg', 0.92);
+        a.download = arq.nome.replace(/\.[^.]+$/, '') + '.jpg';
+        a.click();
+      };
+      img.src = 'data:'+arq.mime+';base64,'+arq.b64;
+    }, i * 300);
+  });
+}
+
 function diArqRender(cid) {
   var e = getE(cid);
   var arqs = e.arquivos || [];
@@ -1515,6 +1641,7 @@ function diArqRender(cid) {
     html += '<div style="flex:1"><div style="font-size:13px;font-weight:600">'+arq.nome+'</div>';
     html += '<div style="font-size:11px;color:#aaa">'+dt+' &middot; '+diArqFmtSize(arq.tamanho||0)+'</div></div>';
     html += '<div style="display:flex;gap:5px">';
+    if (isImg) html += '<button class="btn" style="font-size:11px;padding:4px 8px;background:#fff3e0;border-color:#ffcc80;color:#e65100" data-idx="'+i+'" data-cid="'+cid+'" onclick="diArqBaixarJPG(+this.dataset.idx,this.dataset.cid)">&#128247; JPG</button>';
     html += '<button class="btn" style="font-size:11px;padding:4px 8px;background:#e3f2fd;border-color:#90caf9;color:#1565c0" data-idx="'+i+'" data-cid="'+cid+'" onclick="diArqBaixarPDF(+this.dataset.idx,this.dataset.cid)">&#128196; PDF</button>';
     html += '<button class="btn" style="font-size:11px;padding:4px 8px" data-idx="'+i+'" data-cid="'+cid+'" onclick="diArqBaixarOriginal(+this.dataset.idx,this.dataset.cid)">&#11015; Original</button>';
     html += '<button class="btn" style="font-size:11px;padding:4px 6px;background:#fce4ec;border-color:#f8bbd0;color:#c62828" data-idx="'+i+'" data-cid="'+cid+'" onclick="diArqExcluir(+this.dataset.idx,this.dataset.cid)">&#10005;</button>';
@@ -2041,6 +2168,74 @@ function diDownloadPet(){
   baixarDocx(limparMarkdown(diPetTexto||g('di-pet-txt').textContent),'peticao_descontos.doc');
 }
 
+var diPetAnexos = [];
+
+function diAtualizaDrivePet(){
+  var bar=g('di-drive-bar-pet');if(!bar)return;
+  if(driveToken){
+    bar.style.background='#e8f5e9';bar.style.borderColor='#a5d6a7';
+    bar.innerHTML='<span style="font-size:11px;color:#1b5e20;font-weight:600">&#9989; Drive conectado - documentos serao lidos na geracao</span>';
+  }else{
+    bar.style.background='#fce4ec';bar.style.borderColor='#f8bbd0';
+    bar.innerHTML='<span style="font-size:11px;color:#c62828;font-weight:600">&#9888; Drive nao conectado</span><button class="btn" style="font-size:11px;padding:3px 8px" onclick="driveConectar(function(){diAtualizaDrivePet();})">Conectar</button>';
+  }
+}
+
+function diAddAnexo(){
+  var input=document.createElement('input');
+  input.type='file';
+  input.accept='image/*,.pdf';
+  input.style.display='none';
+  input.onchange=function(){
+    if(!input.files||!input.files[0])return;
+    var file=input.files[0];
+    var reader=new FileReader();
+    reader.onload=function(e){
+      var b64=e.target.result.split(',')[1];
+      var obj={nome:file.name,b64:b64,mime:file.type,texto:''};
+      diPetAnexos.push(obj);
+      diRenderAnexos();
+      diAnalisarAnexo(obj);
+    };
+    reader.readAsDataURL(file);
+  };
+  document.body.appendChild(input);
+  input.click();
+  document.body.removeChild(input);
+}
+
+function diAnalisarAnexo(obj){
+  var statusEl=g('di-pet-anexos-status');
+  if(statusEl){statusEl.style.display='block';statusEl.textContent='Analisando '+obj.nome+'...';}
+  var isImg=obj.mime.indexOf('image')>=0;
+  fetch(SCRIPT,{method:'POST',redirect:'follow',body:JSON.stringify({action:'aiDoc',prompt:'Extraia TODAS as informacoes relevantes deste documento de forma detalhada: dados pessoais, valores, datas, nomes de credores, numeros de contratos, saldos, parcelas, descontos, qualquer dado relevante para uma peticao judicial de desconto indevido.',b64:obj.b64,mime:obj.mime,isImg:isImg})})
+    .then(function(r){return r.text();})
+    .then(function(t){
+      var d;try{d=JSON.parse(t);}catch(x){d={ok:false};}
+      obj.texto=d.ok?d.text:'Nao foi possivel extrair automaticamente.';
+      diRenderAnexos();
+      var pendentes=diPetAnexos.filter(function(a){return !a.texto;});
+      if(statusEl){statusEl.textContent=pendentes.length===0?'Todos os documentos analisados!':'Analisando...';}
+      if(pendentes.length===0)setTimeout(function(){if(statusEl)statusEl.style.display='none';},3000);
+    })
+    .catch(function(){obj.texto='Erro na analise.';diRenderAnexos();});
+}
+
+function diRenderAnexos(){
+  var el=g('di-pet-anexos');if(!el)return;
+  if(!diPetAnexos.length){el.innerHTML='';return;}
+  var html='';
+  diPetAnexos.forEach(function(a,i){
+    var ok=a.texto&&a.texto!=='Analisando...'&&a.texto!=='Erro na analise.';
+    html+='<div style="display:flex;align-items:center;gap:6px;padding:4px 0;border-bottom:1px solid #e1bee7">'
+      +'<span style="font-size:10px;background:'+(ok?'#c8e6c9':'#fff9c4')+';padding:1px 5px;border-radius:8px">'+(ok?'OK':'...')+'</span>'
+      +'<span style="flex:1;font-size:11px;color:#333">'+a.nome+'</span>'
+      +'<button data-idx="'+i+'" onclick="diPetAnexos.splice(+this.dataset.idx,1);diRenderAnexos()" style="background:none;border:none;cursor:pointer;color:#c62828;font-size:12px">&#10005;</button>'
+      +'</div>';
+  });
+  el.innerHTML=html;
+}
+
 function diGerPeticaoCompleta(){
   var id=g('di-sel-pet').value;
   if(!id){alert('Selecione um cliente.');return;}
@@ -2084,6 +2279,8 @@ function diGerPeticaoCompleta(){
   var analises=getE(cl.id).analises||{};
   var docInfo='';
   Object.keys(analises).forEach(function(did){docInfo+='['+analises[did].doc+']: '+analises[did].txt+'; ';});
+  var diAnexosTxt='';
+  diPetAnexos.forEach(function(a){if(a.texto&&a.texto.length>5){diAnexosTxt+='\n[DOCUMENTO ANEXADO: '+a.nome+']:\n'+a.texto+'\n';}});
   var reusQual=reus.map(function(r){
     return r.nome+(r.cnpj?', inscrita no CNPJ n. '+r.cnpj:'')+(r.end?', com sede em '+r.end:'');
   }).join('; e ');
@@ -2097,7 +2294,7 @@ function diGerPeticaoCompleta(){
   diPetTexto='';
 
   var prompt='Voce e advogado senior com 20 anos de experiencia em direito do consumidor. Redija uma PETICAO INICIAL completa, tecnica e robusta.'
-    +'\n\nDADOS DO CASO:\nAutor: '+cl.nome+' | brasileiro(a) | '+cl.civil+' | '+(cl.prof||'aposentado(a)')+' | CPF: '+cl.cpf+' | Nascimento: '+cl.nasc+' | Endereco: '+(cl.end||cl.cidade)+'/'+estado+(cl.tel?' | Tel: '+cl.tel:'')+(cl.email?' | Email: '+cl.email:'')+(cl.doencas?' | Condicao de saude: '+cl.doencas:'')+' | Renda: '+(cl.renda||'beneficio INSS')+'\nReus: '+reusQual+'\nBanco: '+cl.banco+' | Tipo: '+(cl.tipo||'desconto nao autorizado')+' | Contrato: '+contrato+' | Parcela: R$ '+parc+' | Total parcelas: '+np+' | Inicio: '+(dt?new Date(dt+'T12:00:00').toLocaleDateString('pt-BR'):'-')+' | Meses descontados: '+mes+' | Total descontado: '+totStr+(docInfo?' | Documentos analisados: '+docInfo:'')
+    +'\n\nDADOS DO CASO:\nAutor: '+cl.nome+' | brasileiro(a) | '+cl.civil+' | '+(cl.prof||'aposentado(a)')+' | CPF: '+cl.cpf+' | Nascimento: '+cl.nasc+' | Endereco: '+(cl.end||cl.cidade)+'/'+estado+(cl.tel?' | Tel: '+cl.tel:'')+(cl.email?' | Email: '+cl.email:'')+(cl.doencas?' | Condicao de saude: '+cl.doencas:'')+' | Renda: '+(cl.renda||'beneficio INSS')+'\nReus: '+reusQual+'\nBanco: '+cl.banco+' | Tipo: '+(cl.tipo||'desconto nao autorizado')+' | Contrato: '+contrato+' | Parcela: R$ '+parc+' | Total parcelas: '+np+' | Inicio: '+(dt?new Date(dt+'T12:00:00').toLocaleDateString('pt-BR'):'-')+' | Meses descontados: '+mes+' | Total descontado: '+totStr+(docInfo?' | Documentos analisados: '+docInfo:'')+(diAnexosTxt?' | DOCUMENTOS ANEXADOS:'+diAnexosTxt:'')
     +'\n\nESTRUTURA OBRIGATORIA (siga esta ordem exata):'
     +'\n\n[ENDERECAMENTO - justificado, MAIUSCULO]'
     +'\n'+trat.toUpperCase()+' DA '+vara.toUpperCase()+' DA COMARCA DE '+cidade.toUpperCase()+' - ESTADO DE '+estado.toUpperCase()
@@ -2470,37 +2667,88 @@ function seDriveBuscarCliente(cl,id){
 }
 
 function seDriveBuscarEmMeses(meses,cl,id,idx){
+  // Collect ALL candidates across ALL months, then pick best or show selection
   var st=g('se-drive-status');
-  if(idx>=meses.length){st.textContent='Cliente "'+cl.nome+'" nao encontrado em nenhuma pasta de mes.';return;}
-  var mes=meses[idx];
-  var q='"'+mes.id+'" in parents and mimeType="application/vnd.google-apps.folder" and trashed=false';
-  fetch('https://www.googleapis.com/drive/v3/files?q='+encodeURIComponent(q)+'&fields=files(id,name)&pageSize=100',{headers:{Authorization:'Bearer '+driveToken}})
-  .then(function(r){return r.json();})
-  .then(function(d){
-    if(!d.files||!d.files.length){seDriveBuscarEmMeses(meses,cl,id,idx+1);return;}
-    var nN=cl.nome.toLowerCase().replace(/[^a-z0-9 ]/g,' ').trim();
-    var pals=nN.split(/\s+/).filter(function(p){return p.length>2;});
-    var melhor=null,melhorSc=0;
-    d.files.forEach(function(f){
-      var fn=f.name.toLowerCase().replace(/[^a-z0-9 ]/g,' ').trim();
-      // Require ALL significant words to match as whole words or start of word
-      var matched=pals.filter(function(p){
-        // Match as whole word boundary using space-padded comparison
-        return (' '+fn+' ').indexOf(' '+p)>=0||fn.indexOf(p)===0;
-      });
-      // Score: must match at least 2 words OR match the first+last name
-      var sc=matched.length>=2?matched.length*10:(matched.length===1&&pals.length===1?10:0);
-      if(sc>melhorSc){melhorSc=sc;melhor=f;}
+  st.textContent='Buscando em '+meses.length+' pastas de mes...';
+  var candidatos=[];
+  var checked=0;
+  var nN=cl.nome.toLowerCase().replace(/[^a-z0-9 ]/g,' ').trim();
+  var pals=nN.split(/\s+/).filter(function(p){return p.length>2;});
+
+  function calcScore(fn){
+    fn=fn.toLowerCase().replace(/[^a-z0-9 ]/g,' ').trim();
+    var matched=pals.filter(function(p){
+      return (' '+fn+' ').indexOf(' '+p)>=0;
     });
-    if(melhor&&melhorSc>=10){
-      st.textContent='Pasta encontrada: '+mes.name+' / '+melhor.name;
-      getE(id).drivePastaId=melhor.id;saveEst();
-      seDriveListar(melhor.id,id);
-    } else {
-      seDriveBuscarEmMeses(meses,cl,id,idx+1);
-    }
-  })
-  .catch(function(){seDriveBuscarEmMeses(meses,cl,id,idx+1);});
+    // Bonus: first word of name matches start of folder name
+    var bonus=(pals.length>0&&fn.indexOf(pals[0])===0)?5:0;
+    return matched.length*10+bonus;
+  }
+
+  meses.forEach(function(mes){
+    var q='"'+mes.id+'" in parents and mimeType="application/vnd.google-apps.folder" and trashed=false';
+    fetch('https://www.googleapis.com/drive/v3/files?q='+encodeURIComponent(q)+'&fields=files(id,name)&pageSize=100',{headers:{Authorization:'Bearer '+driveToken}})
+    .then(function(r){return r.json();})
+    .then(function(d){
+      if(d.files)d.files.forEach(function(f){
+        var sc=calcScore(f.name);
+        if(sc>=10)candidatos.push({id:f.id,nome:f.name,mes:mes.name,sc:sc});
+      });
+      checked++;
+      if(checked===meses.length)seDriveApresentarCandidatos(candidatos,cl,id,st);
+    })
+    .catch(function(){
+      checked++;
+      if(checked===meses.length)seDriveApresentarCandidatos(candidatos,cl,id,st);
+    });
+  });
+  if(!meses.length)st.textContent='Nenhuma pasta de mes encontrada no Drive SE.';
+}
+
+function seDriveApresentarCandidatos(candidatos,cl,id,st){
+  candidatos.sort(function(a,b){return b.sc-a.sc;});
+  var lista=g('se-drive-lista');
+
+  if(!candidatos.length){
+    st.textContent='Nenhuma pasta encontrada com o nome "'+cl.nome+'". Verifique o nome da pasta no Drive.';
+    lista.innerHTML='<div style="padding:16px;text-align:center;color:#999;font-size:13px">'
+      +'<div style="margin-bottom:12px">Pasta nao encontrada automaticamente.</div>'
+      +'<div style="font-size:12px;color:#aaa">Dica: o nome da pasta no Drive deve conter o nome do cliente.</div>'
+      +'</div>';
+    return;
+  }
+
+  // If top candidate has dominant score (>= 2x second), use it directly
+  var top=candidatos[0];
+  var segundo=candidatos[1];
+  if(!segundo||(top.sc>=20&&top.sc>=(segundo.sc*1.5))){
+    st.textContent='Pasta encontrada: '+top.mes+' / '+top.nome;
+    getE(id).drivePastaId=top.id;saveEst();
+    seDriveListar(top.id,id);
+    return;
+  }
+
+  // Multiple similar candidates - show selection list
+  st.textContent='Encontradas '+candidatos.length+' pasta(s) similares. Confirme qual e o cliente:';
+  var html='<div style="margin-bottom:8px;font-size:12px;font-weight:700;color:#1565c0">Selecione a pasta correta de "'+cl.nome+'":</div>';
+  candidatos.slice(0,5).forEach(function(cand){
+    var encNome=encodeURIComponent(cand.mes+' / '+cand.nome);
+    html+='<div style="display:flex;align-items:center;gap:10px;padding:10px;border:1px solid #e0ddd6;border-radius:8px;margin-bottom:6px;background:#fff">'
+      +'<div style="flex:1"><div style="font-size:13px;font-weight:600">&#128193; '+cand.nome+'</div>'
+      +'<div style="font-size:11px;color:#aaa">Mes: '+cand.mes+'</div></div>'
+      +'<button class="btn btnp" style="font-size:11px;padding:4px 10px" '
+      +'data-pid="'+cand.id+'" data-pnome="'+encNome+'" data-cid="'+id+'" '
+      +'onclick="seDriveConfirmar(this.dataset.pid,this.dataset.pnome,this.dataset.cid)">Usar esta</button>'
+      +'</div>';
+  });
+  lista.innerHTML=html;
+}
+
+function seDriveConfirmar(pastaId,nomeEnc,cid){
+  var st=g('se-drive-status');
+  st.textContent='Pasta selecionada: '+decodeURIComponent(nomeEnc);
+  getE(cid).drivePastaId=pastaId;saveEst();
+  seDriveListar(pastaId,cid);
 }
 
 function seDriveListar(pastaId,cid){
@@ -3297,6 +3545,8 @@ function checarTokenDrive(){
 }
 function atualizarStatusDrive(){
   if(typeof seAtualizaDrivePet==='function')seAtualizaDrivePet();
+  if(typeof diAtualizaDrivePet==='function')diAtualizaDrivePet();
+  if(diArqCidAtual&&typeof diArqAtualizarDriveBar==='function')diArqAtualizarDriveBar(diArqCidAtual);
   var bar=document.getElementById('drive-bar');
   if(!bar)return;
   if(driveToken){
