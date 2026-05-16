@@ -4946,19 +4946,67 @@ function djBuscarIntervalo(ini,fim){
 }
 
 function djBuscarAdvogado(ini,fim,adv,cb){
-  var url=SCRIPT+'?action=djen&oab='+adv.oab+'&uf='+adv.uf+'&ini='+ini+'&fim='+fim;
-  fetch(url,{method:'GET',redirect:'follow'})
-    .then(function(r){return r.text();})
-    .then(function(t){
-      try{
-        var d=JSON.parse(t);
-        if(d.log) window._djLastLog=(window._djLastLog||[]).concat(d.log);
-        if(d.aviso) window._djLastLog=(window._djLastLog||[]).concat(['AVISO: '+d.aviso]);
-        if(d.ok&&Array.isArray(d.data)){cb(d.data,null);}
-        else{cb([],d.error||'Sem dados');}
-      }catch(e){cb([],e.message);}
-    })
-    .catch(function(e){cb([],e.message);});
+  // Busca direto do browser (o PJe bloqueia Apps Script mas aceita browser)
+  djBuscarPaginasDireto(ini,fim,adv,0,[],cb);
+}
+
+function djBuscarPaginasDireto(ini,fim,adv,pagina,acumulado,cb){
+  var url='https://comunica.pje.jus.br/api/v1/comunicacao'
+    +'?dataDisponibilizacaoInicio='+ini
+    +'&dataDisponibilizacaoFim='+fim
+    +'&numeroOab='+adv.oab
+    +'&ufOab='+adv.uf
+    +'&page='+pagina+'&size=20';
+
+  fetch(url,{
+    method:'GET',
+    headers:{
+      'Accept':'application/json, text/plain, */*',
+      'Accept-Language':'pt-BR,pt;q=0.9'
+    },
+    mode:'cors',
+    credentials:'omit'
+  })
+  .then(function(r){
+    window._djLastLog=(window._djLastLog||[]);
+    window._djLastLog.push('OAB '+adv.oab+' p'+pagina+' HTTP:'+r.status);
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    return r.json();
+  })
+  .then(function(json){
+    var items=json.content||json.data||json.resultado||json.result||(Array.isArray(json)?json:[]);
+    var todos=acumulado.concat(items);
+    var totalPaginas=json.totalPages||json.totalPaginas||json.total_pages||1;
+    window._djLastLog.push('OAB '+adv.oab+' p'+pagina+': '+items.length+' itens, total paginas: '+totalPaginas);
+    if(pagina+1<totalPaginas && pagina<49){
+      // Buscar proxima pagina
+      setTimeout(function(){djBuscarPaginasDireto(ini,fim,adv,pagina+1,todos,cb);},300);
+    } else {
+      cb(todos,null);
+    }
+  })
+  .catch(function(e){
+    window._djLastLog=(window._djLastLog||[]);
+    window._djLastLog.push('OAB '+adv.oab+' ERRO: '+e.message);
+    // Se CORS bloquear, tentar via Apps Script como fallback
+    if(e.message.indexOf('Failed to fetch')>=0||e.message.indexOf('CORS')>=0||e.message.indexOf('NetworkError')>=0){
+      window._djLastLog.push('CORS bloqueado no browser -- tentando Apps Script fallback');
+      var urlProxy=SCRIPT+'?action=djen&oab='+adv.oab+'&uf='+adv.uf+'&ini='+ini+'&fim='+fim;
+      fetch(urlProxy,{method:'GET',redirect:'follow'})
+        .then(function(r2){return r2.text();})
+        .then(function(t){
+          try{
+            var d=JSON.parse(t);
+            if(d.log) window._djLastLog=window._djLastLog.concat(d.log);
+            if(d.aviso) window._djLastLog.push('AVISO: '+d.aviso);
+            cb(Array.isArray(d.data)?d.data:[],d.error||null);
+          }catch(ex){cb([],ex.message);}
+        })
+        .catch(function(e2){cb([],e2.message);});
+    } else {
+      cb(acumulado.length>0?acumulado:[],e.message);
+    }
+  });
 }
 
 function djProcessarResultados(pubs,ini,fim,st,err){
