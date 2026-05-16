@@ -268,11 +268,39 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#1a1a1a}
 
     <!-- Botao nova tarefa pessoal -->
     <div style="text-align:center;margin-top:12px">
-      <button class="btn btng" onclick="dashNovaTarefa()" style="font-size:12px">+ Nova tarefa pessoal</button>
+      <button class="btn btng" onclick="dashAbrirModal()" style="font-size:12px">+ Nova tarefa</button>
     </div>
   </div>
 </div>
 
+
+  <!-- Modal nova tarefa dashboard -->
+  <div id="dash-modal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:3000;align-items:center;justify-content:center">
+    <div style="background:#fff;border-radius:14px;padding:24px;max-width:460px;width:90%;box-shadow:0 8px 32px rgba(0,0,0,.2)">
+      <div style="font-size:16px;font-weight:700;margin-bottom:16px">Nova Tarefa</div>
+      <label>Descricao *</label>
+      <textarea id="dm-desc" style="margin-bottom:10px;min-height:80px" placeholder="O que precisa ser feito?"></textarea>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+        <div><label>Prazo (opcional)</label><input type="date" id="dm-prazo"></div>
+        <div><label>Prioridade</label>
+          <select id="dm-prioridade">
+            <option value="normal">Normal</option>
+            <option value="urgente">Urgente</option>
+            <option value="baixa">Baixa</option>
+          </select>
+        </div>
+      </div>
+      <label>Delegar para (opcional)</label>
+      <select id="dm-resp" style="margin-bottom:14px"></select>
+      <div id="dm-notif" style="display:none;background:#e8f5e9;border:1px solid #a5d6a7;border-radius:8px;padding:8px 12px;font-size:11px;color:#1b5e20;margin-bottom:14px">
+        Notificacao por WhatsApp sera enviada ao responsavel.
+      </div>
+      <div style="display:flex;gap:8px;justify-content:flex-end">
+        <button class="btn" onclick="g('dash-modal').style.display='none'">Cancelar</button>
+        <button class="btn btng" onclick="dashSalvarTarefa()">Salvar</button>
+      </div>
+    </div>
+  </div>
 
 <!-- DOCS -->
 <div id="mod-docs" style="display:none">
@@ -4894,6 +4922,7 @@ function djBuscarData(){
   djBuscarIntervalo(ini,fim);
 }
 function djBuscarIntervalo(ini,fim){
+  window._djLastLog=[];
   var st=g('dj-status');
   st.style.display='block';
   st.style.background='#e3f2fd';
@@ -4923,6 +4952,8 @@ function djBuscarAdvogado(ini,fim,adv,cb){
     .then(function(t){
       try{
         var d=JSON.parse(t);
+        if(d.log) window._djLastLog=(window._djLastLog||[]).concat(d.log);
+        if(d.aviso) window._djLastLog=(window._djLastLog||[]).concat(['AVISO: '+d.aviso]);
         if(d.ok&&Array.isArray(d.data)){cb(d.data,null);}
         else{cb([],d.error||'Sem dados');}
       }catch(e){cb([],e.message);}
@@ -4946,14 +4977,16 @@ function djProcessarResultados(pubs,ini,fim,st,err){
       novos++;
     }
   });
+  window._djLastLog = (window._djLastLog||[]);
   djSaveLista(lista);
   var label=ini===fim?ini:ini+' a '+fim;
   st.style.background=novos>0?'#e8f5e9':(err?'#fce4ec':'#f5f5f5');
   st.style.color=novos>0?'#1b5e20':(err?'#c62828':'#666');
+  var avisoExtra = (window._djLastLog && window._djLastLog.length) ? '<br><details style="font-size:10px;margin-top:4px"><summary style="cursor:pointer;color:#aaa">Detalhes do servidor</summary><pre style="white-space:pre-wrap;font-size:10px;color:#666">'+window._djLastLog.join('\n')+'</pre></details>' : '';
   st.innerHTML=(novos>0?'<strong>'+novos+' nova(s) publicacao(oes)</strong> encontrada(s).'
-    :(err?'<b>Erro ao consultar DJEN:</b> '+err+'<br><span style="font-size:11px">Verifique o Apps Script e tente novamente.</span>'
-    :'Nenhuma publicacao encontrada para '+label+'.'))
-    +(err?'':' <span style="color:#aaa;font-size:11px">Consulta: '+label+' -- '+new Date().toLocaleString('pt-BR')+'</span>');
+    :(err?'<b>Erro:</b> '+err
+    :'Nenhuma publicacao encontrada para '+label+'. '+avisoExtra))
+    +' <span style="color:#aaa;font-size:11px">Consulta: '+label+' -- '+new Date().toLocaleString('pt-BR')+'</span>';
   // Salvar ultima busca
   est['_djen_ultima']={data:data,ts:new Date().toISOString(),total:pubs.length,novos:novos};
   saveEst();
@@ -5600,15 +5633,71 @@ function dashCumprirAv(id) {
   dashAtualizar();
 }
 
-function dashNovaTarefa() {
+function dashNovaTarefa() { dashAbrirModal(); }
+
+function dashAbrirModal() {
   if (!eqUsuarioAtual) { alert('Identifique-se primeiro.'); return; }
-  var desc = prompt('Descricao da tarefa:');
-  if (!desc || !desc.trim()) return;
-  var prazo = prompt('Prazo (AAAA-MM-DD, ou deixe vazio):');
-  var tarefas = eqGetTarefas(eqUsuarioAtual.id);
-  tarefas.push({desc:desc.trim(), prazo:prazo||'', done:false, de:eqUsuarioAtual.nome, ts:new Date().toISOString()});
-  eqSaveTarefas(eqUsuarioAtual.id, tarefas);
+  // Preencher select de responsavel
+  var equipe = eqGetEquipe();
+  var sel = g('dm-resp');
+  if (sel) {
+    sel.innerHTML = '<option value="">-- Para mim mesmo --</option>';
+    equipe.forEach(function(u){
+      if (u.id !== eqUsuarioAtual.id)
+        sel.innerHTML += '<option value="'+u.id+'|'+u.nome+'">'+u.nome+'</option>';
+    });
+    sel.onchange = function(){
+      var bar = g('dm-notif');
+      if (!bar) return;
+      var parts = (sel.value||'').split('|');
+      var respId = parts[0];
+      var equipe2 = eqGetEquipe();
+      var resp = equipe2.find(function(u){return u.id===respId;});
+      bar.style.display = (resp && resp.tel) ? 'block' : 'none';
+    };
+  }
+  if (g('dm-desc')) g('dm-desc').value = '';
+  if (g('dm-prazo')) g('dm-prazo').value = '';
+  if (g('dm-prioridade')) g('dm-prioridade').value = 'normal';
+  if (g('dm-notif')) g('dm-notif').style.display = 'none';
+  g('dash-modal').style.display = 'flex';
+  setTimeout(function(){ if(g('dm-desc')) g('dm-desc').focus(); }, 100);
+}
+
+function dashSalvarTarefa() {
+  var desc = (g('dm-desc') && g('dm-desc').value || '').trim();
+  if (!desc) { alert('Informe a descricao da tarefa.'); return; }
+  var prazo = g('dm-prazo') && g('dm-prazo').value || '';
+  var prio  = g('dm-prioridade') && g('dm-prioridade').value || 'normal';
+  var selVal = g('dm-resp') && g('dm-resp').value || '';
+  var parts   = selVal.split('|');
+  var respId  = parts[0] || eqUsuarioAtual.id;
+  var respNome= parts[1] || eqUsuarioAtual.nome;
+
+  var tarefa = {
+    desc: desc, prazo: prazo, prioridade: prio,
+    done: false, ts: new Date().toISOString(),
+    de: eqUsuarioAtual.nome
+  };
+  var tarefas = eqGetTarefas(respId);
+  tarefas.push(tarefa);
+  eqSaveTarefas(respId, tarefas);
+  g('dash-modal').style.display = 'none';
   dashAtualizar();
+
+  // Notificar por WhatsApp se delegado para outro
+  if (respId !== eqUsuarioAtual.id) {
+    var equipe = eqGetEquipe();
+    var resp = equipe.find(function(u){return u.id===respId;});
+    if (resp && resp.tel) {
+      var tel = resp.tel.replace(/[^0-9]/g,'');
+      if (tel.length===11) tel='55'+tel;
+      var msg = 'Ola, '+respNome.split(' ')[0]+'! '+eqUsuarioAtual.nome.split(' ')[0]+' delegou uma tarefa: '+desc+(prazo?' - Prazo: '+new Date(prazo+'T12:00:00').toLocaleDateString('pt-BR'):'')+(prio==='urgente'?' - URGENTE':'')+' - Gadiani Advogados';
+
+      if (confirm('Enviar notificacao para '+respNome+' via WhatsApp?'))
+        window.open('https://wa.me/'+tel+'?text='+encodeURIComponent(msg),'_blank');
+    }
+  }
 }
 
 function dashAtualizarBadge() {
