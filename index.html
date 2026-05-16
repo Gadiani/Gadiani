@@ -399,6 +399,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#1a1a1a}
     <button id="sn4" onclick="swSE(4)">Protocolo</button>
     <button id="sn5" onclick="swSE(5)">CRM</button>
     <button id="sn6" onclick="swSE(6)">Notificacoes</button>
+    <button id="sn7" onclick="swSE(7)">Drive</button>
   </nav>
 
   <div id="sp0" class="pg on">
@@ -468,11 +469,15 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#1a1a1a}
         <div><label>Cidade</label><input id="se-cidade-pet" value="Vargem Grande do Sul"></div>
         <div><label>Estado</label><input id="se-estado-pet" value="Sao Paulo"></div>
       </div>
-      <div style="margin-top:10px;padding:10px;background:#e8f5e9;border:1px solid #a5d6a7;border-radius:8px">
+      <div id="se-pet-drive-bar" style="margin-top:10px;padding:10px;border-radius:8px;display:flex;align-items:center;justify-content:space-between;gap:10px;background:#fce4ec;border:1px solid #f8bbd0">
+        <span style="font-size:12px;color:#c62828;font-weight:600">&#9888; Drive nao conectado - documentos NAO serao usados na peticao</span>
+        <button class="btn" style="font-size:11px;padding:4px 10px;background:#fff;border-color:#f8bbd0;color:#c62828" onclick="driveConectar(function(){atualizarStatusDriveSE();})">Conectar Drive</button>
+      </div>
+      <div style="margin-top:8px;padding:10px;background:#e8f5e9;border:1px solid #a5d6a7;border-radius:8px">
         <div style="font-size:12px;font-weight:700;color:#1b5e20;margin-bottom:4px">Tutela de Urgencia obrigatoria nesta acao</div>
         <div style="font-size:11px;color:#2e7d32">Suspensao de todas as dividas ate audiencia de conciliacao + limitacao dos descontos ao minimo existencial</div>
       </div>
-      <button class="btn btnp" style="width:100%;justify-content:center;margin-top:14px;padding:12px;font-size:14px" onclick="seGerPeticaoCompleta()">&#9654; Gerar peticao completa</button>
+      <button class="btn btnp" style="width:100%;justify-content:center;margin-top:14px;padding:12px;font-size:14px" onclick="seGerPeticaoComDrive()">&#9654; Gerar peticao completa</button>
       <div id="se-pet-area" style="display:none;margin-top:14px">
         <div style="font-size:12px;font-weight:600;color:#1b5e20;margin-bottom:6px" id="se-pet-lbl"></div>
         <div class="out" id="se-pet-txt" style="min-height:100px"></div>
@@ -560,6 +565,23 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#1a1a1a}
       <button class="btn" onclick="closeModal()">Cancelar</button>
       <button class="btn btnp" onclick="saveUrg()">Marcar urgente</button>
     </div>
+  <div id="sp7" class="pg">
+    <div class="card">
+      <div class="ct">Drive do cliente - Superendividamento</div>
+      <div id="se-drive-status" class="warn-box">Selecione um cliente e clique em Buscar no Drive.</div>
+      <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+        <select id="se-drive-sel" style="flex:1" onchange="seDriveAtualizar()"><option value="">Selecionar cliente...</option></select>
+        <button class="btn btnp" onclick="seDriveBuscar()">Buscar no Drive</button>
+      </div>
+      <div id="se-drive-lista"></div>
+    </div>
+    <div id="se-drive-docs-card" style="display:none" class="card">
+      <div class="ct" style="margin-bottom:10px">Documentos encontrados</div>
+      <div class="info-box" style="margin-bottom:10px">Marque os documentos presentes. Isso atualiza o checklist automaticamente.</div>
+      <div id="se-drive-docs"></div>
+    </div>
+  </div>
+
   </div>
 </div>
 
@@ -570,6 +592,7 @@ var DI_GID = '600954692';
 var SE_ID = '1vPyX8IP8ukhpID0eWfZR5ckbYUj-xldKyVTgQIkpBVs';
 var DRIVE_CLIENT_ID = '764530109135-jr7395s7cqhpioe2ng9mr59g73ukpojc.apps.googleusercontent.com';
 var DRIVE_FOLDER_DI = '1eT8ZckAtgcfdJ0MAhc--svyMVINzfV7b';
+var DRIVE_FOLDER_SE = '1Ed0rrn4zmFssqj9M0lqxDjWoPEgr6zKM'; // pasta raiz SE
 
 var diC = [], seC = [], est = {}, saveT = null;
 var diCur = null, seCur = null, sePetC = null, sePetTxts = [];
@@ -989,7 +1012,7 @@ function setMod(m){
   if(m==='pt')ptListar();
 }
 function swDI(n){var i;for(i=0;i<8;i++){g('dp'+i).className='pg'+(i===n?' on':'');g('dn'+i).className=i===n?'on':'';}if(n===7)drivePopSel();}
-function swSE(n){var i;for(i=0;i<7;i++){g('sp'+i).className='pg'+(i===n?' on':'');g('sn'+i).className=i===n?'on':'';}}
+function swSE(n){var i;for(i=0;i<8;i++){g('sp'+i)&&(g('sp'+i).className='pg'+(i===n?' on':''));g('sn'+i)&&(g('sn'+i).className=i===n?'on':'');}}
 
 function diLoad(){
   g('di-lista').innerHTML='<div class="load"><span class="spin"></span> Carregando...</div>';
@@ -1129,7 +1152,9 @@ function verAnalises(cid){
 function docSalvarDrive(file,b64,c){
   var pastaId=getE(c.id).drivePastaId;
   if(pastaId){uploadDrive(file,b64,pastaId);return;}
-  var q='"'+DRIVE_FOLDER_DI+'" in parents and mimeType="application/vnd.google-apps.folder" and trashed=false';
+  var isSE=!!seC.find(function(x){return x.id===cid;});
+  var folder=isSE?DRIVE_FOLDER_SE:DRIVE_FOLDER_DI;
+  var q='"'+folder+'" in parents and mimeType="application/vnd.google-apps.folder" and trashed=false';
   fetch('https://www.googleapis.com/drive/v3/files?q='+encodeURIComponent(q)+'&fields=files(id,name)&pageSize=200',{headers:{Authorization:'Bearer '+driveToken}})
     .then(function(r){return r.json();})
     .then(function(d){
@@ -1242,18 +1267,47 @@ function lerArquivosDrive(cid, cb){
   var c=nomeN;
   var pastaId=getE(cid).drivePastaId;
   if(pastaId){lerArquivosDaPasta(pastaId,cb);return;}
-  var q='"'+DRIVE_FOLDER_DI+'" in parents and mimeType="application/vnd.google-apps.folder" and trashed=false';
-  fetch('https://www.googleapis.com/drive/v3/files?q='+encodeURIComponent(q)+'&fields=files(id,name)&pageSize=200',{headers:{Authorization:'Bearer '+driveToken}})
+  var isSE=!!seC.find(function(x){return x.id===cid;});
+  var folder=isSE?DRIVE_FOLDER_SE:DRIVE_FOLDER_DI;
+  var nN=c.nome.toLowerCase().replace(/[^a-z0-9 ]/g,'');
+  var pals=nN.split(' ').filter(function(p){return p.length>2;});
+  function melhorPasta(files){
+    var melhor=null,melhorSc=0;
+    files.forEach(function(f){
+      var fn=f.name.toLowerCase().replace(/[^a-z0-9 ]/g,'');
+      var sc=0;pals.forEach(function(p){if(fn.indexOf(p)>=0)sc+=10;});
+      if(sc>melhorSc){melhorSc=sc;melhor=f;}
+    });
+    return melhorSc>=10?melhor:null;
+  }
+  var q1='"'+folder+'" in parents and mimeType="application/vnd.google-apps.folder" and trashed=false';
+  fetch('https://www.googleapis.com/drive/v3/files?q='+encodeURIComponent(q1)+'&fields=files(id,name)&pageSize=200',{headers:{Authorization:'Bearer '+driveToken}})
     .then(function(r){return r.json();})
     .then(function(d){
       if(!d.files||!d.files.length){cb(null,'');return;}
-      var nN=c.nome.toLowerCase().replace(/[^a-z0-9 ]/g,'');
-      var pals=nN.split(' ').filter(function(p){return p.length>2;});
-      var melhor=null,melhorSc=0;
-      d.files.forEach(function(f){var fn=f.name.toLowerCase().replace(/[^a-z0-9 ]/g,'');var sc=0;pals.forEach(function(p){if(fn.indexOf(p)>=0)sc+=10;});if(sc>melhorSc){melhorSc=sc;melhor=f;}});
-      if(!melhor||melhorSc<10){cb(null,'');return;}
-      getE(cid).drivePastaId=melhor.id;saveEst();
-      lerArquivosDaPasta(melhor.id,cb);
+      // Try to find client folder at level 1 (DI structure)
+      var nivel1=melhorPasta(d.files);
+      if(nivel1){getE(cid).drivePastaId=nivel1.id;saveEst();lerArquivosDaPasta(nivel1.id,cb);return;}
+      if(!isSE){cb(null,'');return;}
+      // SE structure: root > mes > cliente - search all month folders
+      var meses=d.files;
+      var encontrado=false;
+      var pendentes=meses.length;
+      if(!pendentes){cb(null,'');return;}
+      meses.forEach(function(mes){
+        var q2='"'+mes.id+'" in parents and mimeType="application/vnd.google-apps.folder" and trashed=false';
+        fetch('https://www.googleapis.com/drive/v3/files?q='+encodeURIComponent(q2)+'&fields=files(id,name)&pageSize=200',{headers:{Authorization:'Bearer '+driveToken}})
+          .then(function(r){return r.json();})
+          .then(function(d2){
+            if(!encontrado&&d2.files&&d2.files.length){
+              var nivel2=melhorPasta(d2.files);
+              if(nivel2){encontrado=true;getE(cid).drivePastaId=nivel2.id;saveEst();lerArquivosDaPasta(nivel2.id,cb);}
+            }
+            pendentes--;
+            if(pendentes===0&&!encontrado)cb(null,'');
+          })
+          .catch(function(){pendentes--;if(pendentes===0&&!encontrado)cb(null,'');});
+      });
     })
     .catch(function(){cb(null,'');});
 }
@@ -1576,7 +1630,9 @@ function driveBuscar(){
 function driveBuscarPasta(c){
   var st=g('drive-status'),res=g('drive-resultado');
   st.style.display='block';st.textContent='Buscando pasta de '+c.nome+'...';res.style.display='none';
-  var q='"'+DRIVE_FOLDER_DI+'" in parents and mimeType="application/vnd.google-apps.folder" and trashed=false';
+  var isSE=!!seC.find(function(x){return x.id===cid;});
+  var folder=isSE?DRIVE_FOLDER_SE:DRIVE_FOLDER_DI;
+  var q='"'+folder+'" in parents and mimeType="application/vnd.google-apps.folder" and trashed=false';
   fetch('https://www.googleapis.com/drive/v3/files?q='+encodeURIComponent(q)+'&fields=files(id,name)&pageSize=200',{headers:{Authorization:'Bearer '+driveToken}})
     .then(function(r){return r.json();})
     .then(function(d){
@@ -1728,7 +1784,7 @@ function seListar(){
   g('se-lista').innerHTML=html;
 }
 function sePopSels(){
-  var sels=['se-sel-doc','se-sel-pet','se-sel-plano','se-p1','se-p2','se-crm-sel','se-not-sel'],i,j,s,c;
+  var sels=['se-sel-doc','se-sel-pet','se-sel-plano','se-p1','se-p2','se-crm-sel','se-not-sel','se-drive-sel'],i,j,s,c;
   for(i=0;i<sels.length;i++){s=g(sels[i]);if(!s)continue;s.innerHTML='<option value="">Selecionar...</option>';for(j=0;j<seC.length;j++){c=seC[j];s.innerHTML+='<option value="'+c.id+'">'+c.nome+'</option>';}}
 }
 function seIrDocs(id){swSE(1);g('se-sel-doc').value=id;seOpenDocs();}
@@ -1806,6 +1862,86 @@ function seBaixarPet(){
   var txt=sePetTxts.join('\n\n'+sep+'\n\n');
   baixarDocx(txt,'peticao_superendividamento.doc');
 }
+function seDriveAtualizar(){
+  var id=g('se-drive-sel').value;if(!id)return;
+  var ds=g('se-drive-status');
+  if(ds){ds.className=driveToken?'info-box':'warn-box';ds.textContent=driveToken?'Drive conectado. Clique em Buscar no Drive.':'Drive nao conectado. Clique em Buscar no Drive para autorizar.';}
+}
+function seDriveBuscar(){
+  var id=g('se-drive-sel').value;if(!id){alert('Selecione um cliente.');return;}
+  if(!driveToken){driveConectar(function(){seDriveBuscarExec(id);});return;}
+  seDriveBuscarExec(id);
+}
+function seDriveBuscarExec(cid){
+  var cl=seC.find(function(x){return x.id===cid;});if(!cl)return;
+  var ds=g('se-drive-status');
+  ds.className='info-box';ds.textContent='Buscando pasta de '+cl.nome+'...';
+  g('se-drive-lista').innerHTML='';
+  g('se-drive-docs-card').style.display='none';
+  lerArquivosDrive(cid,function(err,docsTxt){
+    var pastaId=getE(cid).drivePastaId;
+    if(!pastaId){ds.className='warn-box';ds.textContent='Pasta nao encontrada para '+cl.nome+'. Verifique se o nome da pasta no Drive corresponde ao nome do cliente.';return;}
+    ds.className='info-box';ds.textContent='Pasta encontrada! Carregando arquivos...';
+    // List files in found folder
+    var q='"'+pastaId+'" in parents and trashed=false';
+    fetch('https://www.googleapis.com/drive/v3/files?q='+encodeURIComponent(q)+'&fields=files(id,name,mimeType,size)&pageSize=100',{headers:{Authorization:'Bearer '+driveToken}})
+      .then(function(r){return r.json();})
+      .then(function(d){
+        if(!d.files||!d.files.length){ds.textContent='Pasta encontrada mas sem arquivos.';return;}
+        ds.textContent='Encontrados '+d.files.length+' arquivo(s) para '+cl.nome+'.';
+        g('se-drive-docs-card').style.display='block';
+        var html='';
+        var est=getE(cid);
+        if(!est.seDriveDocs)est.seDriveDocs={};
+        d.files.forEach(function(f){
+          var chk=est.seDriveDocs[f.id]?'checked':'';
+          var ico=f.mimeType.indexOf('pdf')>=0?'&#128196;':f.mimeType.indexOf('image')>=0?'&#128247;':'&#128196;';
+          html+='<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #eee">'
+            +'<input type="checkbox" '+chk+' onchange="seDriveMarcar(''+cid+'',''+f.id+'',this.checked)">'
+            +'<span style="font-size:13px">'+ico+' '+f.name+'</span>'
+            +'</div>';
+        });
+        g('se-drive-docs').innerHTML=html;
+        if(docsTxt)ds.textContent+=' | Informacoes extraidas: '+docsTxt.substring(0,200)+'...';
+      })
+      .catch(function(e){ds.className='warn-box';ds.textContent='Erro ao listar arquivos: '+e.message;});
+  });
+}
+function seDriveMarcar(cid,fileId,checked){
+  var est=getE(cid);
+  if(!est.seDriveDocs)est.seDriveDocs={};
+  if(checked)est.seDriveDocs[fileId]=true;
+  else delete est.seDriveDocs[fileId];
+  saveEst();
+}
+function atualizarStatusDriveSE(){
+  var bar=g('se-pet-drive-bar');
+  if(!bar)return;
+  if(driveToken){
+    bar.style.background='#e8f5e9';
+    bar.style.borderColor='#a5d6a7';
+    bar.innerHTML='<span style="font-size:12px;color:#1b5e20;font-weight:600">&#9989; Drive conectado - documentos serao lidos para enriquecer a peticao</span><button class="btn" style="font-size:11px;padding:4px 10px;background:#fff;border-color:#a5d6a7;color:#1b5e20" onclick="driveToken=null;localStorage.removeItem(\'drv_token\');atualizarStatusDriveSE();atualizarStatusDrive();">Desconectar</button>';
+  } else {
+    bar.style.background='#fce4ec';
+    bar.style.borderColor='#f8bbd0';
+    bar.innerHTML='<span style="font-size:12px;color:#c62828;font-weight:600">&#9888; Drive nao conectado - documentos NAO serao usados na peticao</span><button class="btn" style="font-size:11px;padding:4px 10px;background:#fff;border-color:#f8bbd0;color:#c62828" onclick="driveConectar(function(){atualizarStatusDriveSE();})">Conectar Drive</button>';
+  }
+}
+function seGerPeticaoComDrive(){
+  var id=g('se-sel-pet').value;
+  if(!id){alert('Selecione um cliente.');return;}
+  if(!driveToken){
+    // Generate without drive
+    seGerPeticaoCompleta();
+    return;
+  }
+  g('se-pet-area').style.display='block';
+  g('se-pet-lbl').textContent='Lendo documentos do Drive...';
+  g('se-pet-txt').textContent='Buscando documentos do cliente no Drive...';
+  lerArquivosDrive(id, function(err, docsTxt){
+    seGerPeticaoCompleta(docsTxt||'');
+  });
+}
 function sePetPreench(){
   var id=g('se-sel-pet').value;if(!id)return;
   var cl=seC.find(function(x){return x.id===id;});if(!cl)return;
@@ -1816,7 +1952,7 @@ function seDownloadPet(){
   baixarDocx(limparMarkdown(txt),'peticao_superendividamento.doc');
 }
 
-function seGerPeticaoCompleta(){
+function seGerPeticaoCompleta(docsTxt){
   var id=g('se-sel-pet').value;
   if(!id){alert('Selecione um cliente.');return;}
   var cl=seC.find(function(x){return x.id===id;});
@@ -1843,7 +1979,8 @@ function seGerPeticaoCompleta(){
   }).join('; ');
   var analises=getE(cl.id).analises||{};
   var docInfo='';Object.keys(analises).forEach(function(did){docInfo+='['+analises[did].doc+']: '+analises[did].txt+'; ';});
-  var dados='DADOS DO CLIENTE: Nome: '+cl.nome+' | CPF: '+(cl.cpf||'-')+' | Nac: '+(cl.nac||'brasileiro(a)')+' | Estado civil: '+(cl.civil||'-')+' | Prof: '+(cl.prof||'-')+' | Nasc: '+(cl.nasc||'-')+' | End: '+(cl.end||cl.cidade||'-')+'/'+estado+(cl.tel?' | Tel: '+cl.tel:'')+(cl.email?' | Email: '+cl.email:'')+(cl.doencas?' | Doencas/Condicoes: '+cl.doencas:'')+' | Renda bruta: R$ '+rBrut.toLocaleString('pt-BR',{minimumFractionDigits:2})+' | Renda liquida: R$ '+rLiq.toLocaleString('pt-BR',{minimumFractionDigits:2})+' | Minimo existencial (70%): R$ '+minExist+' | Disponivel dividas (30%): R$ '+dispDiv+' | Total dividas: '+totalDivStr+' | Credores: '+credsList+(cl.serasa?' | Serasa/SPC: '+cl.serasa:'')+' | Motivos superendividamento: '+(cl.motivos||'nao informado')+(docInfo?' | Documentos analisados: '+docInfo:'');
+  docsTxt=docsTxt||'';
+  var dados='DADOS DO CLIENTE: Nome: '+cl.nome+' | CPF: '+(cl.cpf||'-')+' | Nac: '+(cl.nac||'brasileiro(a)')+' | Estado civil: '+(cl.civil||'-')+' | Prof: '+(cl.prof||'-')+' | Nasc: '+(cl.nasc||'-')+' | End: '+(cl.end||cl.cidade||'-')+'/'+estado+(cl.tel?' | Tel: '+cl.tel:'')+(cl.email?' | Email: '+cl.email:'')+(cl.doencas?' | Doencas/Condicoes: '+cl.doencas:'')+' | Renda bruta: R$ '+rBrut.toLocaleString('pt-BR',{minimumFractionDigits:2})+' | Renda liquida: R$ '+rLiq.toLocaleString('pt-BR',{minimumFractionDigits:2})+' | Minimo existencial (70%): R$ '+minExist+' | Disponivel dividas (30%): R$ '+dispDiv+' | Total dividas: '+totalDivStr+' | Credores: '+credsList+(cl.serasa?' | Serasa/SPC: '+cl.serasa:'')+' | Motivos superendividamento: '+(cl.motivos||'nao informado')+(docInfo?' | Documentos analisados: '+docInfo:'')+(docsTxt?' | DOCUMENTOS DO DRIVE: '+docsTxt:'');
   var r='Escreva em portugues com todos os acentos e cedilhas. Zero markdown. Zero asteriscos. Paragrafos separados por linha em branco. Texto juridico formal e tecnicamente preciso. ';
 
   var P=[
@@ -2076,6 +2213,7 @@ function checarTokenDrive(){
   atualizarStatusDrive();
 }
 function atualizarStatusDrive(){
+  atualizarStatusDriveSE();
   var bar=document.getElementById('drive-bar');
   if(!bar)return;
   if(driveToken){
