@@ -1427,16 +1427,18 @@ function diGerPeticaoCompleta(){
     +'\nFone: (19) 99412-6931 | gadianiedantraccoli@gmail.com'
     +'\n\nINSTRUCOES ABSOLUTAS: escreva em portugues com todos os acentos e cedilhas. ZERO markdown, ZERO asteriscos, ZERO hashtags. Paragrafos separados por linha em branco. Texto juridico formal. Use os dados reais fornecidos.';
 
-  fetch('https://api.anthropic.com/v1/messages',{
+  fetch(SCRIPT,{
     method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:8192,messages:[{role:'user',content:prompt}]})
+    redirect:'follow',
+    body:JSON.stringify({action:'ai',prompt:prompt})
   })
-  .then(function(r){return r.json();})
-  .then(function(d){
-    if(d.error){g('di-pet-txt').textContent='Erro API: '+d.error.message;g('di-pet-lbl').textContent='Erro';return;}
-    var txt=d.content&&d.content[0]?d.content[0].text:'';
-    if(!txt){g('di-pet-txt').textContent='Resposta vazia. Tente novamente.';return;}
+  .then(function(r){return r.text();})
+  .then(function(t){
+    var d;
+    try{d=JSON.parse(t);}catch(x){throw new Error('Resposta invalida do servidor');}
+    if(!d.ok)throw new Error(d.error||'Erro no servidor');
+    var txt=d.text||'';
+    if(!txt)throw new Error('Resposta vazia. Tente novamente.');
     diPetTexto=txt;
     diPetTxts=[txt];
     g('di-pet-txt').textContent=limparMarkdown(txt);
@@ -1444,7 +1446,7 @@ function diGerPeticaoCompleta(){
     g('di-pet-dl').style.display='inline-flex';
   })
   .catch(function(e){
-    g('di-pet-txt').textContent='Erro de rede: '+e.message+'. Verifique sua conexao.';
+    g('di-pet-txt').textContent='Erro: '+e.message;
     g('di-pet-lbl').textContent='Falha na geracao';
   });
 }
