@@ -1098,6 +1098,36 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#1a1a1a}
 </div>
 
 
+<!-- Modal Excluir da fila de cobranca -->
+<div id="docs-excluir-modal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:2000;align-items:center;justify-content:center">
+  <div style="background:#fff;border-radius:14px;padding:24px;max-width:460px;width:92%">
+    <div style="font-size:15px;font-weight:700;margin-bottom:4px">Excluir da fila de cobranca</div>
+    <div id="docs-excluir-nome" style="font-size:12px;color:#666;margin-bottom:14px"></div>
+    <label style="font-weight:700">Motivo da exclusao *</label>
+    <select id="docs-excluir-motivo" style="margin-bottom:10px">
+      <option value="">Selecione um motivo...</option>
+      <option value="Desistiu do processo">Desistiu do processo</option>
+      <option value="Faleceu">Faleceu</option>
+      <option value="Nao tem condicoes de pagar honorarios">Nao tem condicoes de pagar honorarios</option>
+      <option value="Processo encerrado">Processo encerrado</option>
+      <option value="Acordo realizado">Acordo realizado</option>
+      <option value="Cliente optou por outro escritorio">Cliente optou por outro escritorio</option>
+      <option value="Documentos recebidos via outro canal">Documentos recebidos via outro canal</option>
+      <option value="Sem contato ha mais de 60 dias">Sem contato ha mais de 60 dias</option>
+      <option value="Outro">Outro (informar abaixo)</option>
+    </select>
+    <label>Observacoes adicionais (opcional)</label>
+    <textarea id="docs-excluir-obs" style="min-height:70px;margin-bottom:14px" placeholder="Detalhe o motivo se necessario..."></textarea>
+    <div style="background:#fff3e0;border-radius:8px;padding:8px 12px;font-size:11px;color:#e65100;margin-bottom:14px">
+      O cliente sera removido da fila de cobranca de documentos. O registro sera salvo para consulta futura.
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button class="btn" onclick="g('docs-excluir-modal').style.display='none'">Cancelar</button>
+      <button class="btn" style="background:#c62828;color:#fff;border-color:#c62828" onclick="docsConfirmarExcluir()">Confirmar exclusao</button>
+    </div>
+  </div>
+</div>
+
 <!-- Processos -->
 <div id="mod-proc" style="display:none">
   <div class="card">
@@ -2028,8 +2058,8 @@ function docsRefresh() {
   if (!lista || !stats) return;
 
   var clientes = [];
-  if (tipo !== 'se') diC.forEach(function(cl){clientes.push({cl:cl, tipo:'di'});});
-  if (tipo !== 'di') seC.forEach(function(cl){clientes.push({cl:cl, tipo:'se'});});
+  if (tipo !== 'se') diC.forEach(function(cl){if(!cl.docsExcluido)clientes.push({cl:cl, tipo:'di'});});
+  if (tipo !== 'di') seC.forEach(function(cl){if(!cl.docsExcluido)clientes.push({cl:cl, tipo:'se'});});
 
   var nCritico=0, nAtencao=0, nOk=0, nUrgente=0;
   var urgentesHoje = [];
@@ -2170,9 +2200,59 @@ function docsRefresh() {
     if (info.status === 'ok') {
       html += '<span style="font-size:11px;color:#1b5e20;padding:4px 8px;font-weight:600">&#9989; Pronto para protocolo</span>';
     }
+    html += '<button class="btn" style="font-size:11px;padding:4px 8px;color:#c62828;border-color:#f8bbd0;margin-left:auto" '
+         +'data-cid="'+cl.id+'" data-tp="'+tp+'" '
+         +'onclick="var b=this;docsAbrirExcluir(b.dataset.cid,b.dataset.tp)">&#10005; Excluir</button>';
     html += '</div></div>';
   });
   lista.innerHTML = html;
+}
+
+// ── Exclusao da fila de cobranca ─────────────────────────────
+var _docsExcluirCid = null;
+var _docsExcluirTipo = null;
+
+function docsAbrirExcluir(cid, tipo){
+  var cl=(tipo==='di'?diC:seC).find(function(x){return x.id===cid;});
+  if(!cl)return;
+  _docsExcluirCid=cid; _docsExcluirTipo=tipo;
+  var el=g('docs-excluir-nome');
+  if(el) el.textContent='Cliente: '+cl.nome+(cl.cpf?' | CPF: '+cl.cpf:'');
+  if(g('docs-excluir-motivo')) g('docs-excluir-motivo').value='';
+  if(g('docs-excluir-obs')) g('docs-excluir-obs').value='';
+  g('docs-excluir-modal').style.display='flex';
+}
+
+function docsConfirmarExcluir(){
+  var motivo=g('docs-excluir-motivo')&&g('docs-excluir-motivo').value||'';
+  if(!motivo){alert('Selecione um motivo para a exclusao.');return;}
+  var obs=g('docs-excluir-obs')&&g('docs-excluir-obs').value||'';
+  var cid=_docsExcluirCid; var tipo=_docsExcluirTipo;
+  var cl=(tipo==='di'?diC:seC).find(function(x){return x.id===cid;});
+  if(!cl)return;
+
+  // Salvar no historico de excluidos da cobranca
+  var hist=est['_docs_excluidos']||[];
+  hist.push({
+    id:cid, nome:cl.nome||'', tipo:tipo, cpf:cl.cpf||'',
+    tel:cl.tel||'', email:cl.email||'',
+    motivo:motivo, obs:obs,
+    excluidoPor:eqUsuarioAtual?eqUsuarioAtual.nome:'',
+    dataExclusao:new Date().toISOString()
+  });
+  est['_docs_excluidos']=hist;
+
+  // Marcar cliente como excluido da fila de docs
+  cl.docsExcluido=true;
+  cl.docsExcluidoMotivo=motivo;
+  cl.docsExcluidoObs=obs;
+  cl.docsExcluidoPor=eqUsuarioAtual?eqUsuarioAtual.nome:'';
+  cl.docsExcluidoData=new Date().toISOString();
+  saveEst();
+
+  g('docs-excluir-modal').style.display='none';
+  docsRefresh();
+  alert('Cliente removido da fila de cobranca. Motivo: '+motivo);
 }
 
 function docsCobrar(cid, tipo) {
