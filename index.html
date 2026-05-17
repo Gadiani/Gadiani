@@ -5022,27 +5022,22 @@ function djBuscarIntervalo(ini,fim){
 }
 
 function djBuscarAdvogado(ini,fim,adv,cb){
-  // Primeiro tenta Apps Script (proxy server-side, sem restricao CORS)
+  // Usa XMLHttpRequest para o Apps Script (lida melhor com redirects)
   var urlAS=SCRIPT+'?action=djen&oab='+adv.oab+'&uf='+adv.uf+'&ini='+ini+'&fim='+fim;
-  fetch(urlAS,{method:'GET',redirect:'follow'})
-  .then(function(r){
-    if(!r.ok) throw new Error('AS HTTP '+r.status);
-    return r.json();
-  })
-  .then(function(d){
-    if(d.ok && Array.isArray(d.data) && d.data.length>0){
-      cb(d.data,null);
-    } else if(d.ok && Array.isArray(d.data)){
-      // Apps Script funcionou mas sem resultados - tentar proxy CORS
-      djBuscarPaginas(ini,fim,adv,0,[],cb);
-    } else {
-      djBuscarPaginas(ini,fim,adv,0,[],cb);
-    }
-  })
-  .catch(function(){
-    // Apps Script bloqueado - tentar proxy CORS direto
+  var xhr=new XMLHttpRequest();
+  xhr.open('GET',urlAS,true);
+  xhr.setRequestHeader('Accept','application/json');
+  xhr.timeout=45000;
+  xhr.onload=function(){
+    try{
+      var d=JSON.parse(xhr.responseText);
+      if(d.ok&&Array.isArray(d.data)&&d.data.length>0){cb(d.data,null);return;}
+    }catch(e){}
     djBuscarPaginas(ini,fim,adv,0,[],cb);
-  });
+  };
+  xhr.onerror=function(){ djBuscarPaginas(ini,fim,adv,0,[],cb); };
+  xhr.ontimeout=function(){ djBuscarPaginas(ini,fim,adv,0,[],cb); };
+  xhr.send();
 }
 
 // Proxies CORS publicos - tentamos cada um em ordem
@@ -5515,10 +5510,8 @@ function djAgendarVerificacao(){
   var hoje=agora.toISOString().split('T')[0];
   // Busca automatica se nao buscou hoje ainda e for horario comercial
   if(ultDia!==hoje&&horas>=8&&horas<=20){
-    console.log('DJEN: agendando busca automatica...');
-    setTimeout(function(){
-      if(confirm('Buscar publicacoes do DJEN de hoje automaticamente?'))djBuscar();
-    },2000);
+    console.log('DJEN: ultima busca foi '+ultDia+', hoje e '+hoje);
+    // Nao dispara automaticamente - usuario busca manualmente no modulo DJEN
   }
 }
 
