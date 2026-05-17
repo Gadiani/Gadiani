@@ -5029,10 +5029,17 @@ function djBuscarAdvogado(ini,fim,adv,cb){
   xhr.setRequestHeader('Accept','application/json');
   xhr.timeout=45000;
   xhr.onload=function(){
+    console.log('DJEN XHR status:',xhr.status,'url final:',xhr.responseURL,'resp:',xhr.responseText.substring(0,200));
     try{
       var d=JSON.parse(xhr.responseText);
       if(d.ok&&Array.isArray(d.data)&&d.data.length>0){cb(d.data,null);return;}
-    }catch(e){}
+      // Apps Script retornou ok mas sem dados - mostrar aviso especifico
+      if(d.ok&&Array.isArray(d.data)&&d.data.length===0){
+        var av=d.aviso||d.erros&&d.erros.join(' | ')||'';
+        console.log('DJEN Apps Script: sem publicacoes.',av);
+        cb([],av||null);return;
+      }
+    }catch(e){console.log('DJEN XHR parse erro:',e.message,xhr.responseText.substring(0,100));}
     djBuscarPaginas(ini,fim,adv,0,[],cb);
   };
   xhr.onerror=function(){ djBuscarPaginas(ini,fim,adv,0,[],cb); };
@@ -5134,8 +5141,18 @@ function djProcessarResultados(pubs,ini,fim,st,err){
   st.style.background=novos>0?'#e8f5e9':(err?'#fce4ec':'#f5f5f5');
   st.style.color=novos>0?'#1b5e20':(err?'#c62828':'#666');
   var avisoExtra = (window._djLastLog && window._djLastLog.length) ? '<br><details style="font-size:10px;margin-top:4px"><summary style="cursor:pointer;color:#aaa">Detalhes do servidor</summary><pre style="white-space:pre-wrap;font-size:10px;color:#666">'+window._djLastLog.join('\n')+'</pre></details>' : '';
-  if(novos===0 && err){
+  if(novos===0 && err && err!==null && String(err).indexOf('null')===0){
     djMostrarAvisoCors(st);
+    return;
+  }
+  if(novos===0 && err){
+    // Erro real - mostrar mensagem mas tambem opçao manual
+    st.style.display='block';
+    st.style.background='#fff3e0';
+    st.style.color='#e65100';
+    st.innerHTML='<b>Sem publicacoes encontradas</b> no periodo '+label+'.'
+      +' <button class="btn" style="font-size:11px;margin-left:6px" onclick="djAbrirEntradaManual()">+ Inserir manual</button>'
+      +' <button class="btn" style="font-size:11px;margin-left:4px" onclick="djTestarConexao()">Testar conexao</button>';
     return;
   }
   st.innerHTML=(novos>0?'<strong>'+novos+' nova(s) publicacao(oes)</strong> encontrada(s).'
@@ -5308,6 +5325,25 @@ function djListar(){
   el.innerHTML=html;
 }
 
+function djTestarConexao(){
+  var url=SCRIPT+'?action=djen&oab=425910&uf=SP&ini=2026-05-14&fim=2026-05-16';
+  alert('Testando conexao... Abra o console (F12) para ver o resultado.\n\nURL: '+url);
+  var xhr=new XMLHttpRequest();
+  xhr.open('GET',url,true);
+  xhr.onload=function(){
+    console.log('TESTE DJEN - HTTP:',xhr.status);
+    console.log('TESTE DJEN - URL final:',xhr.responseURL);
+    console.log('TESTE DJEN - Resposta:',xhr.responseText.substring(0,500));
+    try{
+      var d=JSON.parse(xhr.responseText);
+      alert('Apps Script respondeu:\nOK: '+d.ok+'\nTotal publicacoes: '+(Array.isArray(d.data)?d.data.length:'?')+'\nAviso: '+(d.aviso||'-')+'\nErros: '+(d.erros&&d.erros.length?d.erros.join(', '):'-'));
+    }catch(e){
+      alert('Resposta nao e JSON:\n'+xhr.responseText.substring(0,300));
+    }
+  };
+  xhr.onerror=function(){ alert('Erro de conexao com Apps Script. Verifique o console (F12).'); };
+  xhr.send();
+}
 function djAbrirAjudaCors(){
   g('dj-cors-modal').style.display='flex';
 }
