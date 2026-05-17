@@ -1049,6 +1049,19 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#1a1a1a}
     <div class="eq-grid" id="eq-grid"></div>
   </div>
 
+  <!-- Modal ver tarefas de membro -->
+  <div id="eq-ver-modal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:2000;align-items:flex-start;justify-content:center;overflow-y:auto;padding:20px 0">
+    <div style="background:#fff;border-radius:14px;padding:24px;max-width:540px;width:92%;margin:auto">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+        <div style="font-size:15px;font-weight:700" id="eq-ver-titulo">Tarefas</div>
+        <button class="btn" onclick="g('eq-ver-modal').style.display='none'">Fechar</button>
+      </div>
+      <div id="eq-ver-subtitulo" style="font-size:11px;color:#aaa;margin-bottom:16px"></div>
+      <div id="eq-ver-lista"></div>
+      <div style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap" id="eq-ver-actions"></div>
+    </div>
+  </div>
+
   <!-- Modal novo membro -->
   <div id="eq-modal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.45);z-index:2000;align-items:center;justify-content:center">
     <div style="background:#fff;border-radius:14px;padding:24px;max-width:420px;width:90%">
@@ -2756,8 +2769,10 @@ function eqRenderEquipe(){
       html += '<button class="btn" style="font-size:10px;padding:3px 7px" data-uid="'+u.id+'" onclick="eqEditarMembro(this.dataset.uid)">&#9998; Editar</button>';
       html += '<button class="btn" style="font-size:10px;padding:3px 7px;background:#fce4ec;border-color:#f8bbd0;color:#c62828" data-uid="'+u.id+'" onclick="eqRemover(this.dataset.uid)">Remover</button>';
     }
-    if (eqUsuarioAtual && eqUsuarioAtual.id===u.id) {
-      html += '<button class="btn" style="font-size:10px;padding:3px 7px;background:#e3f2fd;border-color:#90caf9;color:#1565c0" data-uid="'+u.id+'" onclick="eqVerTarefas(this.dataset.uid)">Ver tarefas</button>';
+    if (eqUsuarioAtual && (eqUsuarioAtual.id===u.id || eqUsuarioAtual.nivel==='admin')) {
+      var labelBtn = eqUsuarioAtual.id===u.id ? 'Ver minhas tarefas' : (pendentes>0 ? '&#128203; Ver tarefas ('+pendentes+')' : '&#128203; Ver tarefas');
+      var corBtn = (pendentes>0 && eqUsuarioAtual.id!==u.id) ? 'background:#fff3e0;border-color:#ffcc80;color:#e65100' : 'background:#e3f2fd;border-color:#90caf9;color:#1565c0';
+      html += '<button class="btn" style="font-size:10px;padding:3px 7px;'+corBtn+'" data-uid="'+u.id+'" onclick="eqAbrirTarefas(this.dataset.uid)">'+labelBtn+'</button>';
     }
     html += '</div></div>';
   });
@@ -2846,9 +2861,138 @@ function eqSalvarTarefa(){
 }
 
 function eqVerTarefas(uid){
-  if (eqUsuarioAtual && eqUsuarioAtual.id!==uid && eqUsuarioAtual.nivel!=='admin') return;
-  eqRenderMinhasTarefas();
-  g('eq-minhas-tarefas').scrollIntoView({behavior:'smooth'});
+  eqAbrirTarefas(uid);
+}
+function eqAbrirTarefas(uid){
+  if(!eqUsuarioAtual) return;
+  if(eqUsuarioAtual.id!==uid && eqUsuarioAtual.nivel!=='admin') return;
+  var equipe = eqGetEquipe();
+  var membro = equipe.find(function(u){return u.id===uid;});
+  if(!membro) return;
+  var tarefas = eqGetTarefas(uid);
+  var ehProprio = eqUsuarioAtual.id===uid;
+  var isAdmin = eqUsuarioAtual.nivel==='admin';
+
+  // Titulo
+  var titulo = g('eq-ver-titulo');
+  var subtitulo = g('eq-ver-subtitulo');
+  if(titulo) titulo.textContent = ehProprio ? 'Minhas tarefas' : 'Tarefas de '+membro.nome.split(' ')[0];
+  var pendentes = tarefas.filter(function(t){return !t.done;});
+  var concluidas = tarefas.filter(function(t){return t.done;});
+  if(subtitulo) subtitulo.textContent = pendentes.length+' pendente(s) · '+concluidas.length+' concluida(s)';
+
+  // Lista
+  var lista = g('eq-ver-lista');
+  if(!lista) return;
+  if(!tarefas.length){
+    lista.innerHTML='<div style="padding:20px;text-align:center;color:#bbb;font-size:13px">Nenhuma tarefa registrada para '+membro.nome.split(' ')[0]+'.</div>';
+  } else {
+    // Pendentes primeiro, depois concluidas
+    var ordenadas = pendentes.concat(concluidas);
+    var html='';
+    ordenadas.forEach(function(t, i){
+      var idx = tarefas.indexOf(t);
+      var vencida = t.prazo && new Date(t.prazo+'T23:59:59')<new Date() && !t.done;
+      var bgCor = t.done ? '#f9f9f9' : vencida ? '#fff8f8' : '#fff';
+      var bordaCor = t.done ? '#e0ddd6' : vencida ? '#f8bbd0' : '#e0ddd6';
+      html += '<div style="padding:10px 12px;border:1px solid '+bordaCor+';border-radius:8px;margin-bottom:6px;background:'+bgCor+'">';
+      html += '<div style="display:flex;align-items:flex-start;gap:10px">';
+      // Status icon
+      if(t.done){
+        html += '<span style="font-size:14px;margin-top:1px">&#9989;</span>';
+      } else if(vencida){
+        html += '<span style="font-size:14px;margin-top:1px">&#9940;</span>';
+      } else {
+        html += '<span style="font-size:14px;margin-top:1px">&#9711;</span>';
+      }
+      html += '<div style="flex:1">';
+      html += '<div style="font-size:13px;font-weight:600;'+(t.done?'text-decoration:line-through;color:#bbb;':'')+(vencida?'color:#c62828;':'')+'">'+t.desc+'</div>';
+      var meta='';
+      if(t.prazo) meta += 'Prazo: '+new Date(t.prazo+'T12:00:00').toLocaleDateString('pt-BR')+(vencida?' <b style="color:#c62828">(VENCIDA)</b>':'');
+      if(t.de) meta += (meta?' &middot; ':'')+' Delegada por: '+t.de;
+      if(t.ts) meta += (meta?' &middot; ':'')+' Criada: '+new Date(t.ts).toLocaleDateString('pt-BR');
+      if(t.done&&t.doneTs) meta += (meta?' &middot; ':'')+' Concluida: '+new Date(t.doneTs).toLocaleDateString('pt-BR');
+      if(meta) html += '<div style="font-size:11px;color:#888;margin-top:3px">'+meta+'</div>';
+      html += '</div>';
+      // Acoes para admin vendo outro membro (ou proprio)
+      if(isAdmin||ehProprio){
+        html += '<div style="display:flex;gap:4px;flex-shrink:0">';
+        if(!t.done){
+          html += '<button class="btn" style="font-size:10px;padding:2px 7px;background:#e8f5e9;border-color:#a5d6a7;color:#1b5e20" '
+               +'data-uid="'+uid+'" data-idx="'+idx+'" onclick="eqMarcarFeitaModal(this.dataset.uid,+this.dataset.idx)">Feito</button>';
+        }
+        html += '<button class="btn" style="font-size:10px;padding:2px 7px;color:#c62828;border-color:#f8bbd0" '
+             +'data-uid="'+uid+'" data-idx="'+idx+'" onclick="eqExcluirTarefaModal(this.dataset.uid,+this.dataset.idx)">&#10005;</button>';
+        html += '</div>';
+      }
+      html += '</div></div>';
+    });
+    lista.innerHTML = html;
+  }
+
+  // Acoes no rodape
+  var actions = g('eq-ver-actions');
+  if(actions){
+    actions.innerHTML = '';
+    // Admin pode cobrar via WA se membro tem tarefas vencidas
+    if(isAdmin && !ehProprio && membro.tel && pendentes.length>0){
+      var vencidas = pendentes.filter(function(t){return t.prazo && new Date(t.prazo+'T23:59:59')<new Date();});
+      if(vencidas.length>0){
+        var btn = document.createElement('button');
+        btn.className='btn'; btn.style.cssText='font-size:11px;background:#25d366;color:#fff;border-color:#25d366';
+        btn.innerHTML='&#128172; Cobrar '+membro.nome.split(' ')[0]+' pelo WhatsApp';
+        btn.onclick=function(){eqCobrarWA(uid,membro,vencidas);};
+        actions.appendChild(btn);
+      }
+    }
+    // Admin pode delegar nova tarefa
+    if(isAdmin){
+      var btn2 = document.createElement('button');
+      btn2.className='btn btnp'; btn2.style.cssText='font-size:11px';
+      btn2.innerHTML='+ Delegar nova tarefa';
+      btn2.onclick=function(){g('eq-ver-modal').style.display='none';eqDelegarPara(uid);};
+      actions.appendChild(btn2);
+    }
+    // Proprio pode adicionar tarefa
+    if(ehProprio){
+      var btn3 = document.createElement('button');
+      btn3.className='btn'; btn3.style.cssText='font-size:11px';
+      btn3.innerHTML='+ Nova tarefa pessoal';
+      btn3.onclick=function(){g('eq-ver-modal').style.display='none';eqAddTarefa();};
+      actions.appendChild(btn3);
+    }
+  }
+
+  g('eq-ver-modal').style.display='flex';
+}
+
+function eqMarcarFeitaModal(uid, idx){
+  var tarefas = eqGetTarefas(uid);
+  if(tarefas[idx]){
+    tarefas[idx].done=true;
+    tarefas[idx].doneTs=new Date().toISOString();
+    eqSaveTarefas(uid,tarefas);
+    eqAbrirTarefas(uid);
+    eqRenderEquipe();
+  }
+}
+
+function eqExcluirTarefaModal(uid, idx){
+  if(!confirm('Excluir esta tarefa?')) return;
+  var tarefas = eqGetTarefas(uid);
+  tarefas.splice(idx,1);
+  eqSaveTarefas(uid,tarefas);
+  eqAbrirTarefas(uid);
+  eqRenderEquipe();
+}
+
+function eqCobrarWA(uid, membro, vencidas){
+  var tel = membro.tel.replace(/[^0-9]/g,'');
+  if(tel.length===11) tel='55'+tel;
+  var lista = vencidas.map(function(t,i){
+    return (i+1)+'. '+t.desc+(t.prazo?' (prazo: '+new Date(t.prazo+'T12:00:00').toLocaleDateString('pt-BR')+')':'');
+  }).join('\n');
+  var msg = 'Ola, '+membro.nome.split(' ')[0]+'! Passando para verificar o andamento das seguintes tarefas pendentes:\n\n'+lista+'\n\nPode me atualizar? Obrigado!\nGadiani & DAntraccoli';
 }
 
 var eqEditandoId = null;
