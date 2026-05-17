@@ -5006,95 +5006,16 @@ function djBuscarIntervalo(ini,fim){
   });
 }
 
+// URL do servidor proxy Gadiani (Render.com)
+// Sera atualizada apos o deploy - por enquanto aponta para o servidor de producao
+var DJ_PROXY_URL = 'https://gadiani-djen-proxy.onrender.com';
+
 function djBuscarAdvogado(ini,fim,adv,cb){
-  // Apps Script redireciona para login Google (restricao Workspace) - usar proxy CORS direto
-  _djProxyIdx = 0;
-  djBuscarPaginas(ini,fim,adv,0,[],cb);
-}
-
-// Proxies CORS publicos - tentamos cada um em ordem
-var DJ_PROXIES = [
-  // allorigins retorna {contents: "...", status:{...}}
-  function(url){ return 'https://api.allorigins.win/get?url='+encodeURIComponent(url); },
-  // corsproxy.io retorna direto
-  function(url){ return 'https://corsproxy.io/?url='+encodeURIComponent(url); },
-  // crossorigin.me
-  function(url){ return 'https://crossorigin.me/'+url; },
-  // htmldriven cors proxy
-  function(url){ return 'https://cors-proxy.htmldriven.com/?url='+encodeURIComponent(url); }
-];
-var _djProxyIdx = 0;
-
-function djBuscarPaginas(ini,fim,adv,pagina,acumulado,cb){
-  var urlOriginal='https://comunica.pje.jus.br/api/v1/comunicacao'
-    +'?dataDisponibilizacaoInicio='+ini
-    +'&dataDisponibilizacaoFim='+fim
-    +'&numeroOab='+adv.oab
-    +'&ufOab='+adv.uf
-    +'&page='+pagina+'&size=20';
-
-  djFetchComProxy(urlOriginal, _djProxyIdx, function(json, erroProxy){
-    if(erroProxy && _djProxyIdx < DJ_PROXIES.length-1){
-      // Tenta proximo proxy
-      _djProxyIdx++;
-      djFetchComProxy(urlOriginal, _djProxyIdx, function(json2, erroProxy2){
-        djProcessarPagina(json2,ini,fim,adv,pagina,acumulado,cb,erroProxy2);
-      });
-    } else {
-      djProcessarPagina(json,ini,fim,adv,pagina,acumulado,cb,erroProxy);
-    }
-  });
-}
-
-function djFetchComProxy(urlOriginal, proxyIdx, cb){
-  var proxyUrl = DJ_PROXIES[proxyIdx](urlOriginal);
-  console.log('DJEN proxy['+proxyIdx+']: '+proxyUrl.substring(0,80));
-  fetch(proxyUrl, {method:'GET'})
-  .then(function(r){
-    console.log('DJEN proxy['+proxyIdx+'] HTTP:'+r.status);
-    if(!r.ok) throw new Error('HTTP '+r.status);
-    return r.text();
-  })
-  .then(function(txt){
-    console.log('DJEN proxy['+proxyIdx+'] resp[200]:'+txt.substring(0,200));
-    var parsed;
-    try {
-      var outer = JSON.parse(txt);
-      // allorigins: {contents:"JSON_STRING", status:{...}}
-      if(outer && typeof outer.contents === 'string') {
-        parsed = JSON.parse(outer.contents);
-      }
-      // corsproxy e outros: JSON direto
-      else if(outer && (outer.content || outer.data || Array.isArray(outer))) {
-        parsed = outer;
-      }
-      else {
-        parsed = outer;
-      }
-    } catch(e){
-      throw new Error('Parse: '+e.message+' txt='+txt.substring(0,100));
-    }
-    cb(parsed, null);
-  })
-  .catch(function(e){
-    console.log('DJEN proxy['+proxyIdx+'] ERRO:'+e.message);
-    cb(null, e.message);
-  });
-}
-
-function djProcessarPagina(json,ini,fim,adv,pagina,acumulado,cb,erro){
-  if(!json){
-    cb(acumulado.length>0?acumulado:[], erro||'Sem dados');
-    return;
-  }
-  var items=json.content||json.data||json.resultado||(Array.isArray(json)?json:[]);
-  var todos=acumulado.concat(items);
-  var totalPag=json.totalPages||json.totalPaginas||1;
-  if(pagina+1<totalPag&&pagina<49){
-    setTimeout(function(){djBuscarPaginas(ini,fim,adv,pagina+1,todos,cb);},500);
-  } else {
-    cb(todos, null);
-  }
+  var url=DJ_PROXY_URL+'/djen?oab='+adv.oab+'&uf='+adv.uf+'&ini='+ini+'&fim='+fim;
+  fetch(url,{method:'GET',headers:{'Accept':'application/json'}})
+  .then(function(r){if(!r.ok)throw new Error('Proxy HTTP '+r.status);return r.json();})
+  .then(function(d){cb(Array.isArray(d.data)?d.data:[],d.erros&&d.erros.length?d.erros.join(' | '):null);})
+  .catch(function(e){cb([],e.message);});
 }
 
 function djProcessarResultados(pubs,ini,fim,st,err){
