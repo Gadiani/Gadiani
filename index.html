@@ -1080,28 +1080,12 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#1a1a1a}
   <div class="card">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">
       <div>
-        <div class="ct" style="margin-bottom:4px">Publicacoes DJEN &mdash; Comunicacoes Processuais PJe</div>
+        <div class="ct" style="margin-bottom:4px">Publicacoes DJEN</div>
         <span id="dj-resumo" style="font-size:11px;color:#aaa"></span>
       </div>
-      <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
-        <div style="display:flex;align-items:center;gap:4px;font-size:11px;font-weight:600;color:#666">
-          De: <input type="date" id="dj-ini" style="font-size:11px;padding:4px 6px;border:1px solid #ddd;border-radius:6px">
-          Ate: <input type="date" id="dj-fim" style="font-size:11px;padding:4px 6px;border:1px solid #ddd;border-radius:6px">
-        </div>
-        <button class="btn btnp" style="font-size:11px" onclick="djBuscarData()">&#8635; Buscar</button>
-        <button class="btn" style="font-size:11px" onclick="djBuscarHoje()">Hoje</button>
-        <button class="btn" style="font-size:11px" onclick="djBuscarSemana()">Semana</button>
-        <button class="btn" style="font-size:11px;background:#f3e5f5;border-color:#ce93d8;color:#6a1b9a" onclick="djAbrirAjudaCors()">&#9881; Configurar acesso</button>
-      </div>
+      <button class="btn btnp" style="font-size:12px;padding:8px 16px" onclick="djNovaPublicacao()">+ Nova publicacao</button>
     </div>
-
-    <!-- Status da busca -->
-    <div id="dj-status" style="display:none;padding:10px 14px;border-radius:8px;margin-bottom:10px;font-size:12px"></div>
-
-    <!-- Stats -->
     <div id="dj-stats" style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr;gap:8px;margin-bottom:12px"></div>
-
-    <!-- Filtros -->
     <div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap;align-items:center">
       <select id="dj-filtro-adv" onchange="djListar()" style="font-size:11px;padding:4px 8px">
         <option value="todos">Ambos advogados</option>
@@ -1110,8 +1094,8 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#1a1a1a}
       </select>
       <select id="dj-filtro-area" onchange="djListar()" style="font-size:11px;padding:4px 8px">
         <option value="todos">Civil + Penal</option>
-        <option value="civil">Direito Civil</option>
-        <option value="penal">Direito Penal</option>
+        <option value="civil">Civil</option>
+        <option value="penal">Penal</option>
       </select>
       <select id="dj-filtro-status" onchange="djListar()" style="font-size:11px;padding:4px 8px">
         <option value="ativos">Ativos</option>
@@ -1119,91 +1103,81 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#1a1a1a}
         <option value="pendente">Pendentes</option>
         <option value="delegado">Delegados</option>
         <option value="cumprido">Cumpridos</option>
-        <option value="ignorado">Ignorados</option>
       </select>
       <input id="dj-busca-txt" placeholder="Buscar processo ou parte..." style="font-size:11px;padding:4px 8px;flex:1;min-width:140px" oninput="djListar()">
-      <label style="font-size:11px;color:#aaa;display:flex;align-items:center;gap:4px">
-        <input type="checkbox" id="dj-mostrar-hist" onchange="djListar()"> Historico
-      </label>
     </div>
-
-    <!-- Ultima busca -->
-    <div id="dj-ultima-busca" style="font-size:11px;color:#aaa;margin-bottom:8px"></div>
-
     <div id="dj-lista"></div>
   </div>
 
-  <!-- Modal ajuda CORS -->
-  <div id="dj-cors-modal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.55);z-index:3000;align-items:flex-start;justify-content:center;overflow-y:auto;padding:20px 0">
-    <div style="background:#fff;border-radius:14px;padding:28px;max-width:560px;width:92%;margin:auto">
-      <div style="font-size:17px;font-weight:700;margin-bottom:4px">Publicacoes DJEN &mdash; Acesso Direto</div>
-      <div style="font-size:12px;color:#aaa;margin-bottom:18px">O PJe bloqueia consultas automaticas de sistemas externos. Use os links abaixo para acessar diretamente e depois importe as publicacoes.</div>
-
-      <!-- Links diretos PJe -->
-      <div style="background:#e3f2fd;border:1px solid #90caf9;border-radius:10px;padding:16px;margin-bottom:14px">
-        <div style="font-size:13px;font-weight:700;color:#1565c0;margin-bottom:12px">&#127758; Abrir publicacoes no site do PJe</div>
-        <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px">
-          <a href="javascript:djAbrirPjeAdvogado('425910','Augusto')" onclick="g('dj-cors-modal').style.display='none'"
-            style="background:#1565c0;color:#fff;padding:10px 16px;border-radius:8px;text-decoration:none;font-size:13px;font-weight:600;display:block;text-align:center">
-            &#128100; Dr. Augusto &mdash; OAB 425910/SP
-          </a>
-          <a href="javascript:djAbrirPjeAdvogado('500799','Ari')" onclick="g('dj-cors-modal').style.display='none'"
-            style="background:#1565c0;color:#fff;padding:10px 16px;border-radius:8px;text-decoration:none;font-size:13px;font-weight:600;display:block;text-align:center">
-            &#128100; Dr. Ari &mdash; OAB 500799/SP
-          </a>
+  <!-- Modal nova publicacao -->
+  <div id="dj-nova-modal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:2000;align-items:flex-start;justify-content:center;overflow-y:auto;padding:20px 0">
+    <div style="background:#fff;border-radius:14px;padding:24px;max-width:520px;width:92%;margin:auto">
+      <div style="font-size:16px;font-weight:700;margin-bottom:16px">Nova Publicacao DJEN</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+        <div>
+          <label>Advogado *</label>
+          <select id="djn-adv">
+            <option value="425910">Dr. Augusto (425910/SP)</option>
+            <option value="500799">Dr. Ari (500799/SP)</option>
+          </select>
         </div>
-        <div style="font-size:11px;color:#1565c0;background:#f5f9ff;padding:8px 10px;border-radius:6px;line-height:1.6">
-          Ao abrir, selecione as datas desejadas no site do PJe.<br>
-          Para cada publicacao encontrada, copie o texto e use <b>"+ Inserir manualmente"</b> abaixo.
+        <div>
+          <label>Data da publicacao *</label>
+          <input type="date" id="djn-data">
         </div>
       </div>
-
-      <div style="display:flex;gap:8px">
-        <button class="btn btng" style="flex:1;font-size:12px" onclick="g('dj-cors-modal').style.display='none';djAbrirEntradaManual()">+ Inserir publicacao manualmente</button>
-        <button class="btn" onclick="g('dj-cors-modal').style.display='none'">Fechar</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Modal entrada manual DJEN -->
-  <div id="dj-manual-modal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.55);z-index:3100;align-items:center;justify-content:center">
-    <div style="background:#fff;border-radius:14px;padding:24px;max-width:520px;width:92%">
-      <div style="font-size:15px;font-weight:700;margin-bottom:14px">Inserir Publicacao Manualmente</div>
       <label>Numero do processo</label>
-      <input id="djm-proc" placeholder="Ex: 1234567-89.2024.8.26.0100" style="margin-bottom:8px">
-      <label>Advogado</label>
-      <select id="djm-adv" style="margin-bottom:8px">
-        <option value="425910">Dr. Augusto Gadiani (OAB 425910/SP)</option>
-        <option value="500799">Dr. Ari D'Antraccoli (OAB 500799/SP)</option>
-      </select>
-      <label>Tribunal / Vara</label>
-      <input id="djm-trib" placeholder="Ex: TJSP - 3a Vara Civel" style="margin-bottom:8px">
-      <label>Data da publicacao</label>
-      <input type="date" id="djm-data" style="margin-bottom:8px">
+      <input id="djn-proc" placeholder="Ex: 1234567-89.2024.8.26.0100" style="margin-bottom:10px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+        <div>
+          <label>Tribunal / Vara</label>
+          <input id="djn-trib" placeholder="Ex: TJSP - 3a Vara">
+        </div>
+        <div>
+          <label>Area</label>
+          <select id="djn-area">
+            <option value="civil">Direito Civil</option>
+            <option value="penal">Direito Penal</option>
+          </select>
+        </div>
+      </div>
       <label>Tipo do ato</label>
-      <input id="djm-tipo" placeholder="Ex: Intimacao, Despacho, Sentenca..." style="margin-bottom:8px">
-      <label>Texto completo da publicacao</label>
-      <textarea id="djm-texto" style="min-height:120px;margin-bottom:8px" placeholder="Cole aqui o texto completo copiado do site do PJe..."></textarea>
-      <label>Link para o tribunal (opcional)</label>
-      <input id="djm-link" placeholder="https://..." style="margin-bottom:14px">
+      <input id="djn-tipo" placeholder="Ex: Intimacao, Despacho, Sentenca..." style="margin-bottom:10px">
+      <label>Descricao / O que precisa ser feito *</label>
+      <textarea id="djn-texto" style="min-height:90px;margin-bottom:10px" placeholder="Descreva a publicacao e o que deve ser feito..."></textarea>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+        <div>
+          <label>Prazo para cumprir</label>
+          <input type="date" id="djn-prazo">
+        </div>
+        <div>
+          <label>Delegar para</label>
+          <select id="djn-resp" onchange="djnAtualizarNotif()"></select>
+        </div>
+      </div>
+      <label>Link do processo (opcional)</label>
+      <input id="djn-link" placeholder="https://..." style="margin-bottom:10px">
+      <div id="djn-notif-bar" style="display:none;background:#e8f5e9;border:1px solid #a5d6a7;border-radius:8px;padding:8px 12px;font-size:11px;color:#1b5e20;margin-bottom:14px">
+        Notificacao por WhatsApp sera enviada ao responsavel.
+      </div>
       <div style="display:flex;gap:8px;justify-content:flex-end">
-        <button class="btn" onclick="g('dj-manual-modal').style.display='none'">Cancelar</button>
-        <button class="btn btng" onclick="djSalvarManual()">Salvar publicacao</button>
+        <button class="btn" onclick="g('dj-nova-modal').style.display='none'">Cancelar</button>
+        <button class="btn btng" onclick="djSalvarNova()">Salvar + Notificar</button>
       </div>
     </div>
   </div>
 
-  <!-- Modal delegar publicacao -->
+  <!-- Modal delegar -->
   <div id="dj-del-modal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.48);z-index:2000;align-items:center;justify-content:center">
     <div style="background:#fff;border-radius:14px;padding:24px;max-width:460px;width:90%">
       <div class="ct" style="margin-bottom:14px">Delegar Publicacao</div>
       <div id="dj-del-info" style="font-size:12px;background:#f8f7f3;border-radius:8px;padding:10px;margin-bottom:12px;line-height:1.5"></div>
       <label>Responsavel</label>
       <select id="dj-del-resp" style="margin-bottom:8px"></select>
-      <label>Prazo para cumprir</label>
+      <label>Prazo</label>
       <input type="date" id="dj-del-prazo" style="margin-bottom:8px">
-      <label>Observacoes / instrucoes</label>
-      <textarea id="dj-del-obs" style="margin-bottom:14px;min-height:70px" placeholder="Ex: verificar se ja foi protocolado, solicitar certidao..."></textarea>
+      <label>Instrucoes</label>
+      <textarea id="dj-del-obs" style="margin-bottom:14px;min-height:70px" placeholder="O que precisa ser feito..."></textarea>
       <div style="display:flex;gap:8px;justify-content:flex-end">
         <button class="btn" onclick="g('dj-del-modal').style.display='none'">Cancelar</button>
         <button class="btn btnp" onclick="djSalvarDelegacao()">Delegar + Notificar WA</button>
@@ -1211,20 +1185,20 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#1a1a1a}
     </div>
   </div>
 
-  <!-- Modal detalhes publicacao -->
+  <!-- Modal ver completo -->
   <div id="dj-det-modal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.48);z-index:2000;align-items:flex-start;justify-content:center;overflow-y:auto;padding:20px 0">
-    <div style="background:#fff;border-radius:14px;padding:24px;max-width:680px;width:90%;margin:auto">
+    <div style="background:#fff;border-radius:14px;padding:24px;max-width:600px;width:90%;margin:auto">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
         <div class="ct" style="margin-bottom:0">Publicacao Completa</div>
         <button class="btn" onclick="g('dj-det-modal').style.display='none'">Fechar</button>
       </div>
       <div id="dj-det-conteudo" style="font-size:12px;line-height:1.7;white-space:pre-wrap;max-height:60vh;overflow-y:auto;background:#f8f7f3;border-radius:8px;padding:12px"></div>
-      <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
-        <a id="dj-det-link" href="#" target="_blank" class="btn btng" style="font-size:11px">Abrir no site do tribunal</a>
-      </div>
+      <div style="margin-top:12px"><a id="dj-det-link" href="#" target="_blank" class="btn btng" style="font-size:11px;display:none">Abrir no tribunal</a></div>
     </div>
   </div>
 </div>
+
+
 
 
 <!-- Modal urgente -->
@@ -4933,383 +4907,94 @@ function avExcluir(id){
 
 
 // ============================================================
-// DJEN -- Publicacoes Processuais PJe
+// DJEN - Publicacoes processuais lancadas manualmente
 // ============================================================
 var DJ_ADVS = [
   {nome:'Dr. Augusto Gadiani', oab:'425910', uf:'SP'},
-  {nome:'Dr. Ari D\'Antraccoli', oab:'500799', uf:'SP'}
+  {nome:'Dr. Ari DAntraccoli', oab:'500799', uf:'SP'}
 ];
+var DJ_PENAL_KW = ['penal','crime','criminal','homicidio','furto','roubo','lesao corporal','trafico','drogas','estupro','ameaca','injuria','difamacao','caluni','execucao penal','pena','condenado','reu','ministerio publico','mp','inquerito','policia','prisao','preventiva','flagrante','denuncia'];
+function djArea(txt){ var t=(txt||'').toLowerCase(); return DJ_PENAL_KW.some(function(k){return t.indexOf(k)>=0;})?'penal':'civil'; }
+function djGetLista(){ return est['_djen']||[]; }
+function djSaveLista(l){ est['_djen']=l; saveEst(); }
+function djDiasRestantes(p){ if(!p.prazoInterno)return 999; return Math.ceil((new Date(p.prazoInterno+'T23:59:59')-new Date())/86400000); }
 
-// Palavras-chave para classificar area
-var DJ_PENAL_KW = ['penal','crime','criminal','homicidio','furto','roubo','lesao corporal',
-  'trafico','drogas','estupro','ameaca','injuria','difamacao','caluni',
-  'execucao penal','pena','condenado','reu','ministerio publico','mp',
-  'inqueri','policia','prisao','preventiva','flagrante','denuncia','inquerito'];
-
-function djArea(txt){
-  if(!txt)return'civil';
-  var t=(txt||'').toLowerCase();
-  return DJ_PENAL_KW.some(function(k){return t.indexOf(k)>=0;})?'penal':'civil';
-}
-
-function djGetLista(){return est['_djen']||[];}
-function djSaveLista(l){est['_djen']=l;saveEst();}
-
-// -- BUSCA VIA APPS SCRIPT (proxy server-side) --------------
-function djBuscarHoje(){
+// Abrir modal nova publicacao
+function djNovaPublicacao(){
   var hoje=new Date().toISOString().split('T')[0];
-  if(g('dj-ini'))g('dj-ini').value=hoje;
-  if(g('dj-fim'))g('dj-fim').value=hoje;
-  djBuscarIntervalo(hoje,hoje);
-}
-function djBuscarSemana(){
-  var fim=new Date().toISOString().split('T')[0];
-  var ini=new Date(Date.now()-6*86400000).toISOString().split('T')[0];
-  if(g('dj-ini'))g('dj-ini').value=ini;
-  if(g('dj-fim'))g('dj-fim').value=fim;
-  djBuscarIntervalo(ini,fim);
-}
-function djBuscar(){
-  var hoje=new Date().toISOString().split('T')[0];
-  if(g('dj-ini'))g('dj-ini').value=hoje;
-  if(g('dj-fim'))g('dj-fim').value=hoje;
-  djBuscarIntervalo(hoje,hoje);
-}
-function djBuscarData(){
-  var ini=g('dj-ini')&&g('dj-ini').value;
-  var fim=g('dj-fim')&&g('dj-fim').value;
-  if(!ini){alert('Informe a data inicial.');return;}
-  if(!fim) fim=ini;
-  djBuscarIntervalo(ini,fim);
-}
-function djBuscarIntervalo(ini,fim){
-  window._djLastLog=[];
-  var st=g('dj-status');
-  st.style.display='block';
-  st.style.background='#e3f2fd';
-  st.style.color='#1565c0';
-  var label=ini===fim?ini:ini+' ate '+fim;
-  st.innerHTML='<span class="spin"></span> Buscando publicacoes de '+label+' (ambos OABs)...';
-  var resultados=[];
-  var done=0;
-  var total=DJ_ADVS.length;
-  DJ_ADVS.forEach(function(adv){
-    djBuscarAdvogado(ini,fim,adv,function(pubs,err){
-      pubs.forEach(function(p){resultados.push(p);});
-      done++;
-      if(done<total){
-        st.innerHTML='<span class="spin"></span> Consultado '+adv.nome+' ('+done+'/'+total+')...';
-      } else {
-        djProcessarResultados(resultados,ini,fim,st,err);
-      }
-    });
-  });
-}
-
-// URL do servidor proxy Gadiani (Render.com)
-// Sera atualizada apos o deploy - por enquanto aponta para o servidor de producao
-var DJ_PROXY_URL = 'https://gadiani-djen-proxy.onrender.com';
-
-function djBuscarAdvogado(ini,fim,adv,cb){
-  var url=DJ_PROXY_URL+'/djen?oab='+adv.oab+'&uf='+adv.uf+'&ini='+ini+'&fim='+fim;
-  fetch(url,{method:'GET',headers:{'Accept':'application/json'}})
-  .then(function(r){if(!r.ok)throw new Error('Proxy HTTP '+r.status);return r.json();})
-  .then(function(d){cb(Array.isArray(d.data)?d.data:[],d.erros&&d.erros.length?d.erros.join(' | '):null);})
-  .catch(function(e){cb([],e.message);});
-}
-
-function djProcessarResultados(pubs,ini,fim,st,err){
-  var data=ini;
-  var lista=djGetLista();
-  var novos=0;
-  pubs.forEach(function(p){
-    // Check if already exists by id
-    var existe=lista.find(function(x){return x.id===p.id;});
-    if(!existe){
-      p.status='pendente';
-      p.area=djArea(p.texto+' '+p.tipoDoDocumento+' '+p.siglaTribunal);
-      p.dataBusca=new Date().toISOString();
-      p.dataPub=data;
-      lista.push(p);
-      novos++;
-    }
-  });
-  window._djLastLog = (window._djLastLog||[]);
-  djSaveLista(lista);
-  var label=ini===fim?ini:ini+' a '+fim;
-  st.style.background=novos>0?'#e8f5e9':(err?'#fce4ec':'#f5f5f5');
-  st.style.color=novos>0?'#1b5e20':(err?'#c62828':'#666');
-  var avisoExtra = (window._djLastLog && window._djLastLog.length) ? '<br><details style="font-size:10px;margin-top:4px"><summary style="cursor:pointer;color:#aaa">Detalhes do servidor</summary><pre style="white-space:pre-wrap;font-size:10px;color:#666">'+window._djLastLog.join('\n')+'</pre></details>' : '';
-  if(novos===0 && err && err!==null && String(err).indexOf('null')===0){
-    djMostrarAvisoCors(st);
-    return;
+  if(g('djn-data'))g('djn-data').value=hoje;
+  if(g('djn-proc'))g('djn-proc').value='';
+  if(g('djn-texto'))g('djn-texto').value='';
+  if(g('djn-trib'))g('djn-trib').value='';
+  if(g('djn-tipo'))g('djn-tipo').value='';
+  if(g('djn-link'))g('djn-link').value='';
+  if(g('djn-prazo'))g('djn-prazo').value='';
+  if(g('djn-area'))g('djn-area').value='civil';
+  if(g('djn-notif-bar'))g('djn-notif-bar').style.display='none';
+  // Popular responsaveis
+  var sel=g('djn-resp');
+  if(sel){
+    sel.innerHTML='<option value="">-- Sem delegacao --</option>';
+    eqGetEquipe().forEach(function(u){ sel.innerHTML+='<option value="'+u.id+'|'+u.nome+'">'+u.nome+'</option>'; });
   }
-  if(novos===0 && err){
-    // Erro real - mostrar mensagem mas tambem opçao manual
-    st.style.display='block';
-    st.style.background='#fff3e0';
-    st.style.color='#e65100';
-    st.innerHTML='<b>Sem publicacoes encontradas</b> no periodo '+label+'.'
-      +' <button class="btn" style="font-size:11px;margin-left:6px" onclick="djAbrirEntradaManual()">+ Inserir manual</button>'
-      +' <button class="btn" style="font-size:11px;margin-left:4px" onclick="djTestarConexao()">Testar conexao</button>';
-    return;
-  }
-  st.innerHTML=(novos>0?'<strong>'+novos+' nova(s) publicacao(oes)</strong> encontrada(s).'
-    :(err?'<b>Erro:</b> '+err
-    :'Nenhuma publicacao encontrada para '+label+'.'))
-    +' <span style="color:#aaa;font-size:11px">Consulta: '+label+' -- '+new Date().toLocaleString('pt-BR')+'</span>'
-    +(novos===0?' &nbsp;<button class="btn" style="font-size:11px" onclick="djAbrirEntradaManual()">+ Inserir manualmente</button>':'');
-  // Salvar ultima busca
-  est['_djen_ultima']={data:data,ts:new Date().toISOString(),total:pubs.length,novos:novos};
-  saveEst();
-  djListar();
-  // Alert if new ones have tight deadlines
-  var urgentes=lista.filter(function(p){return p.status==='pendente'&&djDiasRestantes(p)>=0&&djDiasRestantes(p)<=3;});
-  if(urgentes.length>0){
-    setTimeout(function(){
-      alert('ATENCAO: '+urgentes.length+' publicacao(oes) com prazo vencendo em 3 dias ou menos!');
-    },500);
-  }
+  g('dj-nova-modal').style.display='flex';
+  setTimeout(function(){if(g('djn-proc'))g('djn-proc').focus();},100);
 }
 
-// -- Prazo inteligente: detecta datas no texto -------------
-function djExtrairPrazo(txt){
-  if(!txt)return null;
-  // Match DD/MM/YYYY or YYYY-MM-DD
-  var m=txt.match(/prazo[^0-9]{0,20}(\d{2}\/\d{2}\/\d{4})/i)
-    ||txt.match(/(\d{2}\/\d{2}\/\d{4})[^0-9]{0,20}prazo/i)
-    ||txt.match(/intimar[^0-9]{0,30}(\d{2}\/\d{2}\/\d{4})/i)
-    ||txt.match(/manifestar[^0-9]{0,30}(\d{2}\/\d{2}\/\d{4})/i)
-    ||txt.match(/responder[^0-9]{0,30}(\d{2}\/\d{2}\/\d{4})/i)
-    ||txt.match(/(\d{2})\/(\d{2})\/(\d{4})/);
-  if(!m)return null;
-  var dm=m[1]||m[0];
-  var parts=dm.split('/');
-  if(parts.length===3){
-    var dt=new Date(parts[2]+'-'+parts[1]+'-'+parts[0]+'T12:00:00');
-    if(!isNaN(dt)&&dt>new Date())return dt.toISOString().split('T')[0];
-  }
-  return null;
+function djnAtualizarNotif(){
+  var sel=g('djn-resp'); if(!sel)return;
+  var parts=(sel.value||'').split('|'); var respId=parts[0];
+  var equipe=eqGetEquipe(); var resp=equipe.find(function(u){return u.id===respId;});
+  if(g('djn-notif-bar'))g('djn-notif-bar').style.display=(resp&&resp.tel)?'block':'none';
 }
 
-function djDiasRestantes(p){
-  if(!p.prazoInterno)return 999;
-  var d=new Date(p.prazoInterno+'T23:59:59');
-  return Math.ceil((d-new Date())/86400000);
-}
-
-// -- LISTAR publicacoes ------------------------------------
-function djListar(){
-  djStats();
-  var lista=djGetLista();
-  var filtAdv=g('dj-filtro-adv')&&g('dj-filtro-adv').value||'todos';
-  var filtArea=g('dj-filtro-area')&&g('dj-filtro-area').value||'todos';
-  var filtStatus=g('dj-filtro-status')&&g('dj-filtro-status').value||'ativos';
-  var busca=(g('dj-busca-txt')&&g('dj-busca-txt').value||'').toLowerCase();
-  var hist=g('dj-mostrar-hist')&&g('dj-mostrar-hist').checked;
-
-  lista=lista.filter(function(p){
-    if(filtAdv!=='todos'&&p.oab!==filtAdv)return false;
-    if(filtArea!=='todos'&&p.area!==filtArea)return false;
-    if(filtStatus==='ativos'&&(p.status==='cumprido'||p.status==='ignorado'))return false;
-    if(filtStatus==='pendente'&&p.status!=='pendente')return false;
-    if(filtStatus==='delegado'&&p.status!=='delegado')return false;
-    if(filtStatus==='cumprido'&&p.status!=='cumprido')return false;
-    if(filtStatus==='ignorado'&&p.status!=='ignorado')return false;
-    if(busca&&(p.texto||'').toLowerCase().indexOf(busca)<0
-      &&(p.numeroProcesso||'').indexOf(busca)<0
-      &&(p.nomeParte||'').toLowerCase().indexOf(busca)<0)return false;
-    return true;
-  });
-
-  // Sort: urgentes primeiro
-  lista.sort(function(a,b){
-    var prA=djDiasRestantes(a),prB=djDiasRestantes(b);
-    if(a.status!==b.status){
-      var ord={pendente:0,delegado:1,cumprido:2,ignorado:3};
-      return (ord[a.status]||0)-(ord[b.status]||0);
-    }
-    return prA-prB;
-  });
-
-  var el=g('dj-lista');
-  if(!el)return;
-  if(!lista.length){
-    el.innerHTML='<div style="padding:30px;text-align:center;color:#bbb;font-size:13px">'
-      +(djGetLista().length===0
-        ?'Nenhuma publicacao carregada. Clique em "Buscar publicacoes de hoje" para consultar o DJEN.'
-        :'Nenhuma publicacao com os filtros selecionados.')
-      +'</div>';
-    return;
-  }
-
-  var html='';
-  lista.forEach(function(p){
-    var dias=djDiasRestantes(p);
-    var vencido=p.prazoInterno&&dias<0;
-    var urgente=p.prazoInterno&&dias>=0&&dias<=3;
-    var cls='dj-card '+(p.area==='penal'?'penal':'');
-    if(p.status==='cumprido')cls+=' cumprido';
-    if(p.status==='ignorado')cls+=' ignorado';
-    if(urgente||vencido)cls+=' alerta';
-
-    html+='<div class="'+cls+'">';
-
-    // Header
-    html+='<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:6px">';
-    html+='<div style="flex:1">';
-    html+='<div style="font-size:12px;font-weight:700;color:#1a1a1a;margin-bottom:4px">'
-      +(p.numeroProcesso?'<span style="font-family:monospace;background:#f0ede8;padding:1px 5px;border-radius:4px">'+p.numeroProcesso+'</span> ':'')
-      +(p.nomeParte?p.nomeParte:'')
-      +'</div>';
-    html+='<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:4px">';
-    html+='<span class="dj-tag '+(p.area==='penal'?'dj-penal':'dj-civil')+'">'+(p.area==='penal'?'PENAL':'CIVIL')+'</span>';
-    html+='<span class="dj-tag" style="background:#f5f4f0;color:#666">'+(p.siglaTribunal||'PJe')+'</span>';
-    html+='<span class="dj-tag" style="background:#f5f4f0;color:#999">OAB '+p.oab+'/SP</span>';
-    if(p.tipoDoDocumento)html+='<span class="dj-tag" style="background:#e8f5e9;color:#2e7d32">'+p.tipoDoDocumento+'</span>';
-    if(p.status==='delegado')html+='<span class="dj-tag" style="background:#fff3e0;color:#e65100">Delegado: '+p.delegadoNome+'</span>';
-    if(p.status==='cumprido')html+='<span class="dj-tag" style="background:#e8f5e9;color:#2e7d32">Cumprido '+new Date(p.cumpridoEm).toLocaleDateString('pt-BR')+'</span>';
-    if(p.status==='ignorado')html+='<span class="dj-tag" style="background:#f5f4f0;color:#aaa">Ignorado</span>';
-    html+='</div>';
-
-    // Datas
-    html+='<div style="font-size:10px;color:#aaa">Publicado: '+p.dataPub+(p.dataBusca?' &middot; Capturado: '+new Date(p.dataBusca).toLocaleString('pt-BR'):'')+'</div>';
-    html+='</div>';
-
-    // Prazo badge
-    if(p.prazoInterno){
-      var prazoLabel=vencido?'VENCIDO':(dias===0?'VENCE HOJE':(dias===1?'1 DIA':dias+' DIAS'));
-      var prBg=vencido?'#c62828':(urgente?'#e65100':'#2e7d32');
-      html+='<div style="text-align:right;flex-shrink:0">'
-        +'<div style="background:'+prBg+';color:#fff;border-radius:8px;padding:4px 10px;font-size:11px;font-weight:700">'+prazoLabel+'</div>'
-        +'<div style="font-size:10px;color:#aaa;margin-top:2px">'+new Date(p.prazoInterno+'T12:00:00').toLocaleDateString('pt-BR')+'</div>'
-        +'</div>';
-    }
-    html+='</div>';
-
-    // Texto resumido
-    if(p.texto){
-      var resumo=p.texto.length>300?p.texto.substring(0,300)+'...':p.texto;
-      html+='<div style="font-size:11px;color:#444;line-height:1.5;background:#f8f7f3;border-radius:6px;padding:8px;margin-bottom:8px;cursor:pointer" '
-        +'data-id="'+p.id+'" onclick="djVerDetalhe(this.dataset.id)">'+resumo+'</div>';
-    }
-
-    // Obs delegacao
-    if(p.delegadoObs)html+='<div style="font-size:11px;color:#e65100;margin-bottom:6px;padding:5px 8px;background:#fff3e0;border-radius:6px"><b>Obs:</b> '+p.delegadoObs+'</div>';
-
-    // Acoes
-    if(p.status!=='cumprido'&&p.status!=='ignorado'){
-      html+='<div style="display:flex;gap:5px;flex-wrap:wrap">';
-      html+='<button class="btn btng" style="font-size:11px;padding:3px 8px" data-id="'+p.id+'" onclick="djCumprir(this.dataset.id)">&#10003; Cumprida</button>';
-      html+='<button class="btn" style="font-size:11px;padding:3px 8px;background:#e3f2fd;border-color:#90caf9;color:#1565c0" data-id="'+p.id+'" onclick="djAbrirDelegacao(this.dataset.id)">&#128101; Delegar</button>';
-      if(p.prazoInterno){
-        html+='<button class="btn" style="font-size:11px;padding:3px 8px" data-id="'+p.id+'" onclick="djEditarPrazo(this.dataset.id)">&#128197; Prazo</button>';
-      } else {
-        html+='<button class="btn" style="font-size:11px;padding:3px 8px" data-id="'+p.id+'" onclick="djEditarPrazo(this.dataset.id)">+ Prazo</button>';
-      }
-      html+='<button class="btn" style="font-size:11px;padding:3px 8px" data-id="'+p.id+'" onclick="djVerDetalhe(this.dataset.id)">&#128196; Ver completo</button>';
-      if(p.linkTribunal)html+='<a href="'+p.linkTribunal+'" target="_blank" class="btn" style="font-size:11px;padding:3px 8px;text-decoration:none">&#127758; Tribunal</a>';
-      html+='<button class="btn" style="font-size:11px;padding:3px 6px;color:#aaa" data-id="'+p.id+'" onclick="djIgnorar(this.dataset.id)">Ignorar</button>';
-      html+='<button class="btn" style="font-size:11px;padding:3px 6px;background:#fce4ec;border-color:#f8bbd0;color:#c62828" data-id="'+p.id+'" onclick="djExcluir(this.dataset.id)">&#10005;</button>';
-      html+='</div>';
-    } else {
-      html+='<div style="display:flex;gap:5px">';
-      html+='<button class="btn" style="font-size:11px;padding:3px 8px" data-id="'+p.id+'" onclick="djReabrir(this.dataset.id)">Reabrir</button>';
-      html+='<button class="btn" style="font-size:11px;padding:3px 8px" data-id="'+p.id+'" onclick="djVerDetalhe(this.dataset.id)">&#128196; Ver</button>';
-      html+='<button class="btn" style="font-size:11px;padding:3px 6px;background:#fce4ec;border-color:#f8bbd0;color:#c62828" data-id="'+p.id+'" onclick="djExcluir(this.dataset.id)">&#10005;</button>';
-      html+='</div>';
-    }
-    html+='</div>';
-  });
-  el.innerHTML=html;
-}
-
-function djAbrirPjeLinks(){
-  g('dj-cors-modal').style.display='flex';
-}
-function djAbrirPjeAdvogado(oab, nome){
-  var ini = g('dj-ini')&&g('dj-ini').value || new Date().toISOString().split('T')[0];
-  var fim = g('dj-fim')&&g('dj-fim').value || ini;
-  // Convert AAAA-MM-DD to DD/MM/AAAA for PJe URL
-  function fmt(d){ if(!d)return''; var p=d.split('-'); return p[2]+'/'+p[1]+'/'+p[0]; }
-  var url = 'https://comunica.pje.jus.br/consulta'
-    + '?dataDisponibilizacaoInicio=' + ini
-    + '&dataDisponibilizacaoFim=' + fim
-    + '&numeroOab=' + oab + '&ufOab=SP';
-  window.open(url, '_blank');
-}
-function djTestarConexao(){
-  var url=SCRIPT+'?action=djen&oab=425910&uf=SP&ini=2026-05-14&fim=2026-05-16';
-  alert('Testando conexao... Abra o console (F12) para ver o resultado.\n\nURL: '+url);
-  var xhr=new XMLHttpRequest();
-  xhr.open('GET',url,true);
-  xhr.onload=function(){
-    console.log('TESTE DJEN - HTTP:',xhr.status);
-    console.log('TESTE DJEN - URL final:',xhr.responseURL);
-    console.log('TESTE DJEN - Resposta:',xhr.responseText.substring(0,500));
-    try{
-      var d=JSON.parse(xhr.responseText);
-      alert('Apps Script respondeu:\nOK: '+d.ok+'\nTotal publicacoes: '+(Array.isArray(d.data)?d.data.length:'?')+'\nAviso: '+(d.aviso||'-')+'\nErros: '+(d.erros&&d.erros.length?d.erros.join(', '):'-'));
-    }catch(e){
-      alert('Resposta nao e JSON:\n'+xhr.responseText.substring(0,300));
-    }
-  };
-  xhr.onerror=function(){ alert('Erro de conexao com Apps Script. Verifique o console (F12).'); };
-  xhr.send();
-}
-function djAbrirAjudaCors(){
-  g('dj-cors-modal').style.display='flex';
-}
-function djAbrirEntradaManual(){
-  g('dj-cors-modal').style.display='none';
-  var hoje=new Date().toISOString().split('T')[0];
-  if(g('djm-data'))g('djm-data').value=hoje;
-  if(g('djm-proc'))g('djm-proc').value='';
-  if(g('djm-texto'))g('djm-texto').value='';
-  if(g('djm-trib'))g('djm-trib').value='';
-  if(g('djm-tipo'))g('djm-tipo').value='';
-  if(g('djm-link'))g('djm-link').value='';
-  g('dj-manual-modal').style.display='flex';
-}
-function djSalvarManual(){
-  var proc=(g('djm-proc')&&g('djm-proc').value||'').trim();
-  var texto=(g('djm-texto')&&g('djm-texto').value||'').trim();
-  if(!proc&&!texto){alert('Informe ao menos o numero do processo ou o texto.');return;}
-  var oab=g('djm-adv')&&g('djm-adv').value||'425910';
-  var data=g('djm-data')&&g('djm-data').value||new Date().toISOString().split('T')[0];
+function djSalvarNova(){
+  var texto=(g('djn-texto')&&g('djn-texto').value||'').trim();
+  var proc=(g('djn-proc')&&g('djn-proc').value||'').trim();
+  if(!texto&&!proc){alert('Informe ao menos o numero do processo ou a descricao.');return;}
+  var oab=g('djn-adv')&&g('djn-adv').value||'425910';
+  var data=g('djn-data')&&g('djn-data').value||new Date().toISOString().split('T')[0];
+  var prazo=g('djn-prazo')&&g('djn-prazo').value||'';
+  var area=g('djn-area')&&g('djn-area').value||djArea(texto);
+  var selVal=g('djn-resp')&&g('djn-resp').value||'';
+  var parts=selVal.split('|'); var respId=parts[0]||''; var respNome=parts[1]||'';
   var pub={
-    id:'manual_'+Date.now()+'_'+Math.random().toString(36).substr(2,5),
+    id:'dj_'+Date.now()+'_'+Math.random().toString(36).substr(2,5),
     numeroProcesso:proc,
     nomeParte:'',
     texto:texto,
-    tipoDoDocumento:g('djm-tipo')&&g('djm-tipo').value||'',
-    siglaTribunal:g('djm-trib')&&g('djm-trib').value||'PJe',
-    linkTribunal:g('djm-link')&&g('djm-link').value||'',
+    tipoDoDocumento:g('djn-tipo')&&g('djn-tipo').value||'',
+    siglaTribunal:g('djn-trib')&&g('djn-trib').value||'PJe',
+    linkTribunal:g('djn-link')&&g('djn-link').value||'',
     oab:oab, uf:'SP',
-    dataDisponibilizacao:data,
-    status:'pendente',
-    area:djArea(texto+' '+(g('djm-trib')&&g('djm-trib').value||'')),
-    dataBusca:new Date().toISOString(),
+    area:area,
     dataPub:data,
-    manual:true
+    dataLancamento:new Date().toISOString(),
+    lancadoPor:eqUsuarioAtual?eqUsuarioAtual.nome:'',
+    status: respId?'delegado':'pendente',
+    delegadoId:respId, delegadoNome:respNome,
+    prazoInterno:prazo,
+    delegadoObs:texto
   };
   var lista=djGetLista();
   lista.push(pub);
   djSaveLista(lista);
-  g('dj-manual-modal').style.display='none';
+  g('dj-nova-modal').style.display='none';
   djListar();
-  alert('Publicacao inserida com sucesso!');
+  // Notificar por WhatsApp
+  if(respId&&respNome){
+    var equipe=eqGetEquipe();
+    var resp=equipe.find(function(u){return u.id===respId;});
+    if(resp&&resp.tel){
+      var tel=resp.tel.replace(/[^0-9]/g,''); if(tel.length===11)tel='55'+tel;
+      var quem=eqUsuarioAtual?eqUsuarioAtual.nome.split(' ')[0]:'Escritorio';
+      var msg=quem+' delegou uma publicacao do DJEN: '+(proc||'')+(g('djn-trib')&&g('djn-trib').value?' - '+g('djn-trib').value:'')+' - '+texto+(prazo?' - Prazo: '+new Date(prazo+'T12:00:00').toLocaleDateString('pt-BR'):'')+' - Gadiani Advogados';
+      if(confirm('Enviar notificacao para '+respNome+' via WhatsApp?'))
+        window.open('https://wa.me/'+tel+'?text='+encodeURIComponent(msg),'_blank');
+    }
+  }
 }
 
-// Mostrar aviso CORS no status quando busca falhar
-function djMostrarAvisoCors(st){
-  st.style.display='block';
-  st.style.background='#fff3e0';
-  st.style.color='#e65100';
-  st.innerHTML='<b>Nao foi possivel buscar automaticamente.</b> O PJe bloqueia acesso externo ao sistema.'
-    +' <button class="btn" style="font-size:11px;margin-left:6px" onclick="djAbrirPjeLinks()">&#127758; Abrir PJe e importar</button>'
-    +' <button class="btn" style="font-size:11px;margin-left:4px" onclick="djAbrirEntradaManual()">+ Inserir manual</button>';
-}
 
 function djStats(){
   var lista=djGetLista();
@@ -5451,18 +5136,6 @@ function djVerDetalhe(id){
 }
 
 // Verificacao automatica 2x ao dia (8h e 18h)
-function djAgendarVerificacao(){
-  var agora=new Date();
-  var horas=agora.getHours();
-  var ult=est['_djen_ultima'];
-  var ultDia=ult?ult.data:'';
-  var hoje=agora.toISOString().split('T')[0];
-  // Busca automatica se nao buscou hoje ainda e for horario comercial
-  if(ultDia!==hoje&&horas>=8&&horas<=20){
-    console.log('DJEN: ultima busca foi '+ultDia+', hoje e '+hoje);
-    // Nao dispara automaticamente - usuario busca manualmente no modulo DJEN
-  }
-}
 
 
 // ============================================================
