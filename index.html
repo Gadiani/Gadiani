@@ -176,7 +176,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#1a1a1a}
   </div>
 </div>
 
-<div class="mod-tabs" style="grid-template-columns:1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr">
+<div class="mod-tabs" style="grid-template-columns:1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr">
   <button class="mod-btn on" id="mb-dash" onclick="setMod('dash')">
     <div class="mod-icon">&#9776;</div>
     <div class="mod-title">Meu Dia</div>
@@ -216,6 +216,11 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#1a1a1a}
     <div class="mod-icon">&#9878;</div>
     <div class="mod-title">DJEN</div>
     <div class="mod-sub" id="mb-dj-badge">Publicacoes diarias</div>
+  </button>
+  <button class="mod-btn" id="mb-proc" onclick="setMod('proc')">
+    <div class="mod-icon">&#128203;</div>
+    <div class="mod-title">Processos</div>
+    <div class="mod-sub" id="mb-proc-badge">Todos os processos</div>
   </button>
 </div>
 
@@ -344,6 +349,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#1a1a1a}
     <button id="dn6" onclick="swDI(6)">Protocolo</button>
     <button id="dn7" onclick="swDI(7)">CRM</button>
     <button id="dn8" onclick="swDI(8)" style="background:#e8f5e9;color:#1b5e20;font-weight:600">&#128230; Arquivos</button>
+    <button id="dn9" onclick="swDI(9)">Excluidos</button>
   </nav>
 
   <div id="dp0" class="pg on">
@@ -606,6 +612,15 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#1a1a1a}
     </div>
   </div>
 </div>
+
+  <div id="dp9" class="pg">
+    <div class="card">
+      <div class="ct" style="margin-bottom:10px">Leads Excluidos &mdash; Desconto Indevido</div>
+      <div style="font-size:12px;color:#aaa;margin-bottom:12px">Clientes removidos da fila. Registro para consulta futura.</div>
+      <input id="di-exc-busca" placeholder="Buscar por nome ou CPF..." style="font-size:11px;padding:6px 10px;margin-bottom:12px;width:100%" oninput="diExcListar()">
+      <div id="di-exc-lista"></div>
+    </div>
+  </div>
 
   <div id="dp8" class="pg">
     <div class="card">
@@ -968,6 +983,118 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#1a1a1a}
 </div>
 
 
+<!-- Processos -->
+<div id="mod-proc" style="display:none">
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+      <div>
+        <div class="ct" style="margin-bottom:4px">Processos do Escritorio</div>
+        <span id="proc-resumo" style="font-size:11px;color:#aaa"></span>
+      </div>
+      <button class="btn btnp" style="font-size:12px" onclick="procNovo()">+ Novo processo</button>
+    </div>
+
+    <!-- Stats por tipo -->
+    <div id="proc-stats" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px"></div>
+
+    <!-- Filtros -->
+    <div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap">
+      <select id="proc-filtro-tipo" onchange="procListar()" style="font-size:11px;padding:4px 8px">
+        <option value="todos">Todos os tipos</option>
+        <option value="di">Desconto Indevido</option>
+        <option value="neg">Negativacao Indevida</option>
+        <option value="se">Superendividamento</option>
+        <option value="criminal">Criminal</option>
+        <option value="busca">Busca e Apreensao</option>
+        <option value="veiculo">Revisao de Veiculo</option>
+        <option value="contrato">Revisao de Contrato</option>
+        <option value="aeroportuario">Aeroportuario</option>
+        <option value="outro">Outro</option>
+      </select>
+      <select id="proc-filtro-status" onchange="procListar()" style="font-size:11px;padding:4px 8px">
+        <option value="ativo">Ativos</option>
+        <option value="todos">Todos</option>
+        <option value="arquivado">Arquivados</option>
+      </select>
+      <input id="proc-busca" placeholder="Buscar numero, cliente ou tribunal..." style="font-size:11px;padding:4px 8px;flex:1;min-width:160px" oninput="procListar()">
+      <button class="btn" style="font-size:11px" onclick="procListar()">&#8635;</button>
+    </div>
+
+    <div id="proc-lista"></div>
+  </div>
+
+  <!-- Modal novo processo -->
+  <div id="proc-modal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:2000;align-items:flex-start;justify-content:center;overflow-y:auto;padding:20px 0">
+    <div style="background:#fff;border-radius:14px;padding:24px;max-width:520px;width:92%;margin:auto">
+      <div style="font-size:16px;font-weight:700;margin-bottom:16px" id="proc-modal-titulo">Novo Processo</div>
+
+      <label>Numero do processo (CNJ) *</label>
+      <input id="proc-num" placeholder="Ex: 1234567-89.2024.8.26.0100" style="margin-bottom:8px">
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+        <div>
+          <label>Tipo de acao *</label>
+          <select id="proc-tipo">
+            <option value="di">Desconto Indevido</option>
+            <option value="neg">Negativacao Indevida</option>
+            <option value="se">Superendividamento</option>
+            <option value="criminal">Criminal</option>
+            <option value="busca">Busca e Apreensao</option>
+            <option value="veiculo">Revisao de Veiculo</option>
+            <option value="contrato">Revisao de Contrato</option>
+            <option value="aeroportuario">Aeroportuario</option>
+            <option value="outro">Outro</option>
+          </select>
+        </div>
+        <div>
+          <label>Status</label>
+          <select id="proc-status-sel">
+            <option value="ativo">Ativo</option>
+            <option value="arquivado">Arquivado</option>
+          </select>
+        </div>
+      </div>
+
+      <label>Cliente</label>
+      <input id="proc-cliente" placeholder="Nome do cliente" style="margin-bottom:8px">
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+        <div>
+          <label>Tribunal / Vara</label>
+          <input id="proc-trib" placeholder="Ex: TJSP - 3a Vara Civel">
+        </div>
+        <div>
+          <label>Advogado responsavel</label>
+          <select id="proc-adv">
+            <option value="425910">Dr. Augusto (425910/SP)</option>
+            <option value="500799">Dr. Ari (500799/SP)</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+        <div>
+          <label>Data de protocolo</label>
+          <input type="date" id="proc-data">
+        </div>
+        <div>
+          <label>Valor da causa</label>
+          <input id="proc-valor" placeholder="R$ 0,00">
+        </div>
+      </div>
+
+      <label>Observacoes</label>
+      <textarea id="proc-obs" style="min-height:60px;margin-bottom:14px" placeholder="Informacoes adicionais..."></textarea>
+
+      <div style="display:flex;gap:8px;justify-content:flex-end">
+        <button class="btn" onclick="g('proc-modal').style.display='none'">Cancelar</button>
+        <button class="btn btng" onclick="procSalvar()">Salvar processo</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
 <!-- Avulsos -->
 <div id="mod-av" style="display:none">
   <div class="card">
@@ -1083,7 +1210,11 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#1a1a1a}
         <div class="ct" style="margin-bottom:4px">Publicacoes DJEN</div>
         <span id="dj-resumo" style="font-size:11px;color:#aaa"></span>
       </div>
-      <button class="btn btnp" style="font-size:12px;padding:8px 16px" onclick="djNovaPublicacao()">+ Nova publicacao</button>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <button class="btn btnp" style="font-size:12px;padding:8px 16px" onclick="djNovaPublicacao()">+ Nova publicacao</button>
+        <a href="https://comunica.pje.jus.br/consulta?numeroOab=425910&ufOab=SP" target="_blank" class="btn" style="font-size:11px;padding:6px 12px;text-decoration:none;background:#e3f2fd;border-color:#90caf9;color:#1565c0">&#127758; DJEN Augusto</a>
+        <a href="https://comunica.pje.jus.br/consulta?numeroOab=500799&ufOab=SP" target="_blank" class="btn" style="font-size:11px;padding:6px 12px;text-decoration:none;background:#f3e5f5;border-color:#ce93d8;color:#6a1b9a">&#127758; DJEN Ari</a>
+      </div>
     </div>
     <div id="dj-stats" style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr;gap:8px;margin-bottom:12px"></div>
     <div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap;align-items:center">
@@ -2577,6 +2708,9 @@ function setMod(m){
   if(m==='av'){avPopularFiltroResp();avListar();}
   if(g('mod-av'))g('mod-av').style.display=m==='av'?'block':'none';
   if(g('mb-av'))g('mb-av').className='mod-btn'+(m==='av'?' on':'');
+  if(g('mod-proc'))g('mod-proc').style.display=m==='proc'?'block':'none';
+  if(g('mb-proc'))g('mb-proc').className='mod-btn'+(m==='proc'?' on':'');
+  if(m==='proc'){procListar();}
   if(g('mod-dj'))g('mod-dj').style.display=m==='dj'?'block':'none';
   if(g('mb-dj'))g('mb-dj').className='mod-btn'+(m==='dj'?' on':'');
   if(m==='dj'){
@@ -2585,7 +2719,7 @@ function setMod(m){
     setTimeout(function(){if(g('dj-ini')&&!g('dj-ini').value)g('dj-ini').value=hoje;if(g('dj-fim')&&!g('dj-fim').value)g('dj-fim').value=hoje;},50);
   }
 }
-function swDI(n){var i;for(i=0;i<9;i++){if(g('dp'+i))g('dp'+i).className='pg'+(i===n?' on':'');if(g('dn'+i))g('dn'+i).className=i===n?'on':'';}if(n===3)drivePopSel();if(n===8){var v=g('di-sel-doc')&&g('di-sel-doc').value;if(v)diArqAbrir(v);}}
+function swDI(n){var i;for(i=0;i<10;i++){if(g('dp'+i))g('dp'+i).className='pg'+(i===n?' on':'');if(g('dn'+i))g('dn'+i).className=i===n?'on':'';}if(n===3)drivePopSel();if(n===8){var v=g('di-sel-doc')&&g('di-sel-doc').value;if(v)diArqAbrir(v);}}
 function swSE(n){var i;for(i=0;i<11;i++){var sp=g('sp'+i);var sn=g('sn'+i);if(sp)sp.className='pg'+(i===n?' on':'');if(sn)sn.className=i===n?'on':'';}if(n===2&&seC.length>0)seListarPend();if(n===9){var v=g('se-arq-sel')&&g('se-arq-sel').value;if(v)seArqAbrir(v);}}
 
 function diLoad(){
@@ -3425,6 +3559,22 @@ function driveMarcar(el,cid,did){
 }
 
 // SE
+function seDriveLimparCache(id){
+  var e=getE(id);
+  delete e.drivePastaId;
+  saveEst();
+  var sel=g('se-drive-sel');
+  if(sel&&sel.value){
+    var cl=seC.find(function(x){return x.id===id;});
+    if(cl){
+      var st=g('se-drive-status');
+      st.style.display='block';
+      st.innerHTML='Rebuscando pasta de '+cl.nome+'...';
+      if(g('se-drive-lista'))g('se-drive-lista').innerHTML='';
+      seDriveBuscarCliente(cl,id);
+    }
+  }
+}
 function seDriveBuscar(){
   var id=g('se-drive-sel').value;
   if(!id){alert('Selecione um cliente.');return;}
@@ -3445,9 +3595,12 @@ function seDriveBuscar(){
 
 function seDriveBuscarCliente(cl,id){
   var st=g('se-drive-status');
+  // Sempre rebusca para garantir pasta correta
   var pastaId=getE(id).drivePastaId;
   if(pastaId){
-    st.textContent='Pasta em cache. Listando arquivos...';
+    st.style.display='block';
+    st.innerHTML='Pasta em cache: <b>'+pastaId+'</b>. '
+    st.innerHTML='Pasta em cache. <button class="btn" style="font-size:10px;padding:2px 6px;margin-left:6px" data-id="'+id+'" onclick="seDriveLimparCache(this.dataset.id)">Rebuscar</button>';
     seDriveListar(pastaId,id);
     return;
   }
@@ -5544,8 +5697,249 @@ function dashAtualizarBadge() {
   else { badge.textContent = 'Tudo em dia!'; badge.style.color = '#2e7d32'; }
 }
 
+
+// ============================================================
+// EXCLUIDOS - historico de leads descartados
+// ============================================================
+function diExcListar(){
+  var hist=(est['_excluidos']||[]).filter(function(x){return x.tipo==='DI';});
+  var busca=(g('di-exc-busca')&&g('di-exc-busca').value||'').toLowerCase();
+  if(busca) hist=hist.filter(function(x){return (x.nome||'').toLowerCase().indexOf(busca)>=0||(x.cpf||'').indexOf(busca)>=0;});
+  hist.sort(function(a,b){return new Date(b.dataExclusao)-new Date(a.dataExclusao);});
+  var el=g('di-exc-lista'); if(!el)return;
+  if(!hist.length){el.innerHTML='<div style="padding:20px;text-align:center;color:#bbb;font-size:13px">Nenhum lead excluido registrado.</div>';return;}
+  var html='';
+  hist.forEach(function(x){
+    html+='<div style="padding:10px 0;border-bottom:1px solid #f0ede8;display:flex;align-items:center;gap:12px">'
+      +'<div style="flex:1">'
+      +'<div style="font-size:13px;font-weight:600">'+(x.nome||'(sem nome)')+'</div>'
+      +'<div style="font-size:11px;color:#aaa">CPF: '+(x.cpf||'-')+' &middot; Tel: '+(x.tel||'-')+'</div>'
+      +'<div style="font-size:11px;color:#aaa">Entrada: '+(x.dataEntrada?new Date(x.dataEntrada+'T12:00:00').toLocaleDateString('pt-BR'):'-')+' &middot; Excluido: '+new Date(x.dataExclusao).toLocaleDateString('pt-BR')+(x.excluidoPor?' por '+x.excluidoPor:'')+'</div>'
+      +'</div>'
+      +(x.tel?'<a href="https://wa.me/55'+x.tel.replace(/\D/g,'')+'" target="_blank" class="btn btnw" style="font-size:11px;padding:3px 8px;text-decoration:none">WA</a>':'')
+      +'</div>';
+  });
+  el.innerHTML=html;
+}
+
+// ============================================================
+// PROCESSOS - lista de todos os processos do escritorio
+// ============================================================
+var PROC_TIPOS = {
+  di:'Desconto Indevido', neg:'Negativacao Indevida', se:'Superendividamento',
+  criminal:'Criminal', busca:'Busca e Apreensao', veiculo:'Revisao de Veiculo',
+  contrato:'Revisao de Contrato', aeroportuario:'Aeroportuario', outro:'Outro'
+};
+var PROC_CORES = {
+  di:'#1565c0', neg:'#6a1b9a', se:'#2e7d32', criminal:'#c62828',
+  busca:'#e65100', veiculo:'#00695c', contrato:'#4527a0', aeroportuario:'#0277bd', outro:'#555'
+};
+var procEditandoId = null;
+
+function procGetLista(){ return est['_processos']||[]; }
+function procSaveLista(l){ est['_processos']=l; saveEst(); }
+
+// Auto-adicionar quando DI ou SE for protocolado
+function procAdicionarAuto(tipo, numProc, cliente, trib, adv, valor){
+  var lista = procGetLista();
+  if(lista.find(function(p){return p.numero===numProc;})) return; // ja existe
+  lista.push({
+    id: 'proc_'+Date.now(),
+    numero: numProc,
+    tipo: tipo,
+    cliente: cliente,
+    tribunal: trib||'',
+    adv: adv||'425910',
+    valor: valor||'',
+    status: 'ativo',
+    dataCriacao: new Date().toISOString(),
+    obs: ''
+  });
+  procSaveLista(lista);
+}
+
+function procNovo(){
+  procEditandoId = null;
+  if(g('proc-modal-titulo')) g('proc-modal-titulo').textContent = 'Novo Processo';
+  if(g('proc-num'))    g('proc-num').value='';
+  if(g('proc-cliente'))g('proc-cliente').value='';
+  if(g('proc-trib'))   g('proc-trib').value='';
+  if(g('proc-obs'))    g('proc-obs').value='';
+  if(g('proc-valor'))  g('proc-valor').value='';
+  if(g('proc-tipo'))   g('proc-tipo').value='di';
+  if(g('proc-adv'))    g('proc-adv').value='425910';
+  if(g('proc-status-sel')) g('proc-status-sel').value='ativo';
+  if(g('proc-data'))   g('proc-data').value=new Date().toISOString().split('T')[0];
+  g('proc-modal').style.display='flex';
+  setTimeout(function(){if(g('proc-num'))g('proc-num').focus();},100);
+}
+
+function procEditar(id){
+  var lista=procGetLista();
+  var p=lista.find(function(x){return x.id===id;});
+  if(!p)return;
+  procEditandoId=id;
+  if(g('proc-modal-titulo')) g('proc-modal-titulo').textContent='Editar Processo';
+  if(g('proc-num'))    g('proc-num').value=p.numero||'';
+  if(g('proc-cliente'))g('proc-cliente').value=p.cliente||'';
+  if(g('proc-trib'))   g('proc-trib').value=p.tribunal||'';
+  if(g('proc-obs'))    g('proc-obs').value=p.obs||'';
+  if(g('proc-valor'))  g('proc-valor').value=p.valor||'';
+  if(g('proc-tipo'))   g('proc-tipo').value=p.tipo||'di';
+  if(g('proc-adv'))    g('proc-adv').value=p.adv||'425910';
+  if(g('proc-status-sel')) g('proc-status-sel').value=p.status||'ativo';
+  if(g('proc-data'))   g('proc-data').value=p.dataCriacao?p.dataCriacao.split('T')[0]:'';
+  g('proc-modal').style.display='flex';
+}
+
+function procSalvar(){
+  var num=(g('proc-num')&&g('proc-num').value||'').trim();
+  if(!num){alert('Informe o numero do processo.');return;}
+  var lista=procGetLista();
+  var proc={
+    id: procEditandoId||('proc_'+Date.now()),
+    numero: num,
+    tipo: g('proc-tipo')&&g('proc-tipo').value||'outro',
+    cliente: g('proc-cliente')&&g('proc-cliente').value||'',
+    tribunal: g('proc-trib')&&g('proc-trib').value||'',
+    adv: g('proc-adv')&&g('proc-adv').value||'425910',
+    valor: g('proc-valor')&&g('proc-valor').value||'',
+    status: g('proc-status-sel')&&g('proc-status-sel').value||'ativo',
+    dataCriacao: g('proc-data')&&g('proc-data').value ? g('proc-data').value+'T00:00:00.000Z' : new Date().toISOString(),
+    obs: g('proc-obs')&&g('proc-obs').value||''
+  };
+  if(procEditandoId){
+    var idx=lista.findIndex(function(x){return x.id===procEditandoId;});
+    if(idx>=0) lista[idx]=proc;
+  } else {
+    lista.push(proc);
+  }
+  procSaveLista(lista);
+  g('proc-modal').style.display='none';
+  procListar();
+}
+
+function procExcluir(id){
+  if(!confirm('Excluir este processo?'))return;
+  procSaveLista(procGetLista().filter(function(x){return x.id!==id;}));
+  procListar();
+}
+
+function procArquivar(id){
+  var lista=procGetLista();
+  var p=lista.find(function(x){return x.id===id;});
+  if(p){p.status=p.status==='arquivado'?'ativo':'arquivado';}
+  procSaveLista(lista);procListar();
+}
+
+function procStats(){
+  var lista=procGetLista().filter(function(p){return p.status==='ativo';});
+  var tipos={};
+  lista.forEach(function(p){tipos[p.tipo]=(tipos[p.tipo]||0)+1;});
+  var el=g('proc-stats');
+  if(!el)return;
+  var html='<span style="font-size:11px;color:#aaa;align-self:center">'+lista.length+' processos ativos:</span>';
+  Object.keys(tipos).sort().forEach(function(t){
+    var cor=PROC_CORES[t]||'#555';
+    html+='<span style="display:inline-flex;align-items:center;gap:4px;background:'+cor+'18;border:1px solid '+cor+'44;border-radius:20px;padding:3px 10px;font-size:11px;font-weight:600;color:'+cor+'">'
+      +(PROC_TIPOS[t]||t)+' <b>'+tipos[t]+'</b></span>';
+  });
+  if(g('proc-resumo')) g('proc-resumo').textContent='Total: '+procGetLista().length+' processos';
+  if(g('mb-proc-badge')) g('mb-proc-badge').textContent=lista.length+' ativo(s)';
+  el.innerHTML=html;
+}
+
+function procListar(){
+  procStats();
+  var lista=procGetLista();
+  var filtTipo=g('proc-filtro-tipo')&&g('proc-filtro-tipo').value||'todos';
+  var filtSt=g('proc-filtro-status')&&g('proc-filtro-status').value||'ativo';
+  var busca=(g('proc-busca')&&g('proc-busca').value||'').toLowerCase();
+
+  lista=lista.filter(function(p){
+    if(filtTipo!=='todos'&&p.tipo!==filtTipo)return false;
+    if(filtSt!=='todos'&&p.status!==filtSt)return false;
+    if(busca&&(p.numero||'').toLowerCase().indexOf(busca)<0
+      &&(p.cliente||'').toLowerCase().indexOf(busca)<0
+      &&(p.tribunal||'').toLowerCase().indexOf(busca)<0)return false;
+    return true;
+  });
+  lista.sort(function(a,b){return new Date(b.dataCriacao)-new Date(a.dataCriacao);});
+
+  var el=g('proc-lista');
+  if(!el)return;
+  if(!lista.length){
+    el.innerHTML='<div style="padding:30px;text-align:center;color:#bbb;font-size:13px">Nenhum processo. Clique em "+ Novo processo" para comecar.</div>';
+    return;
+  }
+
+  var html='<table style="width:100%;border-collapse:collapse;font-size:12px">'
+    +'<thead><tr style="background:#f8f7f3;font-weight:700">'
+    +'<th style="padding:8px;text-align:left;border-bottom:2px solid #e0ddd6">Processo</th>'
+    +'<th style="padding:8px;text-align:left;border-bottom:2px solid #e0ddd6">Cliente</th>'
+    +'<th style="padding:8px;text-align:left;border-bottom:2px solid #e0ddd6">Tipo</th>'
+    +'<th style="padding:8px;text-align:left;border-bottom:2px solid #e0ddd6">Tribunal</th>'
+    +'<th style="padding:8px;text-align:left;border-bottom:2px solid #e0ddd6">OAB</th>'
+    +'<th style="padding:8px;text-align:left;border-bottom:2px solid #e0ddd6">Data</th>'
+    +'<th style="padding:8px;text-align:center;border-bottom:2px solid #e0ddd6">Acoes</th>'
+    +'</tr></thead><tbody>';
+
+  lista.forEach(function(p){
+    var cor=PROC_CORES[p.tipo]||'#555';
+    var arquivado=p.status==='arquivado';
+    html+='<tr style="border-bottom:1px solid #f0ede8;'+(arquivado?'opacity:.5':'')+'">'
+      +'<td style="padding:8px;font-family:monospace;font-size:11px;font-weight:600">'+(p.numero||'-')+'</td>'
+      +'<td style="padding:8px">'+(p.cliente||'-')+'</td>'
+      +'<td style="padding:8px"><span style="background:'+cor+'18;color:'+cor+';border-radius:12px;padding:2px 8px;font-size:10px;font-weight:700">'+(PROC_TIPOS[p.tipo]||p.tipo||'-')+'</span></td>'
+      +'<td style="padding:8px;font-size:11px;color:#666">'+(p.tribunal||'-')+'</td>'
+      +'<td style="padding:8px;font-size:11px">'+(p.adv==='425910'?'Augusto':'Ari')+'</td>'
+      +'<td style="padding:8px;font-size:11px;color:#aaa">'+(p.dataCriacao?new Date(p.dataCriacao).toLocaleDateString('pt-BR'):'-')+'</td>'
+      +'<td style="padding:8px;text-align:center;white-space:nowrap">'
+      +'<button class="btn" style="font-size:10px;padding:2px 6px" data-id="'+p.id+'" onclick="procEditar(this.dataset.id)">&#9998;</button> '
+      +'<button class="btn" style="font-size:10px;padding:2px 6px;color:#e65100" data-id="'+p.id+'" onclick="procArquivar(this.dataset.id)">'+(arquivado?'Ativar':'Arquivar')+'</button> '
+      +'<button class="btn" style="font-size:10px;padding:2px 6px;color:#c62828" data-id="'+p.id+'" onclick="procExcluir(this.dataset.id)">&#10005;</button>'
+      +'</td></tr>';
+  });
+  html+='</tbody></table>';
+  el.innerHTML=html;
+}
+
+// ============================================================
+// CLIENTES EXCLUIDOS - historico de leads descartados
+// ============================================================
+function diExcluirParaHistorico(cid){
+  // Chamado ao excluir cliente DI - salva no historico
+  var cl=diC.find(function(x){return x.id===cid;});
+  if(!cl)return;
+  var hist=est['_excluidos']||[];
+  hist.push({
+    id:cid, nome:cl.nome||'', tipo:'DI', cpf:cl.cpf||'',
+    tel:cl.tel||'', email:cl.email||'', origem:cl.origem||'',
+    dataEntrada:cl.data||'', dataExclusao:new Date().toISOString(),
+    excluidoPor:eqUsuarioAtual?eqUsuarioAtual.nome:'',
+    motivo:''
+  });
+  est['_excluidos']=hist;
+  saveEst();
+}
+
+function seExcluirParaHistorico(cid){
+  var cl=seC.find(function(x){return x.id===cid;});
+  if(!cl)return;
+  var hist=est['_excluidos']||[];
+  hist.push({
+    id:cid, nome:cl.nome||'', tipo:'SE', cpf:cl.cpf||'',
+    tel:cl.tel||'', email:cl.email||'', origem:'',
+    dataEntrada:cl.data||'', dataExclusao:new Date().toISOString(),
+    excluidoPor:eqUsuarioAtual?eqUsuarioAtual.nome:'',
+    motivo:''
+  });
+  est['_excluidos']=hist;
+  saveEst();
+}
+
 window.addEventListener('load',function(){
-  checarTokenDrive();loadUser();loadEst();setTimeout(diLoad,300);setTimeout(function(){eqCarregarSessao();setTimeout(function(){dashInicializar();dashAtualizarBadge();},300);},500);setTimeout(avStats,600);setTimeout(function(){djStats();djAgendarVerificacao();},700);
+  checarTokenDrive();loadUser();loadEst();setTimeout(diLoad,300);setTimeout(function(){eqCarregarSessao();setTimeout(function(){dashInicializar();dashAtualizarBadge();},300);},500);setTimeout(avStats,600);setTimeout(procStats,650);setTimeout(function(){djStats();djAgendarVerificacao();},700);
 });
 </script>
 </body>
