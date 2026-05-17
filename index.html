@@ -668,6 +668,8 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#1a1a1a}
     <button id="sn7" onclick="swSE(7)">Protocolo</button>
     <button id="sn8" onclick="swSE(8)">CRM</button>
     <button id="sn9" onclick="swSE(9)" style="background:#e8f5e9;color:#1b5e20;font-weight:600">&#128230; Arquivos</button>
+    <button id="sn10" onclick="swSE(10)" style="background:#e8eaf6;color:#283593;font-weight:600">&#9878; Agravo</button>
+    <button id="sn11" onclick="swSE(11)" style="background:#fce4ec;color:#880e4f;font-weight:600">&#9878; Apelacao</button>
   </nav>
 
   <div id="sp0" class="pg on">
@@ -886,6 +888,119 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#1a1a1a}
     </div>
   </div>
 
+
+  <!-- sp10: Agravo de Instrumento -->
+  <div id="sp10" class="pg">
+    <div class="card">
+      <div class="ct">Agravo de Instrumento</div>
+      <div class="info-box" style="margin-bottom:12px">Gera agravo de instrumento contra decisoes interlocutorias. Selecione o cliente, o fundamento e adicione documentos complementares.</div>
+
+      <select id="se-agr-sel" style="margin-bottom:10px">
+        <option value="">Selecionar cliente...</option>
+      </select>
+
+      <label style="font-weight:700;margin-bottom:6px;display:block">Fundamento do agravo *</label>
+      <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:12px">
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer">
+          <input type="checkbox" id="agr-neg-gratuidade"> Negativa de Justica Gratuita
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer">
+          <input type="checkbox" id="agr-neg-tutela"> Negativa de Tutela de Urgencia
+        </label>
+      </div>
+
+      <label>Numero do processo (1o grau) *</label>
+      <input id="agr-proc" placeholder="Ex: 1234567-89.2024.8.26.0100" style="margin-bottom:10px">
+
+      <div class="g2">
+        <div><label>Vara de origem</label><input id="agr-vara" value="Vara Civel da Comarca de Vargem Grande do Sul - SP"></div>
+        <div><label>Tribunal</label><input id="agr-trib" value="Tribunal de Justica do Estado de Sao Paulo"></div>
+      </div>
+
+      <!-- Caixa de documentos complementares -->
+      <div style="background:#f3e5f5;border:1px solid #ce93d8;border-radius:10px;padding:14px;margin:12px 0">
+        <div style="font-size:13px;font-weight:700;color:#6a1b9a;margin-bottom:8px">&#128206; Documentos complementares (decisao agravada, etc.)</div>
+        <div style="font-size:11px;color:#7b1fa2;margin-bottom:8px">Anexe a decisao impugnada e outros documentos relevantes. A IA vai analisa-los para fundamentar o agravo.</div>
+        <label class="btn" style="cursor:pointer;font-size:11px;background:#6a1b9a;color:#fff;border-color:#6a1b9a">
+          + Anexar documentos
+          <input type="file" id="agr-docs-input" multiple accept="image/*,.pdf" style="display:none" onchange="agrAnexarDocs(this)">
+        </label>
+        <div id="agr-docs-lista" style="margin-top:8px"></div>
+      </div>
+
+      <label>Observacoes adicionais (opcional)</label>
+      <textarea id="agr-obs" style="min-height:70px;margin-bottom:12px" placeholder="Informacoes adicionais para a IA considerar na redacao..."></textarea>
+
+      <button class="btn btnp" style="width:100%;justify-content:center;padding:12px;font-size:14px" onclick="seGerAgravo()">&#9654; Gerar Agravo de Instrumento</button>
+
+      <div id="agr-area" style="display:none;margin-top:14px">
+        <div style="font-size:12px;font-weight:600;color:#283593;margin-bottom:6px" id="agr-lbl"></div>
+        <div class="out" id="agr-txt" style="min-height:100px"></div>
+        <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+          <button class="btn" onclick="copiar('agr-txt')">Copiar</button>
+          <button class="btn btng" id="agr-dl" style="display:none" onclick="seDownloadPeca('agr-txt','agravo_instrumento.doc')">Baixar .doc</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- sp11: Apelacao -->
+  <div id="sp11" class="pg">
+    <div class="card">
+      <div class="ct">Apelacao</div>
+      <div class="info-box" style="margin-bottom:12px">Gera apelacao contra sentencas de extincao sem resolucao do merito. Selecione o cliente e o fundamento da apelacao.</div>
+
+      <select id="se-ape-sel" style="margin-bottom:10px">
+        <option value="">Selecionar cliente...</option>
+      </select>
+
+      <label style="font-weight:700;margin-bottom:6px;display:block">Fundamento da apelacao *</label>
+      <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:12px">
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer">
+          <input type="checkbox" id="ape-extincao-emenda"> Extincao sem resolucao por ausencia de emenda
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer">
+          <input type="checkbox" id="ape-extincao-gratuidade"> Extincao por negativa de justica gratuita
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer">
+          <input type="checkbox" id="ape-ambos"> Ambos os fundamentos
+        </label>
+      </div>
+
+      <label>Numero do processo *</label>
+      <input id="ape-proc" placeholder="Ex: 1234567-89.2024.8.26.0100" style="margin-bottom:10px">
+
+      <div class="g2">
+        <div><label>Vara de origem</label><input id="ape-vara" value="Vara Civel da Comarca de Vargem Grande do Sul - SP"></div>
+        <div><label>Tribunal</label><input id="ape-trib" value="Tribunal de Justica do Estado de Sao Paulo"></div>
+      </div>
+
+      <!-- Documentos complementares -->
+      <div style="background:#fce4ec;border:1px solid #f48fb1;border-radius:10px;padding:14px;margin:12px 0">
+        <div style="font-size:13px;font-weight:700;color:#880e4f;margin-bottom:8px">&#128206; Documentos complementares (sentenca, decisao, etc.)</div>
+        <div style="font-size:11px;color:#ad1457;margin-bottom:8px">Anexe a sentenca impugnada e outros documentos. A IA vai analisa-los para fundamentar a apelacao.</div>
+        <label class="btn" style="cursor:pointer;font-size:11px;background:#880e4f;color:#fff;border-color:#880e4f">
+          + Anexar documentos
+          <input type="file" id="ape-docs-input" multiple accept="image/*,.pdf" style="display:none" onchange="apeAnexarDocs(this)">
+        </label>
+        <div id="ape-docs-lista" style="margin-top:8px"></div>
+      </div>
+
+      <label>Observacoes adicionais (opcional)</label>
+      <textarea id="ape-obs" style="min-height:70px;margin-bottom:12px" placeholder="Informacoes adicionais para a IA considerar..."></textarea>
+
+      <button class="btn btnp" style="width:100%;justify-content:center;padding:12px;font-size:14px;background:#880e4f;border-color:#880e4f" onclick="seGerApelacao()">&#9654; Gerar Apelacao</button>
+
+      <div id="ape-area" style="display:none;margin-top:14px">
+        <div style="font-size:12px;font-weight:600;color:#880e4f;margin-bottom:6px" id="ape-lbl"></div>
+        <div class="out" id="ape-txt" style="min-height:100px"></div>
+        <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+          <button class="btn" onclick="copiar('ape-txt')">Copiar</button>
+          <button class="btn btng" id="ape-dl" style="display:none" onclick="seDownloadPeca('ape-txt','apelacao.doc')">Baixar .doc</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
 <!-- Protocolados -->
 <div id="mod-pt" style="display:none">
@@ -2720,7 +2835,7 @@ function setMod(m){
   }
 }
 function swDI(n){var i;for(i=0;i<10;i++){if(g('dp'+i))g('dp'+i).className='pg'+(i===n?' on':'');if(g('dn'+i))g('dn'+i).className=i===n?'on':'';}if(n===3)drivePopSel();if(n===8){var v=g('di-sel-doc')&&g('di-sel-doc').value;if(v)diArqAbrir(v);}}
-function swSE(n){var i;for(i=0;i<11;i++){var sp=g('sp'+i);var sn=g('sn'+i);if(sp)sp.className='pg'+(i===n?' on':'');if(sn)sn.className=i===n?'on':'';}if(n===2&&seC.length>0)seListarPend();if(n===9){var v=g('se-arq-sel')&&g('se-arq-sel').value;if(v)seArqAbrir(v);}}
+function swSE(n){var i;for(i=0;i<12;i++){var sp=g('sp'+i);var sn=g('sn'+i);if(sp)sp.className='pg'+(i===n?' on':'');if(sn)sn.className=i===n?'on':'';}if(n===2&&seC.length>0)seListarPend();if(n===9){var v=g('se-arq-sel')&&g('se-arq-sel').value;if(v)seArqAbrir(v);}if(n===10)sePopularAgr();if(n===11)sePopularApe();}
 
 function diLoad(){
   g('di-lista').innerHTML='<div class="load"><span class="spin"></span> Carregando...</div>';
@@ -5720,6 +5835,245 @@ function diExcListar(){
       +'</div>';
   });
   el.innerHTML=html;
+}
+
+// ============================================================
+// AGRAVO DE INSTRUMENTO & APELACAO - SE
+// ============================================================
+var agrDocs = [];  // anexos agravo
+var apeDocs = [];  // anexos apelacao
+
+function sePopularAgr(){
+  var sel=g('se-agr-sel'); if(!sel)return;
+  var cur=sel.value;
+  sel.innerHTML='<option value="">Selecionar cliente...</option>';
+  seC.forEach(function(cl){sel.innerHTML+='<option value="'+cl.id+'">'+cl.nome+'</option>';});
+  if(cur)sel.value=cur;
+}
+function sePopularApe(){
+  var sel=g('se-ape-sel'); if(!sel)return;
+  var cur=sel.value;
+  sel.innerHTML='<option value="">Selecionar cliente...</option>';
+  seC.forEach(function(cl){sel.innerHTML+='<option value="'+cl.id+'">'+cl.nome+'</option>';});
+  if(cur)sel.value=cur;
+}
+
+function agrAnexarDocs(input){
+  var files=Array.from(input.files);
+  files.forEach(function(file){
+    var reader=new FileReader();
+    reader.onload=function(e){
+      agrDocs.push({nome:file.name,b64:e.target.result.split(',')[1],mime:file.type,isImg:file.type.startsWith('image/')});
+      agrRenderDocs();
+    };
+    reader.readAsDataURL(file);
+  });
+  input.value='';
+}
+function agrRenderDocs(){
+  var el=g('agr-docs-lista'); if(!el)return;
+  if(!agrDocs.length){el.innerHTML='';return;}
+  el.innerHTML=agrDocs.map(function(d,i){
+    return '<div style="display:flex;align-items:center;gap:8px;font-size:11px;padding:4px 0;border-bottom:1px solid #e0ddd6">'
+      +'<span style="flex:1">'+d.nome+'</span>'
+      +'<button class="btn" style="font-size:10px;padding:1px 6px;color:#c62828" data-i="'+i+'" onclick="agrDocs.splice(+this.dataset.i,1);agrRenderDocs()">&#10005;</button>'
+      +'</div>';
+  }).join('');
+}
+
+function apeAnexarDocs(input){
+  var files=Array.from(input.files);
+  files.forEach(function(file){
+    var reader=new FileReader();
+    reader.onload=function(e){
+      apeDocs.push({nome:file.name,b64:e.target.result.split(',')[1],mime:file.type,isImg:file.type.startsWith('image/')});
+      apeRenderDocs();
+    };
+    reader.readAsDataURL(file);
+  });
+  input.value='';
+}
+function apeRenderDocs(){
+  var el=g('ape-docs-lista'); if(!el)return;
+  if(!apeDocs.length){el.innerHTML='';return;}
+  el.innerHTML=apeDocs.map(function(d,i){
+    return '<div style="display:flex;align-items:center;gap:8px;font-size:11px;padding:4px 0;border-bottom:1px solid #e0ddd6">'
+      +'<span style="flex:1">'+d.nome+'</span>'
+      +'<button class="btn" style="font-size:10px;padding:1px 6px;color:#c62828" data-i="'+i+'" onclick="apeDocs.splice(+this.dataset.i,1);apeRenderDocs()">&#10005;</button>'
+      +'</div>';
+  }).join('');
+}
+
+function seDownloadPeca(elId, filename){
+  baixarDocx(limparMarkdown(g(elId).textContent), filename);
+}
+
+// ── GERAR AGRAVO ─────────────────────────────────────────────
+function seGerAgravo(){
+  var id=g('se-agr-sel')&&g('se-agr-sel').value;
+  if(!id){alert('Selecione um cliente.');return;}
+  var negGrat=g('agr-neg-gratuidade')&&g('agr-neg-gratuidade').checked;
+  var negTut=g('agr-neg-tutela')&&g('agr-neg-tutela').checked;
+  if(!negGrat&&!negTut){alert('Marque ao menos um fundamento.');return;}
+  var cl=seC.find(function(x){return x.id===id;});
+  if(!cl)return;
+  var proc=g('agr-proc')&&g('agr-proc').value||'';
+  var vara=g('agr-vara')&&g('agr-vara').value||'Vara Civel';
+  var trib=g('agr-trib')&&g('agr-trib').value||'TJSP';
+  var obs=g('agr-obs')&&g('agr-obs').value||'';
+  var hoje=new Date().toLocaleDateString('pt-BR');
+  var rLiq=parseFloat(cl.rendaLiquida)||0;
+  var rBrut=parseFloat(cl.rendaBruta)||rLiq;
+  var totDiv=parseFloat(cl.totalDividas)||0;
+  var fundamentos=[];
+  if(negGrat)fundamentos.push('NEGATIVA DE JUSTICA GRATUITA');
+  if(negTut)fundamentos.push('NEGATIVA DE TUTELA DE URGENCIA');
+
+  var dados='Cliente: '+cl.nome+' | CPF: '+(cl.cpf||'-')+' | '+(cl.nac||'brasileiro(a)')+' | '+(cl.civil||'-')+' | '+(cl.prof||'-')+' | Nasc: '+(cl.nasc||'-')+' | Renda bruta: R$ '+rBrut.toLocaleString('pt-BR',{minimumFractionDigits:2})+' | Renda liquida: R$ '+rLiq.toLocaleString('pt-BR',{minimumFractionDigits:2})+' | Total dividas: R$ '+totDiv.toLocaleString('pt-BR',{minimumFractionDigits:2})+(cl.doencas?' | Doencas: '+cl.doencas:'')+(obs?' | Obs: '+obs:'');
+
+  var regras='Escreva em portugues com todos os acentos e cedilhas. Zero markdown. Zero asteriscos. Paragrafos separados por linha em branco. Texto juridico formal.';
+
+  var partes=[];
+
+  // Parte 1: Cabecalho e cabimento
+  var p1=regras+' '+dados+' REDIJA APENAS a parte inicial do AGRAVO DE INSTRUMENTO: (1) Enderecamento ao Excelentissimo Senhor Desembargador Relator do '+trib+'; (2) Qualificacao do agravante '+cl.nome+' conforme dados acima, com advogados Augusto de Andrade Gadiani OAB/SP 425.910 e Ari DAntraccoli Neto OAB/SP 500.799; (3) I - DO CABIMENTO: Art. 1.015 CPC, decisao interlocutoria agravavel, fundamentos: '+fundamentos.join(' e ')+'; (4) II - DOS FATOS: contexto do processo '+proc+', o que foi decidido, por que a decisao e incorreta.';
+  partes.push(p1);
+
+  // Parte 2: Fundamentos
+  var p2=regras+' '+dados+' REDIJA APENAS a fundamentacao do AGRAVO DE INSTRUMENTO com os seguintes topicos conforme fundamentos marcados:';
+  if(negGrat) p2+=' III - DA JUSTICA GRATUITA: renda de R$ '+rLiq.toLocaleString('pt-BR',{minimumFractionDigits:2})+', hipossuficiencia economica evidente, Art. 5 LXXIV CF, Arts. 98-99 CPC, presuncao de pobreza pela declaracao, impossibilidade de arcar com custas sem prejudicar subsistencia'+(cl.doencas?', agravada por '+cl.doencas:'')+', cite STJ/TJSP favoraveis.';
+  if(negTut) p2+=' '+(negGrat?'IV':'III')+' - DA TUTELA DE URGENCIA: FUMUS BONI IURIS = superendividamento comprovado, dividas de R$ '+totDiv.toLocaleString('pt-BR',{minimumFractionDigits:2})+' contra renda de R$ '+rLiq.toLocaleString('pt-BR',{minimumFractionDigits:2})+', credito irresponsavel (Art. 54-B CDC). PERICULUM IN MORA = impossibilidade de subsistencia, dano irreparavel. Art. 300 CPC, Lei 14.181/2021.';
+  partes.push(p2);
+
+  // Parte 3: Pedidos
+  var p3=regras+' '+dados+' REDIJA APENAS a parte final do AGRAVO DE INSTRUMENTO: (1) DO EFEITO SUSPENSIVO: requerer concessao de efeito suspensivo liminar (Art. 1.019 CPC); (2) DOS PEDIDOS: a) concessao de efeito suspensivo; b) conhecimento e provimento do agravo; ';
+  if(negGrat) p3+='c) concessao da justica gratuita; ';
+  if(negTut) p3+=(negGrat?'d':'c')+') concessao da tutela de urgencia requerida; ';
+  p3+='c) condenacao em honorarios. Valor da causa. Pede deferimento. Vargem Grande do Sul, '+hoje+'. Centralizados: Augusto de Andrade Gadiani OAB/SP 425.910 / Ari DAntraccoli Neto OAB/SP 500.799';
+  partes.push(p3);
+
+  var area=g('agr-area'); var lbl=g('agr-lbl'); var txt=g('agr-txt'); var dl=g('agr-dl');
+  if(area)area.style.display='block';
+  if(dl)dl.style.display='none';
+  if(txt)txt.textContent='Gerando agravo...';
+
+  // Se tiver documentos, analisar primeiro
+  function gerarPecaComDocs(docsTxt){
+    if(docsTxt) partes=partes.map(function(p){return p+' Documentos anexados: '+docsTxt;});
+    var acumulado='';
+    function gerarParte(i){
+      if(i>=partes.length){
+        if(txt)txt.textContent=limparMarkdown(acumulado);
+        if(lbl)lbl.textContent='Agravo gerado! Revise e baixe o .doc.';
+        if(dl)dl.style.display='inline-flex';
+        return;
+      }
+      if(lbl)lbl.textContent='Gerando parte '+(i+1)+' de '+partes.length+'...';
+      callAIPost(partes[i], function(res,err){
+        if(err){if(txt)txt.textContent='Erro: '+err;return;}
+        acumulado+=(acumulado?'\n\n':'')+res;
+        gerarParte(i+1);
+      });
+    }
+    gerarParte(0);
+  }
+
+  if(agrDocs.length>0){
+    if(lbl)lbl.textContent='Analisando documentos...';
+    var docsTxt=''; var done=0;
+    agrDocs.forEach(function(doc){
+      fetch(SCRIPT,{method:'POST',redirect:'follow',body:JSON.stringify({action:'aiDoc',prompt:'Extraia todas as informacoes relevantes deste documento para um agravo de instrumento: datas, valores, decisoes, fundamentacao do juiz.',b64:doc.b64,mime:doc.mime,isImg:doc.isImg})})
+      .then(function(r){return r.json();})
+      .then(function(d){
+        if(d.ok)docsTxt+='['+doc.nome+']: '+d.text+'; ';
+        done++;
+        if(done===agrDocs.length)gerarPecaComDocs(docsTxt);
+      }).catch(function(){done++;if(done===agrDocs.length)gerarPecaComDocs(docsTxt);});
+    });
+  } else {
+    gerarPecaComDocs('');
+  }
+}
+
+// ── GERAR APELACAO ───────────────────────────────────────────
+function seGerApelacao(){
+  var id=g('se-ape-sel')&&g('se-ape-sel').value;
+  if(!id){alert('Selecione um cliente.');return;}
+  var extEmenda=g('ape-extincao-emenda')&&g('ape-extincao-emenda').checked;
+  var extGrat=g('ape-extincao-gratuidade')&&g('ape-extincao-gratuidade').checked;
+  var ambos=g('ape-ambos')&&g('ape-ambos').checked;
+  if(ambos){extEmenda=true;extGrat=true;}
+  if(!extEmenda&&!extGrat){alert('Marque ao menos um fundamento.');return;}
+  var cl=seC.find(function(x){return x.id===id;});
+  if(!cl)return;
+  var proc=g('ape-proc')&&g('ape-proc').value||'';
+  var vara=g('ape-vara')&&g('ape-vara').value||'Vara Civel';
+  var trib=g('ape-trib')&&g('ape-trib').value||'TJSP';
+  var obs=g('ape-obs')&&g('ape-obs').value||'';
+  var hoje=new Date().toLocaleDateString('pt-BR');
+  var rLiq=parseFloat(cl.rendaLiquida)||0;
+  var rBrut=parseFloat(cl.rendaBruta)||rLiq;
+  var totDiv=parseFloat(cl.totalDividas)||0;
+
+  var dados='Cliente: '+cl.nome+' | CPF: '+(cl.cpf||'-')+' | '+(cl.nac||'brasileiro(a)')+' | '+(cl.civil||'-')+' | '+(cl.prof||'-')+' | Renda bruta: R$ '+rBrut.toLocaleString('pt-BR',{minimumFractionDigits:2})+' | Renda liquida: R$ '+rLiq.toLocaleString('pt-BR',{minimumFractionDigits:2})+' | Total dividas: R$ '+totDiv.toLocaleString('pt-BR',{minimumFractionDigits:2})+(cl.doencas?' | Doencas: '+cl.doencas:'')+(obs?' | Obs: '+obs:'');
+  var regras='Escreva em portugues com todos os acentos e cedilhas. Zero markdown. Zero asteriscos. Paragrafos separados por linha em branco. Texto juridico formal.';
+
+  var partes=[];
+
+  var p1=regras+' '+dados+' REDIJA a parte inicial da APELACAO CIVEL: (1) Enderecamento ao Excelentissimo Senhor Desembargador Relator do '+trib+'; (2) Qualificacao do apelante '+cl.nome+' com advogados Augusto de Andrade Gadiani OAB/SP 425.910 e Ari DAntraccoli Neto OAB/SP 500.799; (3) I - DO CABIMENTO: Art. 1.009 CPC, sentenca extintiva sem resolucao do merito, prazo de 15 dias; (4) II - DOS FATOS: processo '+proc+' na '+vara+', o que ocorreu, qual a sentenca impugnada.';
+  partes.push(p1);
+
+  var p2=regras+' '+dados+' REDIJA a fundamentacao da APELACAO CIVEL:';
+  if(extEmenda) p2+=' III - DA NULIDADE DA EXTINCAO POR AUSENCIA DE EMENDA: o juiz deveria ter concedido prazo para emenda antes de extinguir, Art. 321 CPC, principio da instrumentalidade das formas, vedacao de surpresa processual. A extincao sem oportunidade de emenda viola o contraditorio e a ampla defesa (Art. 5 LV CF). Cite jurisprudencia TJSP/STJ favoravel.';
+  if(extGrat) p2+=' '+(extEmenda?'IV':'III')+' - DA JUSTICA GRATUITA: renda de R$ '+rLiq.toLocaleString('pt-BR',{minimumFractionDigits:2})+', hipossuficiencia comprovada, Arts. 98-99 CPC. A extincao por negativa de gratuidade e ilegal pois o requerimento deve ser avaliado antes de qualquer extincao. Declaracao de pobreza cria presuncao relativa (Sumula 481 STJ).';
+  partes.push(p2);
+
+  var p3=regras+' '+dados+' REDIJA a parte final da APELACAO CIVEL: (1) DOS PEDIDOS: a) anulacao da sentenca e determinacao de retorno dos autos para apreciacao correta; b) subsidiariamente reforma da sentenca; ';
+  if(extGrat) p3+='c) concessao da justica gratuita; ';
+  p3+='d) condenacao em honorarios recursais (Art. 85 par. 11 CPC). Valor da causa. Pede deferimento. Vargem Grande do Sul, '+hoje+'. Centralizados: Augusto de Andrade Gadiani OAB/SP 425.910 / Ari DAntraccoli Neto OAB/SP 500.799';
+  partes.push(p3);
+
+  var area=g('ape-area'); var lbl=g('ape-lbl'); var txt=g('ape-txt'); var dl=g('ape-dl');
+  if(area)area.style.display='block';
+  if(dl)dl.style.display='none';
+  if(txt)txt.textContent='Gerando apelacao...';
+
+  function gerarPecaComDocs(docsTxt){
+    if(docsTxt) partes=partes.map(function(p){return p+' Documentos: '+docsTxt;});
+    var acumulado='';
+    function gerarParte(i){
+      if(i>=partes.length){
+        if(txt)txt.textContent=limparMarkdown(acumulado);
+        if(lbl)lbl.textContent='Apelacao gerada! Revise e baixe o .doc.';
+        if(dl)dl.style.display='inline-flex';
+        return;
+      }
+      if(lbl)lbl.textContent='Gerando parte '+(i+1)+' de '+partes.length+'...';
+      callAIPost(partes[i], function(res,err){
+        if(err){if(txt)txt.textContent='Erro: '+err;return;}
+        acumulado+=(acumulado?'\n\n':'')+res;
+
+        gerarParte(i+1);
+      });
+    }
+    gerarParte(0);
+  }
+
+  if(apeDocs.length>0){
+    if(lbl)lbl.textContent='Analisando documentos...';
+    var docsTxt2=''; var done2=0;
+    apeDocs.forEach(function(doc){
+      fetch(SCRIPT,{method:'POST',redirect:'follow',body:JSON.stringify({action:'aiDoc',prompt:'Extraia todas as informacoes relevantes deste documento para uma apelacao: data da sentenca, fundamentos do juiz, valores, tipo de extincao.',b64:doc.b64,mime:doc.mime,isImg:doc.isImg})})
+      .then(function(r){return r.json();})
+      .then(function(d){
+        if(d.ok)docsTxt2+='['+doc.nome+']: '+d.text+'; ';
+        done2++;
+        if(done2===apeDocs.length)gerarPecaComDocs(docsTxt2);
+      }).catch(function(){done2++;if(done2===apeDocs.length)gerarPecaComDocs(docsTxt2);});
+    });
+  } else {
+    gerarPecaComDocs('');
+  }
 }
 
 // ============================================================
