@@ -5022,34 +5022,99 @@ function djBuscarIntervalo(ini,fim){
 }
 
 function djBuscarAdvogado(ini,fim,adv,cb){
-  djBuscarPaginas(ini,fim,adv,0,[],cb);
+  // Primeiro tenta Apps Script (proxy server-side, sem restricao CORS)
+  var urlAS=SCRIPT+'?action=djen&oab='+adv.oab+'&uf='+adv.uf+'&ini='+ini+'&fim='+fim;
+  fetch(urlAS,{method:'GET',redirect:'follow'})
+  .then(function(r){
+    if(!r.ok) throw new Error('AS HTTP '+r.status);
+    return r.json();
+  })
+  .then(function(d){
+    if(d.ok && Array.isArray(d.data) && d.data.length>0){
+      cb(d.data,null);
+    } else if(d.ok && Array.isArray(d.data)){
+      // Apps Script funcionou mas sem resultados - tentar proxy CORS
+      djBuscarPaginas(ini,fim,adv,0,[],cb);
+    } else {
+      djBuscarPaginas(ini,fim,adv,0,[],cb);
+    }
+  })
+  .catch(function(){
+    // Apps Script bloqueado - tentar proxy CORS direto
+    djBuscarPaginas(ini,fim,adv,0,[],cb);
+  });
 }
 
+// Proxies CORS publicos - tentamos cada um em ordem
+var DJ_PROXIES = [
+  // allorigins: encapsula a URL e retorna JSON com campo "contents"
+  function(url){ return 'https://api.allorigins.win/get?url='+encodeURIComponent(url); },
+  // corsproxy.io: apenas prefixa a URL
+  function(url){ return 'https://corsproxy.io/?'+encodeURIComponent(url); },
+  // thingproxy
+  function(url){ return 'https://thingproxy.freeboard.io/fetch/'+url; }
+];
+var _djProxyIdx = 0; // qual proxy usar (aprende qual funciona)
+
 function djBuscarPaginas(ini,fim,adv,pagina,acumulado,cb){
-  var base='https://comunica.pje.jus.br/api/v1/comunicacao'
+  var urlOriginal='https://comunica.pje.jus.br/api/v1/comunicacao'
     +'?dataDisponibilizacaoInicio='+ini
     +'&dataDisponibilizacaoFim='+fim
     +'&numeroOab='+adv.oab
     +'&ufOab='+adv.uf
     +'&page='+pagina+'&size=20';
 
-  fetch(base,{method:'GET',headers:{'Accept':'application/json'},mode:'cors',credentials:'omit'})
-  .then(function(r){
-    if(!r.ok) throw new Error('HTTP_'+r.status);
-    return r.json();
-  })
-  .then(function(json){
-    var items=json.content||json.data||json.resultado||(Array.isArray(json)?json:[]);
-    var todos=acumulado.concat(items);
-    var totalPag=json.totalPages||json.totalPaginas||1;
-    if(pagina+1<totalPag&&pagina<49){
-      setTimeout(function(){djBuscarPaginas(ini,fim,adv,pagina+1,todos,cb);},400);
-    } else { cb(todos,null); }
-  })
-  .catch(function(e){
-    // CORS bloqueado -- reportar erro para mostrar aviso
-    cb(acumulado.length>0?acumulado:[], e.message||'Failed to fetch');
+  djFetchComProxy(urlOriginal, _djProxyIdx, function(json, erroProxy){
+    if(erroProxy && _djProxyIdx < DJ_PROXIES.length-1){
+      // Tenta proximo proxy
+      _djProxyIdx++;
+      djFetchComProxy(urlOriginal, _djProxyIdx, function(json2, erroProxy2){
+        djProcessarPagina(json2,ini,fim,adv,pagina,acumulado,cb,erroProxy2);
+      });
+    } else {
+      djProcessarPagina(json,ini,fim,adv,pagina,acumulado,cb,erroProxy);
+    }
   });
+}
+
+function djFetchComProxy(urlOriginal, proxyIdx, cb){
+  var proxyUrl = DJ_PROXIES[proxyIdx](urlOriginal);
+  fetch(proxyUrl, {method:'GET', headers:{'Accept':'application/json'}})
+  .then(function(r){
+    if(!r.ok) throw new Error('Proxy HTTP '+r.status);
+    return r.text();
+  })
+  .then(function(txt){
+    // allorigins envolve em {contents:"..."}
+    var parsed;
+    try {
+      var outer = JSON.parse(txt);
+      if(outer && outer.contents) {
+        parsed = JSON.parse(outer.contents);
+      } else {
+        parsed = outer;
+      }
+    } catch(e){
+      try { parsed = JSON.parse(txt); } catch(e2){ throw new Error('Parse falhou'); }
+    }
+    cb(parsed, null);
+  })
+  .catch(function(e){ cb(null, e.message); });
+}
+
+function djProcessarPagina(json,ini,fim,adv,pagina,acumulado,cb,erro){
+  if(!json){
+    cb(acumulado.length>0?acumulado:[], erro||'Sem dados');
+    return;
+  }
+  var items=json.content||json.data||json.resultado||(Array.isArray(json)?json:[]);
+  var todos=acumulado.concat(items);
+  var totalPag=json.totalPages||json.totalPaginas||1;
+  if(pagina+1<totalPag&&pagina<49){
+    setTimeout(function(){djBuscarPaginas(ini,fim,adv,pagina+1,todos,cb);},500);
+  } else {
+    cb(todos, null);
+  }
 }
 
 function djProcessarResultados(pubs,ini,fim,st,err){
@@ -5074,7 +5139,7 @@ function djProcessarResultados(pubs,ini,fim,st,err){
   st.style.background=novos>0?'#e8f5e9':(err?'#fce4ec':'#f5f5f5');
   st.style.color=novos>0?'#1b5e20':(err?'#c62828':'#666');
   var avisoExtra = (window._djLastLog && window._djLastLog.length) ? '<br><details style="font-size:10px;margin-top:4px"><summary style="cursor:pointer;color:#aaa">Detalhes do servidor</summary><pre style="white-space:pre-wrap;font-size:10px;color:#666">'+window._djLastLog.join('\n')+'</pre></details>' : '';
-  if(novos===0 && (err&&(err.indexOf('HTTP_')>=0||err.indexOf('CORS')>=0||err.indexOf('Failed')>=0||err.indexOf('fetch')>=0))){
+  if(novos===0 && err){
     djMostrarAvisoCors(st);
     return;
   }
@@ -5297,10 +5362,9 @@ function djMostrarAvisoCors(st){
   st.style.display='block';
   st.style.background='#fff3e0';
   st.style.color='#e65100';
-  st.innerHTML='<b>(!) Acesso bloqueado pelo PJe (politica CORS).</b><br>'
-    +'O site do tribunal nao permite buscas automaticas de outros dominios.<br><br>'
-    +'<button class="btn" style="font-size:11px;background:#e65100;color:#fff;border-color:#e65100" onclick="djAbrirAjudaCors()">&#9881; Ver como resolver</button>'
-    +' &nbsp; <button class="btn" style="font-size:11px" onclick="djAbrirEntradaManual()">+ Inserir manualmente</button>';
+  st.innerHTML='<b>(!) Buscando via proxy... aguarde.</b> Se continuar sem resultado: '
+    +'<button class="btn" style="font-size:11px;background:#e65100;color:#fff;border-color:#e65100;margin-left:6px" onclick="djAbrirAjudaCors()">&#9881; Ver solucoes</button>'
+    +' <button class="btn" style="font-size:11px;margin-left:4px" onclick="djAbrirEntradaManual()">+ Inserir manual</button>';
 }
 
 function djStats(){
