@@ -364,12 +364,17 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#1a1a1a}
         <div class="ct" style="margin-bottom:0">Clientes &mdash; Descontos Indevidos</div>
         <div style="display:flex;gap:6px">
           <input id="di-busca" placeholder="Nome ou telefone..." style="width:180px;font-size:12px;padding:6px 10px" oninput="diListar()">
-          <select id="di-filtro" style="width:130px;font-size:12px;padding:6px 8px" onchange="diListar()">
+          <select id="di-filtro" style="font-size:12px;padding:6px 8px" onchange="diListar()">
             <option value="todos">Todos</option>
+            <option value="novos">&#127381; Casos novos</option>
             <option value="urgente">Urgentes</option>
             <option value="docs">Docs pendentes</option>
             <option value="protocolo">Para protocolo</option>
             <option value="arquivado">Arquivados</option>
+          </select>
+          <select id="di-ordem" style="font-size:12px;padding:6px 8px" onchange="diListar()">
+            <option value="antigo">&#9660; Mais antigos</option>
+            <option value="novo">&#9650; Mais novos</option>
           </select>
           <button class="btn" onclick="diLoad()">&#8635;</button>
         </div>
@@ -683,7 +688,17 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#1a1a1a}
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
         <div class="ct" style="margin-bottom:0">Clientes &mdash; Superendividamento</div>
         <div style="display:flex;gap:6px">
-          <input id="se-busca" placeholder="Nome ou telefone..." style="width:180px;font-size:12px;padding:6px 10px" oninput="seListar()">
+          <input id="se-busca" placeholder="Nome ou telefone..." style="width:150px;font-size:12px;padding:6px 10px" oninput="seListar()">
+          <select id="se-filtro" style="font-size:12px;padding:6px 8px" onchange="seListar()">
+            <option value="todos">Todos</option>
+            <option value="novos">&#127381; Casos novos</option>
+            <option value="docs">Docs pendentes</option>
+            <option value="protocolo">Para protocolo</option>
+          </select>
+          <select id="se-ordem" style="font-size:12px;padding:6px 8px" onchange="seListar()">
+            <option value="antigo">&#9660; Mais antigos</option>
+            <option value="novo">&#9650; Mais novos</option>
+          </select>
           <button class="btn" onclick="seLoad()">&#8635;</button>
         </div>
       </div>
@@ -3138,13 +3153,26 @@ function diBadge(c){var st=getE(c.id);if(st.urgente)return '<span class="badge b
 
 function diListar(){
   var f=(g('di-busca').value||'').toLowerCase(),fN=f.replace(/[^0-9]/g,''),t=g('di-filtro').value||'todos';
+  var ordem=(g('di-ordem')&&g('di-ordem').value)||'antigo';
+  var agora=Date.now(); var NOVO_LIMITE=7*24*60*60*1000; // 7 dias
   var lista=diC.filter(function(c){
     var st=getE(c.id);if(st.excluido)return false;
     if(t==='arquivado')return !!st.arquivado;if(st.arquivado)return false;if(st.protocolado)return false;
     if(f){var nm=c.nome.toLowerCase().indexOf(f)>=0,ph=fN.length>=4&&c.tel&&c.tel.replace(/[^0-9]/g,'').indexOf(fN)>=0;if(!nm&&!ph)return false;}
+    if(t==='novos'){var dt=c.data?new Date(c.data).getTime():0;return (agora-dt)<NOVO_LIMITE;}
     if(t==='urgente')return !!st.urgente;if(t==='docs')return !st.paraProtocolo&&diPct(c.id)<100;if(t==='protocolo')return !!st.paraProtocolo;return true;
   });
-  lista.sort(function(a,b){var sa=getE(a.id),sb=getE(b.id);if(sa.urgente&&!sb.urgente)return -1;if(!sa.urgente&&sb.urgente)return 1;if(sa.movedToEnd&&!sb.movedToEnd)return 1;if(!sa.movedToEnd&&sb.movedToEnd)return -1;return 0;});
+  lista.sort(function(a,b){
+    var sa=getE(a.id),sb=getE(b.id);
+    if(ordem==='novo'){
+      var da=a.data?new Date(a.data).getTime():0, db=b.data?new Date(b.data).getTime():0;
+      return db-da;
+    }
+    if(sa.urgente&&!sb.urgente)return -1;if(!sa.urgente&&sb.urgente)return 1;
+    if(sa.movedToEnd&&!sb.movedToEnd)return 1;if(!sa.movedToEnd&&sb.movedToEnd)return -1;
+    var da2=a.data?new Date(a.data).getTime():0, db2=b.data?new Date(b.data).getTime():0;
+    return da2-db2;
+  });
   if(!lista.length){g('di-lista').innerHTML='<div style="padding:16px;text-align:center;color:#bbb">Nenhum cliente encontrado.</div>';return;}
   var html='',i,c,p,st;
   for(i=0;i<lista.length;i++){
@@ -3158,6 +3186,7 @@ function diListar(){
     html+='</div><div style="text-align:right">'+diBadge(c);
     html+='<div style="font-size:11px;color:#bbb;margin-top:3px">'+(c.tel||'sem tel.')+'</div>';
     html+='<div style="display:flex;gap:3px;margin-top:4px;justify-content:flex-end">';
+    if(!st.boasVindasEnviado){html+='<button class="btn" style="padding:2px 6px;font-size:10px;background:#e1f5fe;border-color:#81d4fa;color:#0277bd" data-id="'+c.id+'" onclick="diBoasVindas(this.dataset.id)">&#128172; Boas-vindas</button>';}
     html+='<button class="btn" style="padding:2px 6px;font-size:10px;background:#fff8e1;border-color:#ffcc80;color:#e65100" onclick="diMoverFim(\''+c.id+'\')">Final</button>';
     if(st.arquivado){html+='<button class="btn" style="padding:2px 6px;font-size:10px;background:#e8f5e9;border-color:#a5d6a7;color:#1b5e20" onclick="diDesarq(\''+c.id+'\')">Restaurar</button>';}
     else{html+='<button class="btn" style="padding:2px 6px;font-size:10px" onclick="diArq(\''+c.id+'\')">Arquivar</button>';}
@@ -3166,6 +3195,62 @@ function diListar(){
   }
   g('di-lista').innerHTML=html;
 }
+function diBoasVindas(id){
+  var cl=diC.find(function(x){return x.id===id;});
+  if(!cl||!cl.tel){alert('Cliente sem telefone cadastrado.');return;}
+  var tel=cl.tel.replace(/[^0-9]/g,'');
+  if(tel.length===11)tel='55'+tel;
+  var nome=cl.nome.split(' ')[0];
+  var msg='Ola, '+nome+'! Tudo bem?'
+    +' Somos o escritorio Gadiani & DAntraccoli Advogados e estamos muito felizes em te receber como cliente.'
+    +' Para darmos andamento ao seu processo o mais rapido possivel, precisamos que voce nos envie os seguintes documentos:'
+    +'\n\n'
+    +'*1. Extrato bancario*\nExtratos de TODAS as contas bancarias que voce possui acesso (conta corrente, poupanca, conta digital, etc.).'
+    +'\n\n'
+    +'*2. Extrato do cartao de credito*\nHistorico dos ultimos meses de todos os cartoes de credito que possui.'
+    +'\n\n'
+    +'*3. Declaracao do Imposto de Renda*\nCaso voce declare imposto de renda, nos envie a ultima declaracao completa.'
+    +'\n\n'
+    +'*Por que esses documentos sao importantes?*\nPara garantir que seu processo tenha o beneficio da *Justica Gratuita* (isencao de custas judiciais), o juiz pode solicitar comprovacao da sua situacao financeira. Esses documentos sao fundamentais para que nao haja nenhum obstaculo durante o andamento da acao.'
+    +'\n\n'
+    +'*Caso ja tenha enviado esses documentos, por favor desconsidere esta mensagem.* Estamos aqui para te ajudar!'
+    +'\n\n'
+    +'Qualquer duvida, e so nos chamar. Obrigado! &#128522;'
+    +'\n\n'
+    +'_Gadiani & DAntraccoli Advogados_';
+  window.open('https://wa.me/'+tel+'?text='+encodeURIComponent(msg),'_blank');
+  getE(id).boasVindasEnviado=new Date().toISOString();
+  saveEst();diListar();
+}
+
+function seBoasVindas(id){
+  var cl=seC.find(function(x){return x.id===id;});
+  if(!cl||!cl.tel){alert('Cliente sem telefone cadastrado.');return;}
+  var tel=cl.tel.replace(/[^0-9]/g,'');
+  if(tel.length===11)tel='55'+tel;
+  var nome=cl.nome.split(' ')[0];
+  var msg='Ola, '+nome+'! Tudo bem?'
+    +' Somos o escritorio Gadiani & DAntraccoli Advogados e estamos muito felizes em te receber como cliente.'
+    +' Para darmos andamento ao seu processo o mais rapido possivel, precisamos que voce nos envie os seguintes documentos:'
+    +'\n\n'
+    +'*1. Extrato bancario*\nExtratos de TODAS as contas bancarias que voce possui acesso (conta corrente, poupanca, conta digital, etc.).'
+    +'\n\n'
+    +'*2. Extrato do cartao de credito*\nHistorico dos ultimos meses de todos os cartoes de credito que possui.'
+    +'\n\n'
+    +'*3. Declaracao do Imposto de Renda*\nCaso voce declare imposto de renda, nos envie a ultima declaracao completa.'
+    +'\n\n'
+    +'*Por que esses documentos sao importantes?*\nPara garantir que seu processo tenha o beneficio da *Justica Gratuita* (isencao de custas judiciais), o juiz pode solicitar comprovacao da sua situacao financeira. Esses documentos sao fundamentais para que nao haja nenhum obstaculo durante o andamento da acao.'
+    +'\n\n'
+    +'*Caso ja tenha enviado esses documentos, por favor desconsidere esta mensagem.* Estamos aqui para te ajudar!'
+    +'\n\n'
+    +'Qualquer duvida, e so nos chamar. Obrigado! &#128522;'
+    +'\n\n'
+    +'_Gadiani & DAntraccoli Advogados_';
+  window.open('https://wa.me/'+tel+'?text='+encodeURIComponent(msg),'_blank');
+  getE(id).boasVindasEnviado=new Date().toISOString();
+  saveEst();seListar();
+}
+
 function diMoverFim(id){getE(id).movedToEnd=Date.now();saveEst();diListar();}
 function diArq(id){if(!confirm('Arquivar este cliente?'))return;getE(id).arquivado=true;saveEst();diListar();diStats();}
 function diDesarq(id){getE(id).arquivado=false;saveEst();diListar();diStats();}
@@ -4348,14 +4433,35 @@ function seStats(){
 function sePct(id){var r=getDC('se',id),ok=0,k;for(k in r){if(r[k])ok++;}return Math.round(ok/SE_DOCS.length*100);}
 function seListar(){
   var f=(g('se-busca').value||'').toLowerCase(),fN=f.replace(/[^0-9]/g,'');
-  var lista=seC.filter(function(c){var st=getE(c.id);if(st.excluido||st.arquivado||st.protocolado)return false;if(!f)return true;return c.nome.toLowerCase().indexOf(f)>=0||(fN.length>=4&&c.tel&&c.tel.replace(/[^0-9]/g,'').indexOf(fN)>=0);});
-  lista.sort(function(a,b){var sa=getE(a.id),sb=getE(b.id);if(sa.urgente&&!sb.urgente)return -1;if(!sa.urgente&&sb.urgente)return 1;return 0;});
+  var ft=(g('se-filtro')&&g('se-filtro').value)||'todos';
+  var ordem=(g('se-ordem')&&g('se-ordem').value)||'antigo';
+  var agora=Date.now(); var NOVO_LIMITE=7*24*60*60*1000;
+  var lista=seC.filter(function(c){
+    var st=getE(c.id);
+    if(st.excluido||st.arquivado||st.protocolado)return false;
+    if(ft==='novos'){var dt=c.data?new Date(c.data).getTime():0;return (agora-dt)<NOVO_LIMITE;}
+    if(ft==='docs'){var pct=sePct(c.id);return pct<100;}
+    if(ft==='protocolo'){return !!st.paraProtocolo;}
+    if(!f)return true;
+    return c.nome.toLowerCase().indexOf(f)>=0||(fN.length>=4&&c.tel&&c.tel.replace(/[^0-9]/g,'').indexOf(fN)>=0);
+  });
+  lista.sort(function(a,b){
+    var sa=getE(a.id),sb=getE(b.id);
+    if(ordem==='novo'){
+      var da=a.data?new Date(a.data).getTime():0, db=b.data?new Date(b.data).getTime():0;
+      return db-da;
+    }
+    if(sa.urgente&&!sb.urgente)return -1;if(!sa.urgente&&sb.urgente)return 1;
+    var da2=a.data?new Date(a.data).getTime():0, db2=b.data?new Date(b.data).getTime():0;
+    return da2-db2;
+  });
   if(!lista.length){g('se-lista').innerHTML='<div style="padding:16px;text-align:center;color:#bbb">Nenhum cliente.</div>';return;}
   var html='',i,c,p,st,rLiq,badge;
   for(i=0;i<lista.length;i++){
     c=lista[i];p=sePct(c.id);st=getE(c.id);rLiq=parseFloat(c.rendaLiquida)||0;
     badge=st.protocolado?'<span class="badge bg">Protocolado</span>':st.paraProtocolo?'<span class="badge bo">Para protocolo</span>':p>=100?'<span class="badge bi">Docs OK</span>':p>0?'<span class="badge bo">Em andamento</span>':'<span class="badge br">Pendente</span>';
-    html+='<div class="cli-row"><div style="flex:1"><div class="cli-nome" onclick="seIrDocs(\''+c.id+'\')">'+c.nome+'</div><div class="cli-sub">'+(c.prof||'-')+' &middot; Divida: '+(c.totalDividas||'-')+' &middot; Renda: R$ '+rLiq.toLocaleString('pt-BR')+'</div><div class="pw" style="width:180px;margin-top:4px"><div class="pb" style="width:'+p+'%"></div></div>'+(st.numAcao?'<div style="font-size:10px;color:#1b5e20;margin-top:2px">No '+st.numAcao+'</div>':'')+' </div><div style="text-align:right">'+badge+'<div style="font-size:11px;color:#bbb;margin-top:4px">'+(c.tel||'sem tel.')+'</div></div></div>';
+    var bvBtn=st.boasVindasEnviado?'':'<button class="btn" style="font-size:10px;padding:2px 7px;background:#e1f5fe;border-color:#81d4fa;color:#0277bd;margin-top:4px" data-id="'+c.id+'" onclick="seBoasVindas(this.dataset.id)">&#128172; Boas-vindas</button>';
+    html+='<div class="cli-row"><div style="flex:1"><div class="cli-nome" onclick="seIrDocs(\''+c.id+'\')">'+c.nome+'</div><div class="cli-sub">'+(c.prof||'-')+' &middot; Divida: '+(c.totalDividas||'-')+' &middot; Renda: R$ '+rLiq.toLocaleString('pt-BR')+'</div><div class="pw" style="width:180px;margin-top:4px"><div class="pb" style="width:'+p+'%"></div></div>'+(st.numAcao?'<div style="font-size:10px;color:#1b5e20;margin-top:2px">No '+st.numAcao+'</div>':'')+' </div><div style="text-align:right">'+badge+'<div style="font-size:11px;color:#bbb;margin-top:4px">'+(c.tel||'sem tel.')+'</div>'+bvBtn+'</div></div>';
   }
   g('se-lista').innerHTML=html;
 }
