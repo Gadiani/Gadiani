@@ -390,20 +390,34 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#1a1a1a}
     <div id="di-docs-area" style="display:none">
       <div class="card" id="di-ficha"></div>
       <div id="di-alerta" class="err-box" style="display:none"></div>
-      <div class="card">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-          <div><div class="ct" style="margin-bottom:3px">Enviados pelo cliente</div><span class="badge bi" id="di-bc">0/12</span></div>
-          <button class="btn btnw" onclick="diWA(null)">Cobrar WhatsApp</button>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start">
+        <div>
+          <div class="card">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+              <div><div class="ct" style="margin-bottom:3px">Enviados pelo cliente</div><span class="badge bi" id="di-bc">0/12</span></div>
+              <button class="btn btnw" onclick="diWA(null)">Cobrar WhatsApp</button>
+            </div>
+            <div class="pw"><div class="pb" id="di-pc" style="width:0%"></div></div>
+            <div id="di-docs-cli" style="margin-top:10px"></div>
+          </div>
+          <div class="card">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+              <div><div class="ct" style="margin-bottom:3px">Escritorio <span class="tag-gov">.gov</span></div><span class="badge bo" id="di-bg">0/8</span></div>
+            </div>
+            <div class="pw"><div class="pb" id="di-pg" style="width:0%"></div></div>
+            <div id="di-docs-gov" style="margin-top:10px"></div>
+          </div>
         </div>
-        <div class="pw"><div class="pb" id="di-pc" style="width:0%"></div></div>
-        <div id="di-docs-cli" style="margin-top:10px"></div>
-      </div>
-      <div class="card">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-          <div><div class="ct" style="margin-bottom:3px">Escritorio <span class="tag-gov">.gov</span></div><span class="badge bo" id="di-bg">0/8</span></div>
+        <div>
+          <div class="card" id="di-drive-inline">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+              <div class="ct" style="margin-bottom:0">&#128450; Drive do cliente</div>
+              <button class="btn" style="font-size:10px;padding:2px 7px" onclick="diDriveInlineRebuscar()">&#8635; Rebuscar</button>
+            </div>
+            <div id="di-drive-inline-status" style="font-size:11px;color:#aaa;margin-bottom:6px"></div>
+            <div id="di-drive-inline-lista" style="max-height:420px;overflow-y:auto"></div>
+          </div>
         </div>
-        <div class="pw"><div class="pb" id="di-pg" style="width:0%"></div></div>
-        <div id="di-docs-gov" style="margin-top:10px"></div>
       </div>
       <div class="card">
         <div class="ct">Dados do contrato questionado</div>
@@ -712,15 +726,29 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#1a1a1a}
     </div>
     <div id="se-docs-area" style="display:none">
       <div class="card" id="se-ficha"></div>
-      <div class="card">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-          <div><div class="ct" style="margin-bottom:3px">Documentos necessarios</div><span class="badge bi" id="se-bd">0/10</span></div>
-          <button class="btn btnw" onclick="seWA(null)">Cobrar WhatsApp</button>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start">
+        <div>
+          <div class="card">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+              <div><div class="ct" style="margin-bottom:3px">Documentos necessarios</div><span class="badge bi" id="se-bd">0/10</span></div>
+              <button class="btn btnw" onclick="seWA(null)">Cobrar WhatsApp</button>
+            </div>
+            <div class="pw"><div class="pb" id="se-pd" style="width:0%"></div></div>
+            <div id="se-docs-lista" style="margin-top:10px"></div>
+          </div>
+          <div class="card"><div class="ct">Credores</div><div id="se-credores"></div></div>
         </div>
-        <div class="pw"><div class="pb" id="se-pd" style="width:0%"></div></div>
-        <div id="se-docs-lista" style="margin-top:10px"></div>
+        <div>
+          <div class="card" id="se-drive-inline">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+              <div class="ct" style="margin-bottom:0">&#128450; Drive do cliente</div>
+              <button class="btn" style="font-size:10px;padding:2px 7px" onclick="seDriveInlineRebuscar()">&#8635; Rebuscar</button>
+            </div>
+            <div id="se-drive-inline-status" style="font-size:11px;color:#aaa;margin-bottom:6px"></div>
+            <div id="se-drive-inline-lista" style="max-height:420px;overflow-y:auto"></div>
+          </div>
+        </div>
       </div>
-      <div class="card"><div class="ct">Credores</div><div id="se-credores"></div></div>
     </div>
   </div>
 
@@ -3281,6 +3309,8 @@ function diOpenDocs(){
     +(driveToken?'<span style="font-size:11px;color:#1b5e20;font-weight:600">&#9989; Drive conectado</span>':'<button class="btn" style="font-size:11px;padding:5px 10px;background:#fce4ec;border-color:#f8bbd0;color:#c62828" onclick="driveConectar(function(){diOpenDocs();})">&#9888; Conectar Drive</button>')
     +'</div>';
   diRenderDocs(c);
+  // Carregar drive inline
+  diDriveInlineCarregar(c);
 }
 function diToggle(id,did){
   var r=getDC('di',id);r[did]=!r[did];getE(id).ultimaAt=new Date().toISOString();saveEst();
@@ -4800,6 +4830,8 @@ function seOpenDocs(){
     +'<div>'+(function(){var html2='';[c.c1,c.c2,c.c3,c.c4,c.c5,c.c6,c.c7,c.c8,c.c9,c.c10].forEach(function(cr,i){if(!cr||!cr.nome)return;html2+='<div style="padding:6px 0;border-bottom:1px solid #f0ede8;font-size:12px"><b>C'+(i+1)+'. '+cr.nome+'</b> &mdash; R$ '+(cr.valor||'?')+' &middot; '+(cr.forma||'-')+' &middot; R$ '+(cr.prest||'?')+'/mes &middot; '+(cr.pagas||'0')+'/'+(cr.parcelas||'-')+' pagas &middot; '+(cr.sit||'-')+'</div>';});return html2||'<div style="color:#aaa;font-size:12px">Nenhum credor informado</div>';})()+
     '</div>'
   g('se-credores').innerHTML=html||'<div style="font-size:12px;color:#bbb">Nenhum credor informado.</div>';
+  // Carregar drive inline
+  if(typeof seCur!=='undefined'&&seCur)seDriveInlineCarregar(seCur.id);
 }
 function seToggle(id,did){var r=getDC('se',id);r[did]=!r[did];getE(id).ultimaAt=new Date().toISOString();saveEst();seRenderDocs(seC.find(function(x){return x.id===id;}));seStats();}
 function seUpload(input,id,did){
@@ -6163,6 +6195,179 @@ function dashAtualizarBadge() {
   else { badge.textContent = 'Tudo em dia!'; badge.style.color = '#2e7d32'; }
 }
 
+
+// ============================================================
+// DRIVE INLINE - aparece ao lado da checklist de documentos
+// ============================================================
+var DRIVE_FOLDER_DI_ID = '1eT8ZckAtgcfdJ0MAhc--svyMVINzfV7b';
+var DRIVE_FOLDER_SE_ID = '1Ed0rrn4zmFssqj9M0lqxDjWoPEgr6zKM';
+
+function driveInlineRenderArquivos(arquivos, listaEl, statusEl) {
+  if (!arquivos || !arquivos.length) {
+    listaEl.innerHTML = '<div style="padding:16px;text-align:center;color:#bbb;font-size:12px">Nenhum arquivo encontrado na pasta do cliente.</div>';
+    statusEl.textContent = '0 arquivos';
+    return;
+  }
+  statusEl.textContent = arquivos.length + ' arquivo(s) encontrado(s)';
+  var html = '';
+  arquivos.forEach(function(f) {
+    var icon = '&#128196;';
+    var mime = f.mimeType || '';
+    if (mime.indexOf('image') >= 0) icon = '&#128247;';
+    else if (mime.indexOf('pdf') >= 0) icon = '&#128220;';
+    else if (mime.indexOf('spreadsheet') >= 0 || mime.indexOf('excel') >= 0) icon = '&#128202;';
+    else if (mime.indexOf('document') >= 0 || mime.indexOf('word') >= 0) icon = '&#128196;';
+    else if (mime.indexOf('folder') >= 0) icon = '&#128193;';
+    var size = f.size ? (f.size > 1024*1024 ? (f.size/1024/1024).toFixed(1)+'MB' : Math.round(f.size/1024)+'KB') : '';
+    var data = f.modifiedTime ? new Date(f.modifiedTime).toLocaleDateString('pt-BR') : '';
+    html += '<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid #f0ede8">'
+      + '<span style="font-size:18px;flex-shrink:0">' + icon + '</span>'
+      + '<div style="flex:1;min-width:0">'
+      + '<div style="font-size:12px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="' + (f.name||'') + '">' + (f.name||'(sem nome)') + '</div>'
+      + '<div style="font-size:10px;color:#aaa">' + size + (size&&data?' &middot; ':'') + data + '</div>'
+      + '</div>'
+      + '<a href="' + (f.webViewLink||('#')) + '" target="_blank" class="btn" style="font-size:10px;padding:2px 7px;flex-shrink:0">Abrir</a>'
+      + '</div>';
+  });
+  listaEl.innerHTML = html;
+}
+
+function diDriveInlineCarregar(cl) {
+  var cid = typeof cl === 'string' ? cl : (cl && cl.id);
+  if (!cid) return;
+  var cliente = diC.find(function(x){return x.id===cid;});
+  if (!cliente) return;
+  var statusEl = g('di-drive-inline-status');
+  var listaEl = g('di-drive-inline-lista');
+  if (!statusEl || !listaEl) return;
+
+  // Check if Drive is connected
+  if (!driveToken) {
+    statusEl.innerHTML = '<span style="color:#e65100">Drive nao conectado. <button class="btn" style="font-size:10px;padding:2px 7px" onclick="driveConectar(function(){diDriveInlineCarregar(\'' + cid + '\')})">Conectar</button></span>';
+    listaEl.innerHTML = '';
+    return;
+  }
+
+  var pastaId = getE(cid).drivePastaId;
+  if (pastaId) {
+    statusEl.textContent = 'Carregando arquivos...';
+    driveListarArquivos(pastaId, function(arqs) {
+      driveInlineRenderArquivos(arqs, listaEl, statusEl);
+    });
+    return;
+  }
+
+  // Buscar pasta pelo nome do cliente
+  statusEl.textContent = 'Buscando pasta de ' + cliente.nome + '...';
+  listaEl.innerHTML = '<div style="padding:16px;text-align:center;color:#aaa;font-size:12px"><span class="spin"></span> Buscando...</div>';
+  driveBuscarPastaCliente(cliente.nome, DRIVE_FOLDER_DI_ID, function(pastaEncontrada) {
+    if (!pastaEncontrada) {
+      statusEl.textContent = 'Pasta nao encontrada no Drive.';
+      listaEl.innerHTML = '<div style="padding:12px;text-align:center;color:#bbb;font-size:12px">Nao foi encontrada uma pasta para este cliente no Drive.</div>';
+      return;
+    }
+    getE(cid).drivePastaId = pastaEncontrada.id;
+    saveEst();
+    driveListarArquivos(pastaEncontrada.id, function(arqs) {
+      driveInlineRenderArquivos(arqs, listaEl, statusEl);
+    });
+  });
+}
+
+function diDriveInlineRebuscar() {
+  if (!diCur) return;
+  delete getE(diCur.id).drivePastaId;
+  saveEst();
+  diDriveInlineCarregar(diCur.id);
+}
+
+function seDriveInlineCarregar(cid) {
+  if (!cid) return;
+  var cliente = seC.find(function(x){return x.id===cid;});
+  if (!cliente) return;
+  var statusEl = g('se-drive-inline-status');
+  var listaEl = g('se-drive-inline-lista');
+  if (!statusEl || !listaEl) return;
+
+  if (!driveToken) {
+    statusEl.innerHTML = '<span style="color:#e65100">Drive nao conectado. <button class="btn" style="font-size:10px;padding:2px 7px" onclick="driveConectar(function(){seDriveInlineCarregar(\'' + cid + '\')})">Conectar</button></span>';
+    listaEl.innerHTML = '';
+    return;
+  }
+
+  var pastaId = getE(cid).drivePastaId;
+  if (pastaId) {
+    statusEl.textContent = 'Carregando arquivos...';
+    driveListarArquivos(pastaId, function(arqs) {
+      driveInlineRenderArquivos(arqs, listaEl, statusEl);
+    });
+    return;
+  }
+
+  statusEl.textContent = 'Buscando pasta de ' + cliente.nome + '...';
+  listaEl.innerHTML = '<div style="padding:16px;text-align:center;color:#aaa;font-size:12px"><span class="spin"></span> Buscando...</div>';
+  driveBuscarPastaCliente(cliente.nome, DRIVE_FOLDER_SE_ID, function(pastaEncontrada) {
+    if (!pastaEncontrada) {
+      statusEl.textContent = 'Pasta nao encontrada no Drive.';
+      listaEl.innerHTML = '<div style="padding:12px;text-align:center;color:#bbb;font-size:12px">Nao foi encontrada uma pasta para este cliente no Drive.</div>';
+      return;
+    }
+    getE(cid).drivePastaId = pastaEncontrada.id;
+    saveEst();
+    driveListarArquivos(pastaEncontrada.id, function(arqs) {
+      driveInlineRenderArquivos(arqs, listaEl, statusEl);
+    });
+  });
+}
+
+function seDriveInlineRebuscar() {
+  if (!seCur) return;
+  delete getE(seCur.id).drivePastaId;
+  saveEst();
+  seDriveInlineCarregar(seCur.id);
+}
+
+// Helper: lista arquivos de uma pasta do Drive
+function driveListarArquivos(pastaId, cb) {
+  if (!driveToken) { cb([]); return; }
+  var url = 'https://www.googleapis.com/drive/v3/files'
+    + '?q=' + encodeURIComponent("'" + pastaId + "' in parents and trashed=false")
+    + '&fields=files(id,name,mimeType,webViewLink,size,modifiedTime)'
+    + '&pageSize=50&orderBy=name';
+  fetch(url, { headers: { 'Authorization': 'Bearer ' + driveToken } })
+    .then(function(r){ return r.json(); })
+    .then(function(d){ cb(d.files || []); })
+    .catch(function(){ cb([]); });
+}
+
+// Helper: busca pasta pelo nome do cliente na pasta raiz
+function driveBuscarPastaCliente(nomeCliente, pastaRaizId, cb) {
+  if (!driveToken) { cb(null); return; }
+  // Pega primeira palavra + segunda para busca
+  var palavras = nomeCliente.trim().split(/\s+/);
+  var termoBusca = palavras.slice(0,2).join(' ');
+  var url = 'https://www.googleapis.com/drive/v3/files'
+    + '?q=' + encodeURIComponent("'" + pastaRaizId + "' in parents and mimeType='application/vnd.google-apps.folder' and name contains '" + termoBusca.replace(/'/g,"") + "' and trashed=false")
+    + '&fields=files(id,name)&pageSize=10';
+  fetch(url, { headers: { 'Authorization': 'Bearer ' + driveToken } })
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      var pastas = d.files || [];
+      if (!pastas.length) { cb(null); return; }
+      // Score: pasta cujo nome mais se parece com o cliente
+      var melhor = pastas[0];
+      var scoreMelhor = 0;
+      pastas.forEach(function(p){
+        var nomePasta = p.name.toLowerCase();
+        var nomeRef = nomeCliente.toLowerCase();
+        // conta palavras em comum
+        var score = palavras.filter(function(w){ return nomePasta.indexOf(w.toLowerCase())>=0; }).length;
+        if(score > scoreMelhor){ scoreMelhor=score; melhor=p; }
+      });
+      cb(melhor);
+    })
+    .catch(function(){ cb(null); });
+}
 
 // ============================================================
 // EXCLUIDOS - historico de leads descartados
