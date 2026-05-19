@@ -1928,7 +1928,19 @@ function loadEst(){
   if(l){try{est=JSON.parse(l);}catch(e){est={};}}
   fetch(SCRIPT+'?action=getState',{redirect:'follow'})
     .then(function(r){return r.json();})
-    .then(function(d){if(d.ok&&d.data&&Object.keys(d.data).length){est=Object.assign({},est,d.data);localStorage.setItem('g_est',JSON.stringify(est));diListar();seListar();diStats();seStats();}})
+    .then(function(d){
+      if(d.ok&&d.data&&Object.keys(d.data).length){
+        // Preservar overrides locais de telefone antes de mesclar servidor
+        var telDi=est['_tel_di']||{};
+        var telSe=est['_tel_se']||{};
+        est=Object.assign({},est,d.data);
+        // Mesclar: local tem prioridade sobre servidor para telefones
+        if(Object.keys(telDi).length) est['_tel_di']=Object.assign({},d.data['_tel_di']||{},telDi);
+        if(Object.keys(telSe).length) est['_tel_se']=Object.assign({},d.data['_tel_se']||{},telSe);
+        localStorage.setItem('g_est',JSON.stringify(est));
+        diListar();seListar();diStats();seStats();
+      }
+    })
     .catch(function(){});
 }
 function saveEst(){
