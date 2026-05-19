@@ -403,6 +403,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#1a1a1a}
           <div class="card">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
               <div><div class="ct" style="margin-bottom:3px">Escritorio <span class="tag-gov">.gov</span></div><span class="badge bo" id="di-bg">0/8</span></div>
+              <button class="btn" style="font-size:11px;padding:4px 10px;background:#1351b4;color:#fff;border-color:#1351b4" onclick="diMsgInss()">&#128275; Cobrar senha Gov.br</button>
             </div>
             <div class="pw"><div class="pb" id="di-pg" style="width:0%"></div></div>
             <div id="di-docs-gov" style="margin-top:10px"></div>
@@ -3239,6 +3240,32 @@ function seSalvarTel(id, val){
   saveEst();
   seStats();
 }
+function diMsgInss(){
+  var sel=g('di-sel-doc');
+  if(!sel||!sel.value){alert('Selecione um cliente primeiro.');return;}
+  var cl=diC.find(function(x){return x.id===sel.value;});
+  if(!cl)return;
+  if(!cl.tel){alert('Cliente sem telefone cadastrado. Adicione o telefone na ficha primeiro.');return;}
+  var tel=cl.tel.replace(/[^0-9]/g,'');
+  if(tel.length===11)tel='55'+tel;
+  var nome=cl.nome.split(' ')[0];
+  var ln='\n';
+  var msg='Ola, '+nome+'! Tudo bem? '
+    +ln+ln+'Passando para te ajudar com uma informacao importante sobre o seu processo.'
+    +ln+ln+'Para conseguirmos os documentos necessarios diretamente nos sistemas do governo (Meu INSS e Gov.br), precisamos da sua *senha de acesso ao site Meu INSS / Gov.br*.'
+    +ln+ln+'Percebemos que a senha informada anteriormente esta *faltando ou incorreta*, o que esta impedindo o andamento do seu processo.'
+    +ln+ln+'*Por que essa senha e tao importante?*'
+    +ln+'Por meio dela, conseguimos acessar os seus dados diretamente na fonte oficial e emitir documentos essenciais para a acao judicial. Sem esse acesso, o processo pode demorar muito mais.'
+    +ln+ln+'Alem disso, se possivel, pedimos que nos envie *o quanto antes* os seguintes documentos:'
+    +ln+ln+'*1. Extrato de Emprestimos Consignados*'
+    +ln+'Disponivel no aplicativo ou site do Meu INSS (em Emprestimos Consignados).'
+    +ln+ln+'*2. Extrato de Recebimentos (ultimos 10 anos)*'
+    +ln+'Tambem disponivel no Meu INSS, mostrando todo o historico de pagamentos do seu beneficio.'
+    +ln+ln+'Caso precise de ajuda para encontrar esses documentos, pode nos chamar que orientamos passo a passo!'
+    +ln+ln+'_Gadiani & DAntraccoli Advogados_';
+  window.open('https://wa.me/'+tel+'?text='+encodeURIComponent(msg),'_blank');
+}
+
 function diBoasVindas(id){
   var cl=diC.find(function(x){return x.id===id;});
   if(!cl||!cl.tel){alert('Cliente sem telefone cadastrado.');return;}
