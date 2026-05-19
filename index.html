@@ -3228,15 +3228,22 @@ function diListar(){
 function diSalvarTel(id, val){
   var cl=diC.find(function(x){return x.id===id;});
   if(!cl)return;
-  cl.tel=val.trim();
+  var v=val.trim();
+  cl.tel=v;
+  // Salvar no override persistente (sobrevive ao reload da planilha)
+  if(!est['_tel_di'])est['_tel_di']={};
+  est['_tel_di'][id]=v;
   saveEst();
-  // Atualiza fila sem rerender (evita perder foco)
   diStats();
 }
 function seSalvarTel(id, val){
   var cl=seC.find(function(x){return x.id===id;});
   if(!cl)return;
-  cl.tel=val.trim();
+  var v=val.trim();
+  cl.tel=v;
+  // Salvar no override persistente
+  if(!est['_tel_se'])est['_tel_se']={};
+  est['_tel_se'][id]=v;
   saveEst();
   seStats();
 }
@@ -4505,6 +4512,9 @@ function seLoad(){
       c10:{nome:r[135]||'',valor:r[136]||'',modalidade:r[137]||'',forma:r[138]||'',parcelas:r[139]||'',pagas:r[140]||'',prest:r[141]||'',sit:r[142]||'',reneg:r[143]||'',contrato:r[144]||''}
     });
     }
+    // Merge telefones salvos manualmente
+    var telOvSe=est['_tel_se']||{};
+    seC.forEach(function(cl){if(telOvSe[cl.id])cl.tel=telOvSe[cl.id];});
     sePopSels();seListar();seStats();seAguard();diPopSels();
   });
 }
