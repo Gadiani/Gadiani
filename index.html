@@ -1590,10 +1590,6 @@ var DC = [
   {id:'d3',txt:'Carteira de trabalho',ob:false,obs:'Se CLT'},
   {id:'d4',txt:'3-6 ultimos holerites / contracheques',ob:true},
   {id:'d5',txt:'3+ extratos bancarios de todos os bancos',ob:true},
-  {id:'d6',txt:'Comprovante de agua',ob:false},
-  {id:'d7',txt:'Comprovante de luz',ob:false},
-  {id:'d8',txt:'Comprovante de aluguel',ob:false},
-  {id:'d9',txt:'Farmacia / remedios',ob:false,obs:'Se tiver'},
   {id:'d10',txt:'Laudos medicos',ob:false,obs:'Se possuir'},
   {id:'d11',txt:'Imposto de Renda',ob:false,obs:'Se declarar'},
   {id:'d12',txt:'Contratos com credores',ob:false,obs:'Se tiver'}
@@ -1930,14 +1926,15 @@ function loadEst(){
     .then(function(r){return r.json();})
     .then(function(d){
       if(d.ok&&d.data&&Object.keys(d.data).length){
-        // Preservar overrides locais de telefone antes de mesclar servidor
-        var telDi=est['_tel_di']||{};
-        var telSe=est['_tel_se']||{};
         est=Object.assign({},est,d.data);
-        // Mesclar: local tem prioridade sobre servidor para telefones
-        if(Object.keys(telDi).length) est['_tel_di']=Object.assign({},d.data['_tel_di']||{},telDi);
-        if(Object.keys(telSe).length) est['_tel_se']=Object.assign({},d.data['_tel_se']||{},telSe);
         localStorage.setItem('g_est',JSON.stringify(est));
+        // Reaplicar telefones (ficam em chave separada, nao sao afetados pelo est)
+        try{
+          var tlDi=JSON.parse(localStorage.getItem('g_tel_di')||'{}');
+          var tlSe=JSON.parse(localStorage.getItem('g_tel_se')||'{}');
+          diC.forEach(function(cl){if(tlDi[cl.id])cl.tel=tlDi[cl.id];});
+          seC.forEach(function(cl){if(tlSe[cl.id])cl.tel=tlSe[cl.id];});
+        }catch(e){}
         diListar();seListar();diStats();seStats();
       }
     })
@@ -3180,6 +3177,7 @@ function diLoad(){
       bancoEnd:r[32]||''
     });
     }
+    try{var tlDi2=JSON.parse(localStorage.getItem('g_tel_di')||'{}');diC.forEach(function(cl){if(tlDi2[cl.id])cl.tel=tlDi2[cl.id];});}catch(e){}
     diPopSels();diListar();diStats();diAguard();
   });
 }
@@ -3242,10 +3240,12 @@ function diSalvarTel(id, val){
   if(!cl)return;
   var v=val.trim();
   cl.tel=v;
-  // Salvar no override persistente (sobrevive ao reload da planilha)
-  if(!est['_tel_di'])est['_tel_di']={};
-  est['_tel_di'][id]=v;
-  saveEst();
+  // Salvar em chave dedicada no localStorage (independente do est)
+  try{
+    var tels=JSON.parse(localStorage.getItem('g_tel_di')||'{}');
+    tels[id]=v;
+    localStorage.setItem('g_tel_di',JSON.stringify(tels));
+  }catch(e){}
   diStats();
 }
 function seSalvarTel(id, val){
@@ -3253,10 +3253,12 @@ function seSalvarTel(id, val){
   if(!cl)return;
   var v=val.trim();
   cl.tel=v;
-  // Salvar no override persistente
-  if(!est['_tel_se'])est['_tel_se']={};
-  est['_tel_se'][id]=v;
-  saveEst();
+  // Salvar em chave dedicada no localStorage (independente do est)
+  try{
+    var tels=JSON.parse(localStorage.getItem('g_tel_se')||'{}');
+    tels[id]=v;
+    localStorage.setItem('g_tel_se',JSON.stringify(tels));
+  }catch(e){}
   seStats();
 }
 function diMsgInss(){
@@ -4524,9 +4526,11 @@ function seLoad(){
       c10:{nome:r[135]||'',valor:r[136]||'',modalidade:r[137]||'',forma:r[138]||'',parcelas:r[139]||'',pagas:r[140]||'',prest:r[141]||'',sit:r[142]||'',reneg:r[143]||'',contrato:r[144]||''}
     });
     }
-    // Merge telefones salvos manualmente
-    var telOvSe=est['_tel_se']||{};
-    seC.forEach(function(cl){if(telOvSe[cl.id])cl.tel=telOvSe[cl.id];});
+    // Merge telefones salvos manualmente (chave dedicada)
+    try{
+      var telSeOv=JSON.parse(localStorage.getItem('g_tel_se')||'{}');
+      seC.forEach(function(cl){if(telSeOv[cl.id])cl.tel=telSeOv[cl.id];});
+    }catch(e){}
     sePopSels();seListar();seStats();seAguard();diPopSels();
   });
 }
