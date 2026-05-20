@@ -3361,7 +3361,7 @@ function diOpenDocs(){
     +'<div class="g3" style="gap:8px">'
     +'<div><div style="font-size:10px;color:#aaa">CPF</div><div style="font-weight:600">'+(c.cpf||'-')+'</div></div>'
     +'<div><div style="font-size:10px;color:#aaa">Nascimento</div><div>'+(c.nasc||'-')+'</div></div>'
-    +'<div><div style="font-size:10px;color:#aaa">Telefone</div><input id="di-tel-edit" placeholder="(19) 99999-9999" style="font-size:12px;font-weight:700;color:#25d366;border:1px solid #ddd;border-radius:5px;padding:2px 5px;width:130px"></div>'
+    +'<div><div style="font-size:10px;color:#aaa">Telefone <span style="font-size:9px;color:#aaa">(salva automaticamente)</span></div><input id="di-tel-edit" data-cid="'+c.id+'" placeholder="(19) 99999-9999" style="font-size:12px;font-weight:700;color:#25d366;border:1px solid #ddd;border-radius:5px;padding:2px 5px;width:140px"></div>'
     +'<div><div style="font-size:10px;color:#aaa">Banco reu</div><div style="font-weight:700;color:#c62828">'+(c.banco||'-')+'</div></div>'
     +'<div><div style="font-size:10px;color:#aaa">Desconto</div><div style="font-weight:700">'+(c.valor||'-')+'</div></div>'
     +'<div><div style="font-size:10px;color:#aaa">Renda</div><div>'+(c.renda||'-')+'</div></div>'
@@ -3375,15 +3375,13 @@ function diOpenDocs(){
   diRenderDocs(c);
   // Carregar drive inline
   diDriveInlineCarregar(c);
-  // Attach tel input listener after HTML is in DOM
+  // Preencher e salvar telefone
   setTimeout(function(){
     var inp=g('di-tel-edit');
     if(!inp)return;
     inp.value=c.tel||'';
-    inp.addEventListener('input',function(){
-      c.tel=this.value.trim();
-      saveEst();diStats();
-    });
+    inp.onchange=function(){diSalvarTel(this.dataset.cid,this.value);};
+    inp.onblur=function(){diSalvarTel(this.dataset.cid,this.value);};
   },50);
 }
 function diToggle(id,did){
@@ -4526,10 +4524,10 @@ function seLoad(){
       c10:{nome:r[135]||'',valor:r[136]||'',modalidade:r[137]||'',forma:r[138]||'',parcelas:r[139]||'',pagas:r[140]||'',prest:r[141]||'',sit:r[142]||'',reneg:r[143]||'',contrato:r[144]||''}
     });
     }
-    // Merge telefones salvos manualmente (chave dedicada)
+    // Merge telefones salvos manualmente (chave dedicada localStorage)
     try{
-      var telSeOv=JSON.parse(localStorage.getItem('g_tel_se')||'{}');
-      seC.forEach(function(cl){if(telSeOv[cl.id])cl.tel=telSeOv[cl.id];});
+      var tlSe2=JSON.parse(localStorage.getItem('g_tel_se')||'{}');
+      seC.forEach(function(cl){if(tlSe2[cl.id])cl.tel=tlSe2[cl.id];});
     }catch(e){}
     sePopSels();seListar();seStats();seAguard();diPopSels();
   });
@@ -4881,7 +4879,7 @@ function seOpenDocs(){
     +'<div><div style="font-size:10px;color:#aaa">Profissao</div><div>'+(c.prof||'-')+'</div></div>'
     +'<div><div style="font-size:10px;color:#aaa">Telefone</div>'
     +'<div style="display:flex;align-items:center;gap:4px">'
-    +'<input id="se-tel-edit" value="'+(c.tel||'')+'" placeholder="(19) 99999-9999" style="font-size:12px;font-weight:700;color:#25d366;border:1px solid #ddd;border-radius:5px;padding:2px 6px;width:130px">'
+    +'<input id="se-tel-edit" data-cid="'+c.id+'" value="'+(c.tel||'')+'" placeholder="(19) 99999-9999" style="font-size:12px;font-weight:700;color:#25d366;border:1px solid #ddd;border-radius:5px;padding:2px 6px;width:140px">'
     +'</div></div>'
     +'<div><div style="font-size:10px;color:#aaa">E-mail</div><div>'+(c.email||'-')+'</div></div>'
     +'<div><div style="font-size:10px;color:#aaa">Endereco</div><div>'+(c.end||'-')+'</div></div>'
@@ -4915,15 +4913,13 @@ function seOpenDocs(){
   g('se-credores').innerHTML=html||'<div style="font-size:12px;color:#bbb">Nenhum credor informado.</div>';
   // Carregar drive inline
   if(typeof seCur!=='undefined'&&seCur)seDriveInlineCarregar(seCur.id);
-  // Attach tel input listener
+  // Preencher e salvar telefone SE
   setTimeout(function(){
     var inp=g('se-tel-edit');
     if(!inp||!seCur)return;
     inp.value=seCur.tel||'';
-    inp.addEventListener('input',function(){
-      seCur.tel=this.value.trim();
-      saveEst();seStats();
-    });
+    inp.onchange=function(){seSalvarTel(this.dataset.cid,this.value);};
+    inp.onblur=function(){seSalvarTel(this.dataset.cid,this.value);};
   },50);
 }
 function seToggle(id,did){var r=getDC('se',id);r[did]=!r[did];getE(id).ultimaAt=new Date().toISOString();saveEst();seRenderDocs(seC.find(function(x){return x.id===id;}));seStats();}
